@@ -1,0 +1,7 @@
+<h4>Login</h4>
+<form [formGroup]="form" novalidate (ngSubmit)="login()">
+  <input type="text" required name="email" placeholder="Email" formControlName="email" />
+  <input type="password" required name="password" placeholder="Password" formControlName="password" />
+
+  <input type="submit" value="Login" />
+</form>

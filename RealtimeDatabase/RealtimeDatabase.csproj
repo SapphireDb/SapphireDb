@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Authors>morrisjdev</Authors>
+    <Description>A .NET Core Extension for Entity Framework Core to enable Realtime Capability.</Description>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/morrisjdev/RealtimeDatabase/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/morrisjdev/RealtimeDatabase</PackageProjectUrl>
+    <PackageIconUrl>https://morrisj.net/img/morrisjdev_logo.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/morrisjdev/RealtimeDatabase</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Copyright>Copyright © Morris Janatzek</Copyright>
+    <PackageTags>realtime, authentication, core, .net, entityframework, database, websocket</PackageTags>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>RealtimeDatabaseCert.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+</Project>

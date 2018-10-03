@@ -1,0 +1,8 @@
+<div *ngFor="let v of user$ | async" (click)="remove(v)">
+  {{v | json}}
+</div>
+
+<input type="text" [(ngModel)]="username" (keyup.enter)="createUser()" />
+
+<button type="button" (click)="addOffset(1)">+1</button>
+<button type="button" (click)="addOffset(-1)">-1</button>
