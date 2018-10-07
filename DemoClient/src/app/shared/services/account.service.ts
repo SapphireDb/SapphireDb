@@ -33,6 +33,7 @@ export class AccountService {
             this.authData.refreshToken = result.refresh_token;
             this.authData.expiresAt = result.expires_at;
             this.authData.validFor = result.valid_for;
+            this.authData.userData.roles = result.roles;
 
             this.db.setBearer(result.auth_token);
 

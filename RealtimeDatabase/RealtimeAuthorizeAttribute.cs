@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RealtimeDatabase
@@ -20,14 +21,14 @@ namespace RealtimeDatabase
 
         public RealtimeAuthorizeAttribute(string roles)
         {
-            RolesRead = RolesWrite = RolesDelete = roles.Split(',');
+            RolesRead = RolesWrite = RolesDelete = roles.Split(',').Select(r => r.Trim()).ToArray();
         }
 
         public RealtimeAuthorizeAttribute(string rolesRead, string rolesWrite, string rolesDelete)
         {
-            RolesRead = rolesRead.Split(',');
-            RolesWrite = rolesWrite.Split(',');
-            RolesDelete = rolesDelete.Split(',');
+            RolesRead = rolesRead.Split(',').Select(r => r.Trim()).ToArray();
+            RolesWrite = rolesWrite.Split(',').Select(r => r.Trim()).ToArray();
+            RolesDelete = rolesDelete.Split(',').Select(r => r.Trim()).ToArray();
         }
 
         public enum OperationType

@@ -103,7 +103,8 @@ namespace WebUI.Controllers
                 auth_token = await GenerateEncodedToken(appUser),
                 refresh_token = newrT.RefreshKey,
                 expires_at = jwtOptions.Expiration,
-                valid_for = jwtOptions.ValidFor.TotalSeconds
+                valid_for = jwtOptions.ValidFor.TotalSeconds,
+                roles = await userManager.GetRolesAsync(appUser)
             });
         }
 

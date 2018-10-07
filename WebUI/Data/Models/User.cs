@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace WebUI.Data.Models
 {
     [Updatable]
-    [RealtimeAuthorize("admin", "admin", "admin")]
+    [RealtimeAuthorize("admin", "admin, user", "admin")]
     public class User : Base
     {
         [Required]
