@@ -27,33 +27,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                string[] primaryKeys = property.Key.GetPrimaryKeyNames(db);
-
-                InfoResponse infoResponse;
-
-                RealtimeAuthorizeAttribute authorizeAttribute = property.Key.GetCustomAttribute<RealtimeAuthorizeAttribute>();
-
-                if (authorizeAttribute != null)
-                {
-                    infoResponse = new InfoResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        PrimaryKeys = primaryKeys,
-                        RolesDelete = authorizeAttribute.RolesDelete,
-                        RolesRead = authorizeAttribute.RolesRead,
-                        RolesWrite = authorizeAttribute.RolesWrite,
-                        OnlyAuthorized = true
-                    };
-                }
-                else
-                {
-                    infoResponse = new InfoResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        PrimaryKeys = primaryKeys
-                    };
-                }
-
+                InfoResponse infoResponse = property.Key.GetInfoResponse(db);
+                infoResponse.ReferenceId = command.ReferenceId;
                 await websocketConnection.Websocket.Send(infoResponse);
             }
         }

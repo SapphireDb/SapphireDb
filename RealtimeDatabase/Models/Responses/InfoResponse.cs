@@ -13,12 +13,30 @@ namespace RealtimeDatabase.Models.Responses
 
         public string[] PrimaryKeys { get; set; }
 
-        public bool OnlyAuthorized { get; set; }
+        public PropertyAuthInfo QueryAuth { get; set; }
 
-        public string[] RolesRead { get; set; }
+        public AuthInfo CreateAuth { get; set; }
 
-        public string[] RolesWrite { get; set; }
+        public AuthInfo RemoveAuth { get; set; }
 
-        public string[] RolesDelete { get; set; }
+        public PropertyAuthInfo UpdateAuth { get; set; }
+    }
+
+    class AuthInfo
+    {
+        public bool Authentication { get; set; }
+
+        public bool Authorization {
+            get {
+                return Roles != null;
+            }
+        }
+
+        public string[] Roles { get; set; }
+    }
+
+    class PropertyAuthInfo : AuthInfo
+    {
+        public Dictionary<string, AuthInfo> Properties { get; set; }
     }
 }

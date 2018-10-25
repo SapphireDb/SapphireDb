@@ -19,12 +19,15 @@ import {UnloadResponse} from './response/unload-response';
 import {LoadResponse} from './response/load-response';
 import {CollectionHelper} from '../helper/collection-helper';
 import {QueryCommand} from './command/query-command';
+import {AuthCollectionInfo} from './auth-collection-info';
 
 export class Collection<T> {
+  public authInfo: AuthCollectionInfo;
+
   constructor(public collectionName: string,
               private websocket: WebsocketService,
               private collectionInformation: Observable<InfoResponse>) {
-
+    this.authInfo = new AuthCollectionInfo(this.collectionInformation);
   }
 
   /**
@@ -124,52 +127,5 @@ export class Collection<T> {
           return new CommandResult<T>(response.error, response.validationResults);
         }));
     }));
-  }
-
-  /**
-   * Check if the collection needs authentication
-   */
-  public onlyAuthenticated(): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.onlyAuthorized;
-      })
-    );
-  }
-
-  /**
-   * Check if any of the roles can read the collection
-   * @param roles The roles to check
-   */
-  public canRead(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.rolesRead == null || info.rolesRead.Any(r => roles.Contains(r));
-      })
-    );
-  }
-
-  /**
-   * Check if any of the roles can write in the collection
-   * @param roles The roles to check
-   */
-  public canWrite(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.rolesWrite == null || info.rolesWrite.Any(r => roles.Contains(r));
-      })
-    );
-  }
-
-  /**
-   * Check if any of the roles can delete in the collection
-   * @param roles The roles to check
-   */
-  public canDelete(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.rolesDelete == null || info.rolesDelete.Any(r => roles.Contains(r));
-      })
-    );
   }
 }

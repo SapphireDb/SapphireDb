@@ -23,11 +23,27 @@ export class MainComponent implements OnInit {
     const roles = this.account.userData().roles;
     const collection = this.db.collection('users');
 
-    combineLatest(collection.onlyAuthenticated(), collection.canRead(roles), collection.canWrite(roles), collection.canDelete(roles))
-      .subscribe(([a, r, w, d]: [boolean, boolean, boolean, boolean]) => {
-        console.warn(`Needs authentication: ${a}`, `Can read: ${r}`, `Can write: ${w}`, `Can delete: ${d}`);
-      }
-    );
+    combineLatest(
+      collection.authInfo.queryAuth(),
+      collection.authInfo.canQuery(roles),
+      collection.authInfo.createAuth(),
+      collection.authInfo.canCreate(roles),
+      collection.authInfo.updateAuth(),
+      collection.authInfo.canUpdate(roles),
+      collection.authInfo.removeAuth(),
+      collection.authInfo.canRemove(roles)
+    ).subscribe(([q, cq, c, cc, u, cu, r, cr]: [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean]) => {
+      console.warn(`Query: Authentication: ${q}, Can query: ${cq}`);
+      console.warn(`Create: Authentication: ${c}, Can create: ${cc}`);
+      console.warn(`Update: Authentication: ${u}, Can update: ${cu}`);
+      console.warn(`Remove: Authentication: ${r}, Can remove: ${cr}`);
+    });
+
+    // combineLatest(collection.onlyAuthenticated(), collection.canRead(roles), collection.canWrite(roles), collection.canDelete(roles))
+    //   .subscribe(([a, r, w, d]: [boolean, boolean, boolean, boolean]) => {
+    //     console.warn(`Needs authentication: ${a}`, `Can read: ${r}`, `Can write: ${w}`, `Can delete: ${d}`);
+    //   }
+    // );
 
     this.user$ = this.offset$.pipe(switchMap((i: number) => {
       return this.db.collection<User>('users')

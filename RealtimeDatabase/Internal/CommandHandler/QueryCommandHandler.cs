@@ -33,7 +33,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.IsAuthorized(websocketConnection, RealtimeAuthorizeAttribute.OperationType.Read))
+                if (!property.Key.CanQuery(websocketConnection))
                 {
                     await websocketConnection.Websocket.Send(new QueryResponse()
                     {
@@ -53,7 +53,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Collection = collectionSet,
+                    Collection = collectionSet.Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)),
                     ReferenceId = command.ReferenceId,
                 };
 

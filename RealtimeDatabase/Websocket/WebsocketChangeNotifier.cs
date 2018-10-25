@@ -39,7 +39,7 @@ namespace RealtimeDatabase.Websocket
 
                     if (property.Key != null)
                     {
-                        if (!property.Key.IsAuthorized(connection, RealtimeAuthorizeAttribute.OperationType.Read))
+                        if (!property.Key.CanQuery(connection))
                         {
                             continue;
                         }
@@ -73,13 +73,14 @@ namespace RealtimeDatabase.Websocket
                                     if (change != null)
                                     {
                                         change.ReferenceId = cs.ReferenceId;
+                                        change.Value = change.Value.GetAuthenticatedQueryModel(connection);
                                         await connection.Websocket.Send(JsonHelper.Serialize(change));
                                     }
                                 }
                                 else
                                 {
                                     await connection.Websocket.Send(JsonHelper.Serialize(new LoadResponse() {
-                                        NewObject = obj,
+                                        NewObject = obj.GetAuthenticatedQueryModel(connection),
                                         ReferenceId = cs.ReferenceId
                                     }));
                                 }

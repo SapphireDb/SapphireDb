@@ -94,7 +94,12 @@ export class WebsocketService {
     const commandReference = this.commandReferences[response.referenceId];
 
     if (commandReference) {
+
       commandReference.subject$.next(response);
+
+      if (response.error) {
+        commandReference.subject$.error(response.error);
+      }
 
       if (commandReference.keep !== true) {
         commandReference.subject$.complete();

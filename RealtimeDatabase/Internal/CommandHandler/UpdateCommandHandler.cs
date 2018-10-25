@@ -26,7 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.IsAuthorized(websocketConnection, RealtimeAuthorizeAttribute.OperationType.Write))
+                if (!property.Key.CanUpdate(websocketConnection))
                 {
                     await websocketConnection.Websocket.Send(new UpdateResponse()
                     {
@@ -46,7 +46,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     if (value != null)
                     {
-                        ModelHelper.UpdateFields(property.Key, value, updateValue, db);
+                        property.Key.UpdateFields(value, updateValue, db, websocketConnection);
 
                         if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
                         {

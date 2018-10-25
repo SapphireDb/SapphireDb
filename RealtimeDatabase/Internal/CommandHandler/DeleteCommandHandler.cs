@@ -27,7 +27,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.IsAuthorized(websocketConnection, RealtimeAuthorizeAttribute.OperationType.Delete))
+                if (!property.Key.CanRemove(websocketConnection))
                 {
                     await websocketConnection.Websocket.Send(new DeleteResponse()
                     {

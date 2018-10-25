@@ -36,8 +36,9 @@ namespace WebUI
             //Register services
             services.AddRealtimeDatabase<RealtimeContext>();
 
-            services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
-            
+            //services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
+            services.AddDbContext<RealtimeContext>(cfg => cfg.UseInMemoryDatabase("realtime"));
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(cfg => {
                 cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;

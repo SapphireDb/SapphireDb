@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using RealtimeDatabase;
+using RealtimeDatabase.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -9,7 +10,6 @@ using System.Threading.Tasks;
 namespace WebUI.Data.Models
 {
     [Updatable]
-    [RealtimeAuthorize("admin", "admin, user", "admin")]
     public class User : Base
     {
         [Required]
@@ -18,6 +18,7 @@ namespace WebUI.Data.Models
 
         [Required]
         [MinLength(3)]
+        [QueryAuth("admin")]
         public string FirstName { get; set; }
 
         [Required]

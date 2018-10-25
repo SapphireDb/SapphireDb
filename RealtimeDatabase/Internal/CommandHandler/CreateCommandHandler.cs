@@ -29,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.IsAuthorized(websocketConnection, RealtimeAuthorizeAttribute.OperationType.Write))
+                if (!property.Key.CanCreate(websocketConnection))
                 {
                     await websocketConnection.Websocket.Send(new CreateResponse()
                     {

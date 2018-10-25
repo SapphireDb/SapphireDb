@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
+using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -7,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using static RealtimeDatabase.RealtimeAuthorizeAttribute;
 
 namespace RealtimeDatabase.Internal
 {
@@ -35,17 +36,20 @@ namespace RealtimeDatabase.Internal
             return db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
         }
 
-        public static void UpdateFields(Type entityType, object entityObject, object newValues, RealtimeDbContext db)
+        public static void UpdateFields(this Type entityType, object entityObject, object newValues, RealtimeDbContext db, WebsocketConnection websocketConnection)
         {
+            string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
+
             if (entityType.GetCustomAttribute<UpdatableAttribute>() != null)
             {
-                string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
-
                 foreach (PropertyInfo pi in entityType.GetProperties())
                 {
                     if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
                     {
-                        pi.SetValue(entityObject, pi.GetValue(newValues));
+                        if (pi.CanUpdate(websocketConnection))
+                        {
+                            pi.SetValue(entityObject, pi.GetValue(newValues));
+                        }
                     }
                 }
             }
@@ -55,54 +59,126 @@ namespace RealtimeDatabase.Internal
                 {
                     if (pi.GetCustomAttribute<UpdatableAttribute>() != null)
                     {
-                        pi.SetValue(entityObject, pi.GetValue(newValues));
+                        if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
+                        {
+                            if (pi.CanUpdate(websocketConnection))
+                            {
+                                pi.SetValue(entityObject, pi.GetValue(newValues));
+                            }
+                        }
                     }
                 }
             }
         }
 
-        public static bool IsAuthorized(this Type t, WebsocketConnection connection, OperationType operationType)
+        public static InfoResponse GetInfoResponse(this Type t, RealtimeDbContext db)
         {
-            RealtimeAuthorizeAttribute authorizeAttribute = t.GetCustomAttribute<RealtimeAuthorizeAttribute>();
+            string[] primaryKeys = t.GetPrimaryKeyNames(db);
 
-            if (authorizeAttribute == null)
+            InfoResponse infoResponse = new InfoResponse()
             {
-                return true;
+                PrimaryKeys = primaryKeys
+            };
+
+            QueryAuthAttribute queryAuthAttribute = t.GetCustomAttribute<QueryAuthAttribute>();
+
+            Dictionary<string, AuthInfo> propertiesQueryAuthInfo = t.GetProperties()
+                .Where(pi => pi.GetCustomAttribute<QueryAuthAttribute>() != null)
+                .ToDictionary(
+                    pi => pi.Name.ToCamelCase(), 
+                    pi => new AuthInfo()
+                    {
+                        Authentication = true,
+                        Roles = pi.GetCustomAttribute<QueryAuthAttribute>().Roles
+                    }
+                );
+
+            if (queryAuthAttribute != null)
+            {
+                infoResponse.QueryAuth = new PropertyAuthInfo()
+                {
+                    Authentication = true,
+                    Roles = queryAuthAttribute.Roles,
+                    Properties = propertiesQueryAuthInfo
+                };
+            }
+            else
+            {
+                infoResponse.QueryAuth = new PropertyAuthInfo()
+                {
+                    Authentication = false,
+                    Properties = propertiesQueryAuthInfo
+                };
             }
 
-            ClaimsPrincipal user = connection.HttpContext.User;
+            CreateAuthAttribute createAuthAttribute= t.GetCustomAttribute<CreateAuthAttribute>();
 
-            if (authorizeAttribute.RolesRead == null || authorizeAttribute.RolesWrite == null || authorizeAttribute.RolesDelete == null)
+            if (createAuthAttribute != null)
             {
-                return user.Identity.IsAuthenticated;
+                infoResponse.CreateAuth = new AuthInfo()
+                {
+                    Authentication = true,
+                    Roles = createAuthAttribute.Roles
+                };
+            }
+            else
+            {
+                infoResponse.CreateAuth = new AuthInfo()
+                {
+                    Authentication = false
+                };
             }
 
-            if (user.Identity.IsAuthenticated)
+            RemoveAuthAttribute removeAuthAttribute = t.GetCustomAttribute<RemoveAuthAttribute>();
+
+            if (removeAuthAttribute != null)
             {
-                if (operationType == OperationType.Read)
+                infoResponse.RemoveAuth = new AuthInfo()
                 {
-                    if (authorizeAttribute.RolesRead.Any(r => user.IsInRole(r)))
-                    {
-                        return true;
-                    }
-                }
-                else if (operationType == OperationType.Write)
+                    Authentication = true,
+                    Roles = removeAuthAttribute.Roles
+                };
+            }
+            else
+            {
+                infoResponse.RemoveAuth = new AuthInfo()
                 {
-                    if (authorizeAttribute.RolesWrite.Any(r => user.IsInRole(r)))
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (authorizeAttribute.RolesDelete.Any(r => user.IsInRole(r)))
-                    {
-                        return true;
-                    }
-                }
+                    Authentication = false
+                };
             }
 
-            return false;
+            UpdateAuthAttribute updateAuthAttribute = t.GetCustomAttribute<UpdateAuthAttribute>();
+
+            Dictionary<string, AuthInfo> propertiesUpdateAuthInfo = t.GetProperties()
+                .Where(pi => pi.GetCustomAttribute<UpdatableAttribute>() != null && pi.GetCustomAttribute<UpdateAuthAttribute>() != null)
+                .ToDictionary(
+                    pi => pi.Name.ToCamelCase(),
+                    pi => new AuthInfo()
+                    {
+                        Authentication = true,
+                        Roles = pi.GetCustomAttribute<UpdateAuthAttribute>().Roles
+                    }
+                );
+
+            if (updateAuthAttribute != null)
+            {
+                infoResponse.UpdateAuth = new PropertyAuthInfo()
+                {
+                    Authentication = true,
+                    Roles = updateAuthAttribute.Roles,
+                    Properties = propertiesUpdateAuthInfo
+                };
+            }
+            else
+            {
+                infoResponse.UpdateAuth = new PropertyAuthInfo()
+                {
+                    Authentication = false,
+                    Properties = propertiesUpdateAuthInfo
+                };
+            }
+
+            return infoResponse;
         }
     }
 }
