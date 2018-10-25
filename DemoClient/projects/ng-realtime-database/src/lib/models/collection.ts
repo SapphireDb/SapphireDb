@@ -1,4 +1,3 @@
-import 'linq4js';
 import {BehaviorSubject, Observable, pipe, Subscription} from 'rxjs';
 import {WebsocketService} from '../websocket.service';
 import {CreateCommand} from './command/create-command';

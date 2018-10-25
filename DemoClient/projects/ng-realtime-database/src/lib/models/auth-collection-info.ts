@@ -1,6 +1,7 @@
 import {Observable} from 'rxjs';
 import {InfoResponse} from './response/info-response';
 import {map} from 'rxjs/operators';
+import {ArrayHelper} from '../helper/array-helper';
 
 export class AuthCollectionInfo {
   constructor (private collectionInformation: Observable<InfoResponse>) {}
@@ -57,7 +58,7 @@ export class AuthCollectionInfo {
     return this.collectionInformation.pipe(
       map((info: InfoResponse) => {
         if (info.queryAuth.authorization) {
-          return info.queryAuth.roles == null || info.queryAuth.roles.Any(r => roles.Contains(r));
+          return info.queryAuth.roles == null || ArrayHelper.isAnyRolePresent(info.queryAuth.roles, roles);
         }
 
         return true;
@@ -72,7 +73,7 @@ export class AuthCollectionInfo {
   public canCreate(roles: string[]): Observable<boolean> {
     return this.collectionInformation.pipe(
       map((info: InfoResponse) => {
-        return info.createAuth.roles == null || info.createAuth.roles.Any(r => roles.Contains(r));
+        return info.createAuth.roles == null || ArrayHelper.isAnyRolePresent(info.createAuth.roles, roles);
       })
     );
   }
@@ -84,7 +85,7 @@ export class AuthCollectionInfo {
   public canRemove(roles: string[]): Observable<boolean> {
     return this.collectionInformation.pipe(
       map((info: InfoResponse) => {
-        return info.removeAuth.roles == null || info.removeAuth.roles.Any(r => roles.Contains(r));
+        return info.removeAuth.roles == null || ArrayHelper.isAnyRolePresent(info.removeAuth.roles, roles);
       })
     );
   }
@@ -96,7 +97,7 @@ export class AuthCollectionInfo {
   public canUpdate(roles: string[]): Observable<boolean> {
     return this.collectionInformation.pipe(
       map((info: InfoResponse) => {
-        return info.updateAuth.roles == null || info.updateAuth.roles.Any(r => roles.Contains(r));
+        return info.updateAuth.roles == null || ArrayHelper.isAnyRolePresent(info.updateAuth.roles, roles);
       })
     );
   }

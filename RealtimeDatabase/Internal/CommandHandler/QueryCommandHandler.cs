@@ -38,7 +38,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     await websocketConnection.Websocket.Send(new QueryResponse()
                     {
                         ReferenceId = command.ReferenceId,
-                        Collection = new List<object>()
+                        Collection = new List<object>(),
+                        Error = new Exception("The user is not authorized for this action.")
                     });
 
                     return new List<object[]>();

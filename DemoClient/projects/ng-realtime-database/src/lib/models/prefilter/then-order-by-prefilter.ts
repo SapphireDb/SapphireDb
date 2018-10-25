@@ -1,4 +1,5 @@
 import {IPrefilter} from './iprefilter';
+import {ArrayHelper} from '../../helper/array-helper';
 
 export class ThenOrderByPrefilter implements IPrefilter {
   prefilterType = 'ThenOrderByPrefilter';
@@ -11,10 +12,6 @@ export class ThenOrderByPrefilter implements IPrefilter {
   }
 
   public execute(values: any[]) {
-    if (this.descending) {
-      return values.ThenByDescending(v => v[this.propertyName]);
-    } else {
-      return values.ThenBy(v => v[this.propertyName]);
-    }
+    return ArrayHelper.thenOrderBy(values, v => v[this.propertyName], this.descending);
   }
 }

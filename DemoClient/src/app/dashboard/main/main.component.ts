@@ -4,6 +4,8 @@ import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {User} from '../../model/user';
 import {switchMap} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
+import {OrderByPrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/order-by-prefilter';
+import {ThenOrderByPrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/then-order-by-prefilter';
 
 @Component({
   selector: 'app-main',
@@ -45,10 +47,12 @@ export class MainComponent implements OnInit {
     //   }
     // );
 
-    this.user$ = this.offset$.pipe(switchMap((i: number) => {
-      return this.db.collection<User>('users')
-        .values(new SkipPrefilter(i), new TakePrefilter(10));
-    }));
+    this.user$ = this.db.collection<User>('users').values(new OrderByPrefilter('username', false), new ThenOrderByPrefilter('id', true));
+
+    // this.user$ = this.offset$.pipe(switchMap((i: number) => {
+    //   return this.db.collection<User>('users')
+    //     .values(new SkipPrefilter(i), new TakePrefilter(10));
+    // }));
 
     this.db.collection<User>('users')
       .snapshot(new SkipPrefilter(5), new TakePrefilter(5)).subscribe(console.table);

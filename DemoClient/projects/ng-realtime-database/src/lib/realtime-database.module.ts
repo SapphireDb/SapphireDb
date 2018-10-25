@@ -1,4 +1,3 @@
-import 'linq4js';
 import {NgModule} from '@angular/core';
 import {RealtimeDatabase} from './realtime-database.service';
 import {RealtimeDatabaseOptions} from './models/realtime-database-options';
