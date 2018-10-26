@@ -77,7 +77,9 @@ export class MainComponent implements OnInit {
       firstName: 'Test',
       lastName: 'User',
       username: this.username
-    }).subscribe(console.table);
+    }).subscribe(v => {
+      console.table(v);
+    });
     this.username = '';
   }
 

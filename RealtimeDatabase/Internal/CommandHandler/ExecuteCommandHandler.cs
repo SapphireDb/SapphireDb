@@ -90,6 +90,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (Exception ex)
             {
+                
                 await websocketConnection.Websocket.Send(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
