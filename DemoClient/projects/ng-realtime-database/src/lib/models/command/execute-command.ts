@@ -5,7 +5,7 @@ export class ExecuteCommand extends CommandBase {
   actionName: string;
   parameters: any[];
 
-  constructor(actionHandlerName: string, actionName: string, ...parameters: any[]) {
+  constructor(actionHandlerName: string, actionName: string, parameters: any[]) {
     super('ExecuteCommand');
     this.actionHandlerName = actionHandlerName;
     this.actionName = actionName;

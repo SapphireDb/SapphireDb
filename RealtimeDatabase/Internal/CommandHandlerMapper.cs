@@ -23,7 +23,7 @@ namespace RealtimeDatabase.Internal
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
         }
 
-        public void ExecuteCommand(CommandBase command, DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
+        public void ExecuteCommand(CommandBase command, DbContextAccesor dbContextAccesor, ActionHandlerAccesor actionHandlerAccesor, WebsocketConnection websocketConnection)
         {
             string commandTypeName = command.GetType().Name;
 
@@ -35,7 +35,7 @@ namespace RealtimeDatabase.Internal
 
                 if (handlerType == typeof(ExecuteCommandHandler))
                 {
-                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, serviceProvider);
+                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, actionHandlerAccesor, serviceProvider);
                 }
                 else
                 {

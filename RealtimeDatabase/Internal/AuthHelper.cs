@@ -188,5 +188,57 @@ namespace RealtimeDatabase.Internal
 
             return value;
         }
+
+        public static bool CanExecuteAction(this Type type, WebsocketConnection websocketConnection)
+        {
+            ActionAuthAttribute authAttribute = type.GetCustomAttribute<ActionAuthAttribute>();
+
+            if (authAttribute == null)
+            {
+                return true;
+            }
+
+            ClaimsPrincipal user = websocketConnection.HttpContext.User;
+
+            if (user.Identity.IsAuthenticated)
+            {
+                if (authAttribute.Roles != null)
+                {
+                    return authAttribute.Roles.Any(r => user.IsInRole(r));
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool CanExecuteAction(this MethodInfo methodInfo, WebsocketConnection websocketConnection)
+        {
+            ActionAuthAttribute authAttribute = methodInfo.GetCustomAttribute<ActionAuthAttribute>();
+
+            if (authAttribute == null)
+            {
+                return true;
+            }
+
+            ClaimsPrincipal user = websocketConnection.HttpContext.User;
+
+            if (user.Identity.IsAuthenticated)
+            {
+                if (authAttribute.Roles != null)
+                {
+                    return authAttribute.Roles.Any(r => user.IsInRole(r));
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

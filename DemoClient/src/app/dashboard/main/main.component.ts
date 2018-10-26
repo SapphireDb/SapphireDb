@@ -1,9 +1,11 @@
 import {Component, OnInit} from '@angular/core';
-import {RealtimeDatabase, SkipPrefilter, TakePrefilter} from 'ng-realtime-database';
+import {RealtimeDatabase, SkipPrefilter, TakePrefilter, Collection} from 'ng-realtime-database';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {User} from '../../model/user';
 import {switchMap} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
+import {ActionResult} from '../../../../projects/ng-realtime-database/src/lib/models/action-result';
+import {ActionHelper} from '../../../../projects/ng-realtime-database/src/lib/helper/action-helper';
 
 @Component({
   selector: 'app-main',
@@ -21,7 +23,7 @@ export class MainComponent implements OnInit {
 
   ngOnInit() {
     const roles = this.account.userData().roles;
-    const collection = this.db.collection('users');
+    const collection: Collection<any> = this.db.collection('users');
 
     combineLatest(
       collection.authInfo.queryAuth(),
@@ -58,7 +60,16 @@ export class MainComponent implements OnInit {
 
     this.db.collection('tests').values();
 
-    this.db.execute('example', 'GenerateRandomNumber').subscribe(v => console.log(v));
+    this.db.execute('example', 'GenerateRandomNumber')
+      // .subscribe((v: ActionResult<number, string>) => console.log(v));
+      .subscribe(ActionHelper.result<number, string>(
+        v => console.log('Result: ' + v),
+          v => console.log('Notification: ' + v)));
+
+    this.db.execute('example', 'TestWithParams', 'test1234', 'test2345')
+      .subscribe(console.log);
+
+    this.db.execute('example', 'NoReturn').subscribe(console.log);
   }
 
   createUser() {

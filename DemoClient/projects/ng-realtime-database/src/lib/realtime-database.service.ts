@@ -3,9 +3,10 @@ import {Collection} from './models/collection';
 import {CollectionManagerService} from './collection-manager.service';
 import {WebsocketService} from './websocket.service';
 import {ExecuteCommand} from './models/command/execute-command';
-import {concatMap, takeUntil, takeWhile} from 'rxjs/operators';
+import {concatMap, map, takeWhile} from 'rxjs/operators';
 import {ExecuteResponse, ExecuteResponseType} from './models/response/execute-response';
 import {Observable, of} from 'rxjs';
+import {ActionResult} from './models/action-result';
 
 @Injectable()
 export class RealtimeDatabase {
@@ -33,7 +34,7 @@ export class RealtimeDatabase {
    * @param actionName The name of the action
    * @param parameters Parameters for the action
    */
-  public execute(handlerName: string, actionName: string, ...parameters: any[]): Observable<ExecuteResponse> {
+  public execute<X, Y>(handlerName: string, actionName: string, ...parameters: any[]): Observable<ActionResult<X, Y>> {
     return this.websocket.sendCommand(new ExecuteCommand(handlerName, actionName, parameters), true).pipe(
       concatMap((result: ExecuteResponse) => {
         if (result.type === ExecuteResponseType.End) {
@@ -42,7 +43,10 @@ export class RealtimeDatabase {
 
         return of(result);
       }),
-      takeWhile(v => !!v)
+      takeWhile(v => !!v),
+      map((result: ExecuteResponse) => {
+        return new ActionResult<X, Y>(result);
+      })
     );
   }
 }

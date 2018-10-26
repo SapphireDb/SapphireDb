@@ -95,11 +95,11 @@ export class WebsocketService {
 
     if (commandReference) {
 
-      commandReference.subject$.next(response);
-
       if (response.error) {
         commandReference.subject$.error(response.error);
       }
+
+      commandReference.subject$.next(response);
 
       if (commandReference.keep !== true) {
         commandReference.subject$.complete();

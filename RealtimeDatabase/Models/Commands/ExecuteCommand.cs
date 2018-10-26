@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class ExecuteCommand : CommandBase
+    public class ExecuteCommand : CommandBase
     {
         public string ActionHandlerName { get; set; }
 

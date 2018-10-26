@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class CommandBase
+    public class CommandBase
     {
         public string ReferenceId { get; set; }
     }

@@ -21,3 +21,7 @@ This enables realtime applications and easy data synchronization.
 [Installation on Server](Server.md)
 
 [Installation on Client](DemoClient/projects/ng-realtime-database/Readme.md)
+
+## Author
+
+[Morris Janatzek](http://morrisj.net) ([morrisjdev](https://github.com/morrisjdev))

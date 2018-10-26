@@ -342,3 +342,38 @@ Check if any of the roles can remove objects from the collection user:
 ````
 this.db.collection('user').authInfo.canRemove(['user', 'admin']);
 ````
+
+## Actions
+
+You can call actions at server using the websocket connection
+realtime database already adds. You first have to define those actions
+at server side.
+
+Then you can invoke this actions using:
+````
+this.db.execute('example', 'GenerateRandomNumber', parameters);
+````
+
+This will return an observable that returns an action result.
+You can simply subscribe and use a custom function to react to the
+results. The actions at server side can also send notification during
+execution for example as a progress indicator. To handle this the recommended
+way is using `ActionHelper`:
+
+````
+this.db.execute('example', 'GenerateRandomNumber')
+  .subscribe(ActionHelper.result<number, string>(
+    v => console.log('Result: ' + v),
+    v => console.log('Notification: ' + v)));
+````
+
+Now you can react to the results and notifications in separate
+functions.
+The observable of the `execute`-function completes after the result
+was send.
+
+Example with parameters:
+````
+this.db.execute('example', 'TestWithParams', 'test1234', 'test2345')
+  .subscribe(console.log);
+````

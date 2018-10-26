@@ -41,9 +41,11 @@ namespace RealtimeDatabase.Extensions
 
             services.AddSingleton(new ActionMapper(actions));
 
+            services.AddScoped<ActionHandlerAccesor>();
+
             foreach (ActionHandlerInformation action in actions)
             {
-                services.AddSingleton(action.Type);
+                services.AddScoped(action.Type);
             }
 
             return services;

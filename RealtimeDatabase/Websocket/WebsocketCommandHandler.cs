@@ -18,11 +18,13 @@ namespace RealtimeDatabase.Websocket
     {
         private readonly DbContextAccesor contextAccesor;
         private readonly CommandHandlerMapper commandHandlerMapper;
+        private readonly ActionHandlerAccesor actionHandlerAccesor;
 
-        public WebsocketCommandHandler(DbContextAccesor _contextAccesor, CommandHandlerMapper _commandHandlerMapper)
+        public WebsocketCommandHandler(DbContextAccesor _contextAccesor, CommandHandlerMapper _commandHandlerMapper, ActionHandlerAccesor _actionHandlerAccesor)
         {
             contextAccesor = _contextAccesor;
             commandHandlerMapper = _commandHandlerMapper;
+            actionHandlerAccesor = _actionHandlerAccesor;
         }
 
         public async Task HandleCommand(WebsocketConnection connection)
@@ -35,7 +37,7 @@ namespace RealtimeDatabase.Websocket
 
                 if (command != null)
                 {
-                    commandHandlerMapper.ExecuteCommand(command, contextAccesor, connection);
+                    commandHandlerMapper.ExecuteCommand(command, contextAccesor, actionHandlerAccesor, connection);
                 }
             }
         }

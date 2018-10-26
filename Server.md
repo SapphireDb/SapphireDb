@@ -1,6 +1,6 @@
 # Realtime Database - Server Configuration
 
-## Installtion
+## Installation
 
 ### Install Package
 To use the realtime database on server side your first need to install the nuget package.
@@ -221,3 +221,113 @@ services.AddAuthentication(cfg => {
     };
 });
 ```
+
+## Actions
+
+You can define custom actions at server side that can be called
+by the client.
+
+### Create ActionHandler
+
+First of all create a class that acts as your action handler.
+Here you can define custom methods as you like. You can use
+all primitive types as parameters. (string, int etc.)
+
+The client has to call the exact name of the method to execute it.
+
+````
+public class ExampleActions : ActionHandlerBase
+{
+    public void Test()
+    {
+        Console.WriteLine("This is a test");
+    }
+}
+````
+
+You can also use dependency injection:
+
+````
+public class ExampleActions : ActionHandlerBase
+{
+    private readonly RealtimeContext db;
+
+    public ExampleActions(RealtimeContext _db)
+    {
+        db = _db;
+    }
+}
+````
+
+### Register Action Handler
+
+To tell realtime database to use action handler you have to
+add it in the `AddRealtimeDatabase` method in Startup.
+
+For example register the `ExampleActions`:
+
+````
+services.AddRealtimeDatabase<RealtimeContext>(
+    new ActionHandlerInformation("example", typeof(ExampleActions)));
+````
+
+Now you can call the actions in ExampleActions from the client.
+
+### Send notifications
+
+To send notifications during the execution of an action use `Notify()`.
+
+Example:
+
+````
+public int GenerateRandomNumber()
+{
+    for (int i = 0; i <= 100; i++)
+    {
+        Thread.Sleep(10);
+        Notify("Progress: " + i + "%");
+    }
+
+    return db.Users.Count();
+}
+````
+
+### Authentication/Authorization
+
+You can secure a handler or a single action using the `ActionAuthAttribute`.
+Just add it to your handler or method:
+
+````
+[ActionAuth]
+public class ExampleActions : ActionHandlerBase
+{
+    private readonly RealtimeContext db;
+
+    public ExampleActions(RealtimeContext _db)
+    {
+        db = _db;
+    }
+
+    [ActionAuth("admin", "user")]
+    public int GenerateRandomNumber()
+    {
+        for (int i = 0; i <= 100; i++)
+        {
+            Thread.Sleep(10);
+            Notify("Progress: " + i + "%");
+        }
+
+        return db.Users.Count();
+    }
+
+    public string TestWithParams(string param1, string param2)
+    {
+        return param1 + param2;
+    }
+
+    public void NoReturn()
+    {
+        Console.WriteLine("This is a test");
+    }
+}
+````
