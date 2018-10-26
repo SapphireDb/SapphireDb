@@ -4,8 +4,6 @@ import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {User} from '../../model/user';
 import {switchMap} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
-import {OrderByPrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/order-by-prefilter';
-import {ThenOrderByPrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/then-order-by-prefilter';
 
 @Component({
   selector: 'app-main',
@@ -33,31 +31,34 @@ export class MainComponent implements OnInit {
       collection.authInfo.updateAuth(),
       collection.authInfo.canUpdate(roles),
       collection.authInfo.removeAuth(),
-      collection.authInfo.canRemove(roles)
-    ).subscribe(([q, cq, c, cc, u, cu, r, cr]: [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean]) => {
+      collection.authInfo.canRemove(roles),
+      collection.authInfo.queryPropertyAuth('firstName'),
+      collection.authInfo.canQueryProperty('firstName', roles),
+      collection.authInfo.updatePropertyAuth('firstName'),
+      collection.authInfo.canUpdateProperty('firstName', roles)
+    ).subscribe(([q, cq, c, cc, u, cu, r, cr, p, cp, up, ucp]:
+                       [boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean]) => {
       console.warn(`Query: Authentication: ${q}, Can query: ${cq}`);
+      console.warn(`Query Property FirstName: Authentication: ${p}, Can query: ${cp}`);
       console.warn(`Create: Authentication: ${c}, Can create: ${cc}`);
       console.warn(`Update: Authentication: ${u}, Can update: ${cu}`);
+      console.warn(`Update Property FirstName: Authentication: ${up}, Can update: ${ucp}`);
       console.warn(`Remove: Authentication: ${r}, Can remove: ${cr}`);
     });
 
-    // combineLatest(collection.onlyAuthenticated(), collection.canRead(roles), collection.canWrite(roles), collection.canDelete(roles))
-    //   .subscribe(([a, r, w, d]: [boolean, boolean, boolean, boolean]) => {
-    //     console.warn(`Needs authentication: ${a}`, `Can read: ${r}`, `Can write: ${w}`, `Can delete: ${d}`);
-    //   }
-    // );
+    // this.user$ = this.db.collection<User>('users').values(new OrderByPrefilter('username', false), new ThenOrderByPrefilter('id', true));
 
-    this.user$ = this.db.collection<User>('users').values(new OrderByPrefilter('username', false), new ThenOrderByPrefilter('id', true));
-
-    // this.user$ = this.offset$.pipe(switchMap((i: number) => {
-    //   return this.db.collection<User>('users')
-    //     .values(new SkipPrefilter(i), new TakePrefilter(10));
-    // }));
+    this.user$ = this.offset$.pipe(switchMap((i: number) => {
+      return this.db.collection<User>('users')
+        .values(new SkipPrefilter(i), new TakePrefilter(10));
+    }));
 
     this.db.collection<User>('users')
       .snapshot(new SkipPrefilter(5), new TakePrefilter(5)).subscribe(console.table);
 
     this.db.collection('tests').values();
+
+    this.db.execute('example', 'GenerateRandomNumber').subscribe(v => console.log(v));
   }
 
   createUser() {

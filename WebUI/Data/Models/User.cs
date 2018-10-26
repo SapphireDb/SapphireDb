@@ -19,6 +19,8 @@ namespace WebUI.Data.Models
         [Required]
         [MinLength(3)]
         [QueryAuth("admin")]
+        [UpdateAuth("admin")]
+        [Updatable]
         public string FirstName { get; set; }
 
         [Required]

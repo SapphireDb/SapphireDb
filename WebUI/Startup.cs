@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Extensions;
+using RealtimeDatabase.Models.Actions;
+using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
 using WebUI.Helper;
@@ -34,7 +36,8 @@ namespace WebUI
             services.ConfigureJWTAuthService(Configuration.GetSection(nameof(JWTOptions)));
 
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>();
+            services.AddRealtimeDatabase<RealtimeContext>(
+                new ActionHandlerInformation("example", typeof(ExampleActions)));
 
             //services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
             services.AddDbContext<RealtimeContext>(cfg => cfg.UseInMemoryDatabase("realtime"));

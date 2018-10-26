@@ -71,7 +71,8 @@ When using Authentication make sure to call it before RealtimeDatabase
 ### Make Entity Properties Updatable
 
 To make properties of an Entity updatable using the update method of the realtime collection
-you have to add the `UpdatableAttribute` to the class or properties of it
+you have to add the `UpdatableAttribute` to the class or properties of it. All other properties
+cannot be changed using the realtime methods at client side.
 
 Make all properties of the class updatable:
 ```csharp
@@ -111,13 +112,19 @@ public class User : Base
 }
 ```
 
-### Authentication
+### Authentication/Authorization
 
-If you only want to allow authenticated users access to specific data
-you can simply add the `RealtimeAuthorizeAttribute` to your Entity Class
+You can protect specific actions on entity classes by using the attributes
+`QueryAuthAttribute`, `CreateAuthAttribute`, `UpdateAuthAttribute` and `RemoveAuthAttribute`.
 
+If you just use the plain attributes without any configuration they will just enable authentication
+for the specific action and model.
+
+For example:
 ```csharp
-[RealtimeAuthorize()]
+[QueryAuth]     // Will require an authenticated request to allow query users
+[RemoveAuth]    // Will require an authenticated request to allow remove users
+                // All other operations are allowed without authentication
 public class User : Base
 {
     [Required]
@@ -130,6 +137,57 @@ public class User : Base
 
     [Required]
     [MinLength(3)]
+    public string LastName { get; set; }
+}
+```
+
+You can also define roles that are authorized to perform a specific action:
+```csharp
+[QueryAuth]             // Will require an authenticated request to allow query
+[RemoveAuth("admin")]   // Will require an authenticated request and role 
+                        // 'admin' to allow remove
+public class User : Base
+{
+    [Required]
+    [MinLength(3)]
+    public string Username { get; set; }
+
+    [Required]
+    [MinLength(3)]
+    public string FirstName { get; set; }
+
+    [Required]
+    [MinLength(3)]
+    public string LastName { get; set; }
+}
+```
+
+
+The `QueryAuthAttribute` and `UpdateAuthAttribute` can also be used for properties.
+You can use it to control query or update of a specific property.
+If a property is not queryable beacause the user is not authorized to it is just omitted
+and does not get transmitted to the client. The same behavior is used when
+an update of a property is not allowed for a user: The property just is omitted and not changed.
+
+```csharp
+[QueryAuth]
+public class User : Base
+{
+    [Required]
+    [MinLength(3)]
+    public string Username { get; set; }
+
+    [Required]
+    [MinLength(3)]
+    [QueryAuth("admin")]        // Property FirstName can only get queried by 
+                                // users with role `admin`
+    public string FirstName { get; set; }
+
+    [Required]
+    [MinLength(3)]
+    [Updatable]
+    [UpdateAuth("admin")]       // LastName can only get updated by users with role
+                                // `admin`
     public string LastName { get; set; }
 }
 ```
@@ -162,48 +220,4 @@ services.AddAuthentication(cfg => {
         }
     };
 });
-```
-
-### Authorization
-
-If you want to restrict the access to specific operation by roles
-you can also use the `RealtimeAuthorizeAttribute` in your Entity class.
-
-To allow all operations for the roles admin and user use:
-```csharp
-[RealtimeAuthorize("admin, user")]
-public class User : Base
-{
-    [Required]
-    [MinLength(3)]
-    public string Username { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    public string FirstName { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    public string LastName { get; set; }
-}
-```
-
-Or an examle where roles read and read2 are allowed to read, 
-role write to write and role delete to delete
-```csharp
-[RealtimeAuthorize("read, read2", "write", "delete")]
-public class User : Base
-{
-    [Required]
-    [MinLength(3)]
-    public string Username { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    public string FirstName { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    public string LastName { get; set; }
-}
 ```

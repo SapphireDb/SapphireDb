@@ -10,7 +10,7 @@ To use realtime database in client you have to install the package using node.js
 In your Angular App-Folder execute
 
 ```
-npm install ng-realtime-database linq4js -S
+npm install ng-realtime-database -S
 ```
 
 ### Import realtime database module in your app.module
@@ -38,7 +38,7 @@ imports: [
 
 ### Use it where you need it
 
-To access the realtime database you need to inject realtime database where you need it.
+To access the realtime database you need to inject `RealtimeDatabase` where you need it.
 
 Example:
 ```
@@ -87,7 +87,7 @@ so make sure to unsubscribe it.
 
 ## Filter data
 
-If you dont want to query the whole collection in your client you
+If you don't want to query the whole collection in your client you
 can use prefilters in both methods `.snapshot()` and `.values()`.
 The prefilter filters the data at server side and only sends relevant data
 to the client.
@@ -123,7 +123,7 @@ The syntax is:
 new WherePrefilter(propertyName, comparison, compareValue);
 ```
 
-Example: Only take vales with username test
+Example: Only take values with username test
 ```js
 new WherePrefilter('username', '==', 'test');
 ```
@@ -257,17 +257,88 @@ db.setBearer('example JWT Token');
 
 The websocket will now refresh and use the JWT.
 
-Make sure to configure the backend to load the JWT as query param.
-Checkout [Server Configuration](Server.md) to learn more.
+Make sure to configure the backend to load the JWT from the query parameter.
+See [Server Configuration](Server.md) to learn more.
 
-### Check if role(s) has access
+### Check role access
 
-If you use the `RealtimeAuthorize` Attribute on your models you can get information
-about the access using the methods `canRead()`, `canWrite()` and `canDelete()`. You can also
-check if the model needs authentication by using `onlyAuthenticated()`.
+If you secured your models at server side you sometimes want to find out if a specific 
+user can access specific operations on the model.
 
-Example: Check if role admin can delete data in collection user
+You can get this information by using the following methods:
 
-```js
-this.db.collection('user').canDelete(['admin'])
-```
+#### Query
+
+Check if the collection user requires authentication for queries by using `queryAuth()`:
+
+````
+this.db.collection('user').authInfo.queryAuth();
+````
+
+Check if any of the roles can query the collection user:
+
+````
+this.db.collection('user').authInfo.canQuery(['user', 'admin']);
+````
+
+To check if a property needs authentication to query use `queryPropertyAuth()`:
+````
+this.db.collection('user').authInfo.queryPropertyAuth('firstName');
+````
+
+To check if the property can get queried by specific roles:
+````
+this.db.collection('user').authInfo.canQueryProperty('firstName', ['user', 'admin']);
+````
+
+#### Update
+
+Check if the collection user requires authentication for updates by using `updateAuth()`:
+
+````
+this.db.collection('user').authInfo.updateAuth();
+````
+
+Check if any of the roles can update the collection user:
+
+````
+this.db.collection('user').authInfo.canUpdate(['user', 'admin']);
+````
+
+To check if a property needs authentication to update use `updatePropertyAuth()`:
+````
+this.db.collection('user').authInfo.updatePropertyAuth('firstName');
+````
+
+To check if the property can get updated by specific roles:
+````
+this.db.collection('user').authInfo.canUpdateProperty('firstName', ['user', 'admin']);
+````
+
+#### Create
+
+Check if the collection user requires authentication to add data by using `createAuth()`:
+
+````
+this.db.collection('user').authInfo.createAuth();
+````
+
+Check if any of the roles can create objects in the collection user:
+
+````
+this.db.collection('user').authInfo.canCreate(['user', 'admin']);
+````
+
+#### Remove
+
+Check if the collection user requires authentication to remove data by using `removeAuth()`:
+
+````
+this.db.collection('user').authInfo.removeAuth();
+````
+
+Check if any of the roles can remove objects from the collection user:
+
+````
+this.db.collection('user').authInfo.canRemove(['user', 'admin']);
+````

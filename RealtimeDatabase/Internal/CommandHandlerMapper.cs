@@ -11,10 +11,13 @@ namespace RealtimeDatabase.Internal
 {
     class CommandHandlerMapper
     {
+        private readonly IServiceProvider serviceProvider;
         private readonly Dictionary<string, Type> commandHandlerTypes;
 
-        public CommandHandlerMapper()
+        public CommandHandlerMapper(IServiceProvider _serviceProvider)
         {
+            serviceProvider = _serviceProvider;
+
             commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.Namespace == "RealtimeDatabase.Internal.CommandHandler" && t.Name.EndsWith("Handler"))
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
@@ -28,7 +31,18 @@ namespace RealtimeDatabase.Internal
             {
                 Type handlerType = commandHandlerTypes[commandTypeName];
 
-                object handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection);
+                object handler;
+
+                if (handlerType == typeof(ExecuteCommandHandler))
+                {
+                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, serviceProvider);
+                }
+                else
+                {
+                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection);
+                }
+
+
                 handlerType.GetMethod("Handle").Invoke(handler, new[] { command });
             }
         }

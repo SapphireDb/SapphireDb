@@ -2,6 +2,10 @@ import {Injectable} from '@angular/core';
 import {Collection} from './models/collection';
 import {CollectionManagerService} from './collection-manager.service';
 import {WebsocketService} from './websocket.service';
+import {ExecuteCommand} from './models/command/execute-command';
+import {concatMap, takeUntil, takeWhile} from 'rxjs/operators';
+import {ExecuteResponse, ExecuteResponseType} from './models/response/execute-response';
+import {Observable, of} from 'rxjs';
 
 @Injectable()
 export class RealtimeDatabase {
@@ -21,5 +25,24 @@ export class RealtimeDatabase {
    */
   public setBearer(bearer?: string) {
     this.websocket.setBearer(bearer);
+  }
+
+  /**
+   * Execute an action on the server
+   * @param handlerName The name of the handler
+   * @param actionName The name of the action
+   * @param parameters Parameters for the action
+   */
+  public execute(handlerName: string, actionName: string, ...parameters: any[]): Observable<ExecuteResponse> {
+    return this.websocket.sendCommand(new ExecuteCommand(handlerName, actionName, parameters), true).pipe(
+      concatMap((result: ExecuteResponse) => {
+        if (result.type === ExecuteResponseType.End) {
+          return of(result, null);
+        }
+
+        return of(result);
+      }),
+      takeWhile(v => !!v)
+    );
   }
 }

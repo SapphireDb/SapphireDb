@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Internal;
+using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Websocket;
 using System;
 using System.Collections.Generic;
@@ -25,9 +26,10 @@ namespace RealtimeDatabase.Extensions
             return builder;
         }
 
-        public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services) where ContextType : RealtimeDbContext
+        public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services, params ActionHandlerInformation[] actions) where ContextType : RealtimeDbContext
         {
             services.AddSingleton<CommandHandlerMapper>();
+
             services.AddSingleton(new DbContextTypeContainer() { DbContextType = typeof(ContextType) });
             services.AddScoped<DbContextAccesor>();
 
@@ -36,6 +38,14 @@ namespace RealtimeDatabase.Extensions
             services.AddSingleton<WebsocketConnectionManager>();
             services.AddScoped<WebsocketChangeNotifier>();
             services.AddScoped<WebsocketCommandHandler>();
+
+            services.AddSingleton(new ActionMapper(actions));
+
+            foreach (ActionHandlerInformation action in actions)
+            {
+                services.AddSingleton(action.Type);
+            }
+
             return services;
         }
     }

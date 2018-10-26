@@ -20,4 +20,4 @@ This enables realtime applications and easy data synchronization.
 
 [Installation on Server](Server.md)
 
-[Installation on Client](Client.md)
+[Installation on Client](DemoClient/projects/ng-realtime-database/Readme.md)
