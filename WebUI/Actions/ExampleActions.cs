@@ -19,11 +19,11 @@ namespace WebUI.Actions
         }
 
         [ActionAuth]
-        public int GenerateRandomNumber()
+        public async Task<int> GenerateRandomNumber()
         {
             for (int i = 0; i <= 100; i++)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(200);
                 Notify("Progress: " + i + "%");
             }
 

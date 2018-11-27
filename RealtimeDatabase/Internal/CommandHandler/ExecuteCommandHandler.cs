@@ -39,7 +39,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 {
                     if (!actionHandlerType.CanExecuteAction(websocketConnection))
                     {
-                        await websocketConnection.Websocket.Send(new ExecuteResponse()
+                        await SendMessage(new ExecuteResponse()
                         {
                             ReferenceId = command.ReferenceId,
                             Error = new Exception("User is not allowed to execute action.")
@@ -54,7 +54,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     {
                         if (!actionMethod.CanExecuteAction(websocketConnection))
                         {
-                            await websocketConnection.Websocket.Send(new ExecuteResponse()
+                            await SendMessage(new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Error = new Exception("User is not allowed to execute action.")
@@ -64,14 +64,20 @@ namespace RealtimeDatabase.Internal.CommandHandler
                         }
 
                         ActionHandlerBase actionHandler = actionHandlerAccesor.GetActionHandler(actionHandlerType);
-                        actionHandler.WebsocketConnection = websocketConnection;
-                        actionHandler.ExecuteCommand = command;
 
                         if (actionHandler != null)
                         {
+                            actionHandler.WebsocketConnection = websocketConnection;
+                            actionHandler.ExecuteCommand = command;
+
                             object result = actionMethod.Invoke(actionHandler, command.Parameters);
 
-                            await websocketConnection.Websocket.Send(new ExecuteResponse()
+                            if (result != null && result.GetType().BaseType == typeof(Task))
+                            {
+                                result = result.GetType().GetProperty("Result").GetValue(result);
+                            }
+
+                            await SendMessage(new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Result = result
@@ -82,7 +88,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     }
                 }
 
-                await websocketConnection.Websocket.Send(new ExecuteResponse()
+                await SendMessage(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("No action to execute was found.")
@@ -91,7 +97,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             catch (Exception ex)
             {
                 
-                await websocketConnection.Websocket.Send(new ExecuteResponse()
+                await SendMessage(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex

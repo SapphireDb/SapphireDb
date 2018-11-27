@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace RealtimeDatabase.Internal
 {
@@ -37,13 +38,19 @@ namespace RealtimeDatabase.Internal
                 {
                     handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, actionHandlerAccesor, serviceProvider);
                 }
+                else if (handlerType == typeof(PublishCommandHandler) || handlerType == typeof(MessageCommandHandler))
+                {
+                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, serviceProvider);
+                }
                 else
                 {
                     handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection);
                 }
 
-
-                handlerType.GetMethod("Handle").Invoke(handler, new[] { command });
+                new Thread(() =>
+                {
+                    handlerType.GetMethod("Handle").Invoke(handler, new[] { command });
+                }).Start();
             }
         }
     }

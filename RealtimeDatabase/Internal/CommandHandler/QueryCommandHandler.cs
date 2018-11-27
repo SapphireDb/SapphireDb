@@ -35,7 +35,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if (!property.Key.CanQuery(websocketConnection))
                 {
-                    await websocketConnection.Websocket.Send(new QueryResponse()
+                    await SendMessage(new QueryResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Collection = new List<object>(),
@@ -58,7 +58,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     ReferenceId = command.ReferenceId,
                 };
 
-                await websocketConnection.Websocket.Send(queryResponse);
+                await SendMessage(queryResponse);
 
                 return collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
             }

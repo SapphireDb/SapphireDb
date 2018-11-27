@@ -37,7 +37,8 @@ namespace WebUI
 
             //Register services
             services.AddRealtimeDatabase<RealtimeContext>(
-                new ActionHandlerInformation("example", typeof(ExampleActions)));
+                new ActionHandlerInformation("example", typeof(ExampleActions)),
+                new ActionHandlerInformation("message", typeof(MessageActions)));
 
             services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
             //services.AddDbContext<RealtimeContext>(cfg => cfg.UseInMemoryDatabase("realtime"));

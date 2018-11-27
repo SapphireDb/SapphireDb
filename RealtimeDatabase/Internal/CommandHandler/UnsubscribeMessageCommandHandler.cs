@@ -7,20 +7,19 @@ using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UnsubscribeCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeCommand>
+    class UnsubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeMessageCommand>
     {
-        public UnsubscribeCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
+        public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
             : base(dbContextAccesor, websocketConnection)
         {
 
         }
 
-        public Task Handle(UnsubscribeCommand command)
+        public Task Handle(UnsubscribeMessageCommand command)
         {
             lock (websocketConnection)
             {
-                websocketConnection.Subscriptions.RemoveAt(
-                    websocketConnection.Subscriptions.FindIndex(s => s.ReferenceId == command.ReferenceId));
+                websocketConnection.MessageSubscriptions.Remove(command.ReferenceId);
             }
 
             return Task.CompletedTask;

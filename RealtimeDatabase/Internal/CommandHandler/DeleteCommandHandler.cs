@@ -29,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if (!property.Key.CanRemove(websocketConnection))
                 {
-                    await websocketConnection.Websocket.Send(new DeleteResponse()
+                    await SendMessage(new DeleteResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Error = new Exception("The user is not authorized for this action.")
@@ -48,7 +48,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                         db.Remove(value);
                         db.SaveChanges();
 
-                        await websocketConnection.Websocket.Send(new DeleteResponse()
+                        await SendMessage(new DeleteResponse()
                         {
                             ReferenceId = command.ReferenceId
                         });
@@ -56,7 +56,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.Websocket.Send(new DeleteResponse()
+                    await SendMessage(new DeleteResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Error = ex

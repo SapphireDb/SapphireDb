@@ -28,7 +28,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if (!property.Key.CanUpdate(websocketConnection))
                 {
-                    await websocketConnection.Websocket.Send(new UpdateResponse()
+                    await SendMessage(new UpdateResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Error = new Exception("The user is not authorized for this action.")
@@ -50,7 +50,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
                         {
-                            await websocketConnection.Websocket.Send(new UpdateResponse()
+                            await SendMessage(new UpdateResponse()
                             {
                                 UpdatedObject = value,
                                 ReferenceId = command.ReferenceId,
@@ -62,7 +62,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         db.SaveChanges();
 
-                        await websocketConnection.Websocket.Send(new UpdateResponse()
+                        await SendMessage(new UpdateResponse()
                         {
                             UpdatedObject = value,
                             ReferenceId = command.ReferenceId
@@ -71,7 +71,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.Websocket.Send(new UpdateResponse()
+                    await SendMessage(new UpdateResponse()
                     {
                         UpdatedObject = updateValue,
                         ReferenceId = command.ReferenceId,

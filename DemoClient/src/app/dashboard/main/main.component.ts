@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {RealtimeDatabase, SkipPrefilter, TakePrefilter, Collection} from 'ng-realtime-database';
 import {BehaviorSubject, combineLatest, Observable} from 'rxjs';
 import {User} from '../../model/user';
-import {switchMap} from 'rxjs/operators';
+import {switchMap, take} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
 import {ActionResult} from '../../../../projects/ng-realtime-database/src/lib/models/action-result';
 import {ActionHelper} from '../../../../projects/ng-realtime-database/src/lib/helper/action-helper';
@@ -18,12 +18,19 @@ export class MainComponent implements OnInit {
   user$: Observable<any[]>;
 
   username: string;
+  message: string;
 
   constructor(private db: RealtimeDatabase, private account: AccountService) { }
 
   ngOnInit() {
     const roles = this.account.userData().roles;
     const collection: Collection<any> = this.db.collection('users');
+
+    this.db.execute('example', 'GenerateRandomNumber')
+    // .subscribe((v: ActionResult<number, string>) => console.log(v));
+      .subscribe(ActionHelper.result<number, string>(
+        v => console.log('Result: ' + v),
+        v => console.log('Notification: ' + v)));
 
     combineLatest(
       collection.authInfo.queryAuth(),
@@ -60,16 +67,14 @@ export class MainComponent implements OnInit {
 
     this.db.collection('tests').values();
 
-    this.db.execute('example', 'GenerateRandomNumber')
-      // .subscribe((v: ActionResult<number, string>) => console.log(v));
-      .subscribe(ActionHelper.result<number, string>(
-        v => console.log('Result: ' + v),
-          v => console.log('Notification: ' + v)));
-
     this.db.execute('example', 'TestWithParams', 'test1234', 'test2345')
       .subscribe(console.log);
 
     this.db.execute('example', 'NoReturn').subscribe(console.log);
+
+    this.db.messaging.topic('test').pipe(take(3)).subscribe(alert);
+
+    this.db.messaging.messages().subscribe(console.warn);
   }
 
   createUser() {
@@ -98,5 +103,19 @@ export class MainComponent implements OnInit {
 
   addOffset(number: number) {
     this.offset$.next(this.offset$.value + number);
+  }
+
+  execute() {
+    this.db.execute('example', 'GenerateRandomNumber')
+    // .subscribe((v: ActionResult<number, string>) => console.log(v));
+      .subscribe(ActionHelper.result<number, string>(
+        v => console.log('Result: ' + v),
+        v => console.log('Notification: ' + v)));
+  }
+
+  send() {
+    this.db.execute('message', 'SendToAdmin', 'Das ist ei ntest');
+    this.db.messaging.send({data: this.message});
+    this.db.messaging.publish('test', this.message);
   }
 }

@@ -13,6 +13,7 @@ namespace RealtimeDatabase.Websocket.Models
         {
             Id = Guid.NewGuid();
             Subscriptions = new List<CollectionSubscription>();
+            MessageSubscriptions = new Dictionary<string, string>();
             Websocket = _webSocket;
             HttpContext = _context;
         }
@@ -22,6 +23,8 @@ namespace RealtimeDatabase.Websocket.Models
         public WebSocket Websocket { get; set; }
 
         public List<CollectionSubscription> Subscriptions { get; set; }
+
+        public Dictionary<string, string> MessageSubscriptions { get; set; }
 
         public HttpContext HttpContext { get; set; }
     }

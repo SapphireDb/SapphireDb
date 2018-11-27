@@ -39,13 +39,15 @@ namespace RealtimeDatabase.Extensions
             services.AddScoped<WebsocketChangeNotifier>();
             services.AddScoped<WebsocketCommandHandler>();
 
+            services.AddSingleton<RealtimeMessageSender>();
+
             services.AddSingleton(new ActionMapper(actions));
 
             services.AddScoped<ActionHandlerAccesor>();
 
             foreach (ActionHandlerInformation action in actions)
             {
-                services.AddScoped(action.Type);
+                services.AddTransient(action.Type);
             }
 
             return services;

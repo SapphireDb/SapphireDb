@@ -7,6 +7,9 @@ import {CommandBase} from './models/command/command-base';
 import {finalize} from 'rxjs/operators';
 import {UnsubscribeCommand} from './models/command/unsubscribe-command';
 import {RealtimeDatabaseOptions} from './models/realtime-database-options';
+import {SubscribeMessageCommand} from './models/command/subscribe-message-command';
+import {UnsubscribeMessageCommand} from './models/command/unsubscribe-message-command';
+import {GuidHelper} from './helper/guid-helper';
 
 @Injectable()
 export class WebsocketService {
@@ -14,10 +17,11 @@ export class WebsocketService {
 
   private socket: WebSocket;
 
-  private subscribeCommandStorage: SubscribeCommand[] = [];
+  private subscribeCommandStorage: (SubscribeCommand|SubscribeMessageCommand)[] = [];
   private unsendCommandStorage: CommandBase[] = [];
 
   private commandReferences: CommandReferences  = {};
+  private serverMessageHandler: CommandReferences = {};
 
   constructor(@Inject('realtimedatabase.options') private options: RealtimeDatabaseOptions) {
     this.bearer = localStorage.getItem('realtimedatabase.bearer');
@@ -79,9 +83,9 @@ export class WebsocketService {
       this.unsendCommandStorage.push(command);
     }
 
-    if (command instanceof UnsubscribeCommand) {
+    if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand) {
       this.subscribeCommandStorage = this.subscribeCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
-    } else if (command instanceof SubscribeCommand) {
+    } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand) {
       this.subscribeCommandStorage.push(command);
     }
 
@@ -90,21 +94,42 @@ export class WebsocketService {
     }));
   }
 
+  public registerServerMessageHandler(): Observable<ResponseBase> {
+    const guid = GuidHelper.generateGuid();
+
+    const referenceSubject = new Subject<ResponseBase>();
+    this.serverMessageHandler[guid] = { subject$: referenceSubject, keep: true };
+
+    return referenceSubject.pipe(finalize(() => {
+      delete this.serverMessageHandler[guid];
+    }));
+  }
+
   private handleResponse(response: ResponseBase) {
-    const commandReference = this.commandReferences[response.referenceId];
+    if (response.responseType === 'MessageResponse') {
+      Object.keys(this.serverMessageHandler).map(k => this.serverMessageHandler[k]).forEach(handler => {
+        if (response.error) {
+          handler.subject$.error(response);
+        }
 
-    if (commandReference) {
+        handler.subject$.next(response);
+      });
+    } else {
+      const commandReference = this.commandReferences[response.referenceId];
 
-      if (response.error) {
-        commandReference.subject$.error(response.error);
-      }
+      if (commandReference) {
 
-      commandReference.subject$.next(response);
+        if (response.error) {
+          commandReference.subject$.error(response.error);
+        }
 
-      if (commandReference.keep !== true) {
-        commandReference.subject$.complete();
+        commandReference.subject$.next(response);
 
-        delete this.commandReferences[response.referenceId];
+        if (commandReference.keep !== true) {
+          commandReference.subject$.complete();
+
+          delete this.commandReferences[response.referenceId];
+        }
       }
     }
   }

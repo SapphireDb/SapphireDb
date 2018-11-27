@@ -29,8 +29,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 Prefilters = command.Prefilters
             };
 
-            websocketConnection.Subscriptions.Add(collectionSubscription);
-
+            lock (websocketConnection)
+            {
+                websocketConnection.Subscriptions.Add(collectionSubscription);
+            }
+        
             collectionSubscription.TransmittedData =
                 await new QueryCommandHandler(contextAccesor, websocketConnection).HandleInner(command);
         }

@@ -16,12 +16,15 @@ namespace RealtimeDatabase.Models.Actions
 
         public void Notify(object data)
         {
-            WebsocketConnection.Websocket.Send(new ExecuteResponse()
+            lock (WebsocketConnection)
             {
-                ReferenceId = ExecuteCommand.ReferenceId,
-                Result = data,
-                Type = ExecuteResponse.ExecuteResponseType.Notify
-            }).Wait();
+                WebsocketConnection.Websocket.Send(new ExecuteResponse()
+                {
+                    ReferenceId = ExecuteCommand.ReferenceId,
+                    Result = data,
+                    Type = ExecuteResponse.ExecuteResponseType.Notify
+                }).Wait();
+            }
         }
     }
 }

@@ -3,14 +3,19 @@ import {Collection} from './models/collection';
 import {CollectionManagerService} from './collection-manager.service';
 import {WebsocketService} from './websocket.service';
 import {ExecuteCommand} from './models/command/execute-command';
-import {concatMap, map, takeWhile} from 'rxjs/operators';
+import {concatMap, finalize, map, takeWhile} from 'rxjs/operators';
 import {ExecuteResponse, ExecuteResponseType} from './models/response/execute-response';
 import {Observable, of} from 'rxjs';
 import {ActionResult} from './models/action-result';
+import {Messaging} from './models/messaging';
 
 @Injectable()
 export class RealtimeDatabase {
-  constructor(private collectionManager: CollectionManagerService, private websocket: WebsocketService) {}
+  public messaging: Messaging;
+
+  constructor(private collectionManager: CollectionManagerService, private websocket: WebsocketService) {
+    this.messaging = new Messaging(this.websocket);
+  }
 
   /**
    * Get the named collection

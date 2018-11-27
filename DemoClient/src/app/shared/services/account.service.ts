@@ -43,9 +43,9 @@ export class AccountService {
             localStorage.removeItem('auth_data');
           });
         }
+      } else {
+        return true;
       }
-
-      return true;
     }
 
     return false;

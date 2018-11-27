@@ -1,4 +1,5 @@
-﻿using RealtimeDatabase.Websocket.Models;
+﻿using RealtimeDatabase.Websocket;
+using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,6 +21,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
         protected RealtimeDbContext GetContext()
         {
             return contextAccesor.GetContext();
+        }
+
+        public Task SendMessage(object message)
+        {
+            lock (websocketConnection)
+            {
+                return websocketConnection.Websocket.Send(message);
+            }
         }
     }
 }
