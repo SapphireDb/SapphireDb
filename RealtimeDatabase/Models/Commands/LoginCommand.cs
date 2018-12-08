@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace WebUI.Data.ViewModels.Auth
+namespace RealtimeDatabase.Models.Commands
 {
-    public class LoginViewModel
+    class LoginCommand : CommandBase
     {
         public string Username { get; set; }
 

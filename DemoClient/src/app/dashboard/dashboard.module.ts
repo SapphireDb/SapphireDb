@@ -5,6 +5,7 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { MainComponent } from './main/main.component';
 import {FormsModule} from '@angular/forms';
 import { TestComponent } from './test/test.component';
+import { AuthComponent } from './auth/auth.component';
 
 @NgModule({
   imports: [
@@ -12,6 +13,6 @@ import { TestComponent } from './test/test.component';
     FormsModule,
     DashboardRoutingModule
   ],
-  declarations: [MainComponent, TestComponent]
+  declarations: [MainComponent, TestComponent, AuthComponent]
 })
 export class DashboardModule { }

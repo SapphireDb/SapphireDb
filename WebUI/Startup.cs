@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
 using RealtimeDatabase.Models.Actions;
+using RealtimeDatabase.Models.Auth;
 using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
@@ -33,15 +35,11 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ConfigureJWTAuthService(Configuration.GetSection(nameof(JWTOptions)));
+            services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
 
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>(
-                new ActionHandlerInformation("example", typeof(ExampleActions)),
-                new ActionHandlerInformation("message", typeof(MessageActions)));
-
-            services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
-            //services.AddDbContext<RealtimeContext>(cfg => cfg.UseInMemoryDatabase("realtime"));
+            services.AddRealtimeDatabase<RealtimeContext>();
+            services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => cfg.UseFileContext(databasename: "auth"));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(cfg => {
                 cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
@@ -67,9 +65,8 @@ namespace WebUI
                 app.UseHsts();
             }
 
-            app.UseAuthentication();
-
             //Add Middleware
+            app.UseRealtimeAuth();
             app.UseRealtimeDatabase();
 
             app.UseStaticFiles();

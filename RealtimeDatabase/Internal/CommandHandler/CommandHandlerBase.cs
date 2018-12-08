@@ -10,12 +10,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
     class CommandHandlerBase
     {
         protected readonly DbContextAccesor contextAccesor;
-        protected readonly WebsocketConnection websocketConnection;
 
-        public CommandHandlerBase(DbContextAccesor _contextAccesor, WebsocketConnection _websocketConnection)
+        public CommandHandlerBase(DbContextAccesor _contextAccesor)
         {
             contextAccesor = _contextAccesor;
-            websocketConnection = _websocketConnection;
         }
 
         protected RealtimeDbContext GetContext()
@@ -23,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             return contextAccesor.GetContext();
         }
 
-        public Task SendMessage(object message)
+        public Task SendMessage(WebsocketConnection websocketConnection, object message)
         {
             lock (websocketConnection)
             {

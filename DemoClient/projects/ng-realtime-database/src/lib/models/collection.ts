@@ -21,6 +21,9 @@ import {QueryCommand} from './command/query-command';
 import {AuthCollectionInfo} from './auth-collection-info';
 
 export class Collection<T> {
+  /**
+   * Information about Authentication and Authorization of the collection
+   */
   public authInfo: AuthCollectionInfo;
 
   constructor(public collectionName: string,

@@ -1,4 +1,5 @@
 ﻿using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,6 +9,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     interface ICommandHandler<T> where T : CommandBase
     {
-        Task Handle(T command);
+        Task Handle(WebsocketConnection websocketConnection, T command);
     }
 }

@@ -10,6 +10,8 @@ import {RealtimeDatabaseOptions} from './models/realtime-database-options';
 import {SubscribeMessageCommand} from './models/command/subscribe-message-command';
 import {UnsubscribeMessageCommand} from './models/command/unsubscribe-message-command';
 import {GuidHelper} from './helper/guid-helper';
+import {LocalstoragePaths} from './helper/localstorage-paths';
+import {AuthData} from './models/auth-data';
 
 @Injectable()
 export class WebsocketService {
@@ -17,14 +19,19 @@ export class WebsocketService {
 
   private socket: WebSocket;
 
-  private subscribeCommandStorage: (SubscribeCommand|SubscribeMessageCommand)[] = [];
   private unsendCommandStorage: CommandBase[] = [];
 
   private commandReferences: CommandReferences  = {};
   private serverMessageHandler: CommandReferences = {};
 
   constructor(@Inject('realtimedatabase.options') private options: RealtimeDatabaseOptions) {
-    this.bearer = localStorage.getItem('realtimedatabase.bearer');
+    const authData = localStorage.getItem(LocalstoragePaths.authPath);
+
+    if (authData) {
+      this.bearer = JSON.parse(authData).authToken;
+    } else {
+      this.bearer = localStorage.getItem(LocalstoragePaths.bearerPath);
+    }
   }
 
   private connectToWebsocket() {
@@ -50,7 +57,8 @@ export class WebsocketService {
           this.socket.send(JSON.stringify(cmd));
         });
 
-        this.unsendCommandStorage = this.unsendCommandStorage.filter(cmd => cmd instanceof SubscribeCommand);
+        this.unsendCommandStorage = this.unsendCommandStorage
+          .filter(cmd => cmd instanceof SubscribeCommand || cmd instanceof SubscribeMessageCommand);
       };
 
       waitCommand();
@@ -84,9 +92,11 @@ export class WebsocketService {
     }
 
     if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand) {
-      this.subscribeCommandStorage = this.subscribeCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
+      this.unsendCommandStorage = this.unsendCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
     } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand) {
-      this.subscribeCommandStorage.push(command);
+      if (this.unsendCommandStorage.findIndex(c => c.referenceId === command.referenceId) === -1) {
+        this.unsendCommandStorage.push(command);
+      }
     }
 
     return referenceSubject.pipe(finalize(() => {
@@ -135,8 +145,15 @@ export class WebsocketService {
   }
 
   public setBearer(bearer?: string) {
-    this.bearer = bearer;
-    localStorage.setItem('realtimedatabase.bearer', bearer);
+    if (bearer) {
+      this.bearer = bearer;
+
+      if (!localStorage.getItem(LocalstoragePaths.authPath)) {
+        localStorage.setItem(LocalstoragePaths.bearerPath, bearer);
+      }
+    } else {
+      localStorage.removeItem(LocalstoragePaths.bearerPath);
+    }
 
     if (this.socket) {
       this.socket.close();

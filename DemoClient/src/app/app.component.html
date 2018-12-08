@@ -1,3 +1,9 @@
 <h1>Demo Client for Realtime Database</h1>
 
+<p *ngIf="(userInfo$ | async) as user">
+  Username: {{user.userName}}<br>
+  {{user | json}}
+</p>
+
+
 <router-outlet></router-outlet>

@@ -23,9 +23,11 @@ namespace WebUI.Actions
         {
             for (int i = 0; i <= 100; i++)
             {
-                Thread.Sleep(200);
-                Notify("Progress: " + i + "%");
+                Thread.Sleep(10);
+                Notify(i);
             }
+
+            await Task.Delay(1000);
 
             return db.Users.Count();
         }

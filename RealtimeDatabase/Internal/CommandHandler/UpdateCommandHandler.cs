@@ -12,13 +12,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>
     {
-        public UpdateCommandHandler(DbContextAccesor contextAccesor, WebsocketConnection websocketConnection)
-            : base(contextAccesor, websocketConnection)
+        public UpdateCommandHandler(DbContextAccesor contextAccesor)
+            : base(contextAccesor)
         {
 
         }
 
-        public async Task Handle(UpdateCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, UpdateCommand command)
         {
             RealtimeDbContext db = GetContext();
 
@@ -28,7 +28,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if (!property.Key.CanUpdate(websocketConnection))
                 {
-                    await SendMessage(new UpdateResponse()
+                    await SendMessage(websocketConnection, new UpdateResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Error = new Exception("The user is not authorized for this action.")
@@ -50,7 +50,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
                         {
-                            await SendMessage(new UpdateResponse()
+                            await SendMessage(websocketConnection, new UpdateResponse()
                             {
                                 UpdatedObject = value,
                                 ReferenceId = command.ReferenceId,
@@ -62,7 +62,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         db.SaveChanges();
 
-                        await SendMessage(new UpdateResponse()
+                        await SendMessage(websocketConnection, new UpdateResponse()
                         {
                             UpdatedObject = value,
                             ReferenceId = command.ReferenceId
@@ -71,7 +71,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await SendMessage(new UpdateResponse()
+                    await SendMessage(websocketConnection, new UpdateResponse()
                     {
                         UpdatedObject = updateValue,
                         ReferenceId = command.ReferenceId,

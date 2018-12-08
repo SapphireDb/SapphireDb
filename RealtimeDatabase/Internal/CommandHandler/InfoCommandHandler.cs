@@ -13,13 +13,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class InfoCommandHandler : CommandHandlerBase, ICommandHandler<InfoCommand>
     {
-        public InfoCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
-            : base(dbContextAccesor, websocketConnection)
+        public InfoCommandHandler(DbContextAccesor dbContextAccesor)
+            : base(dbContextAccesor)
         {
 
         }
 
-        public async Task Handle(InfoCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, InfoCommand command)
         {
             RealtimeDbContext db = GetContext();
 
@@ -29,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 InfoResponse infoResponse = property.Key.GetInfoResponse(db);
                 infoResponse.ReferenceId = command.ReferenceId;
-                await SendMessage(infoResponse);
+                await SendMessage(websocketConnection, infoResponse);
             }
         }
     }

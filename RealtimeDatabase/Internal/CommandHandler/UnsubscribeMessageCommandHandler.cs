@@ -9,13 +9,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UnsubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeMessageCommand>
     {
-        public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
-            : base(dbContextAccesor, websocketConnection)
+        public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccesor)
+            : base(dbContextAccesor)
         {
 
         }
 
-        public Task Handle(UnsubscribeMessageCommand command)
+        public Task Handle(WebsocketConnection websocketConnection, UnsubscribeMessageCommand command)
         {
             lock (websocketConnection)
             {

@@ -8,13 +8,23 @@ import {ExecuteResponse, ExecuteResponseType} from './models/response/execute-re
 import {Observable, of} from 'rxjs';
 import {ActionResult} from './models/action-result';
 import {Messaging} from './models/messaging';
+import {Auth} from './models/auth';
 
 @Injectable()
 export class RealtimeDatabase {
+  /**
+   * Realtime messaging API
+   */
   public messaging: Messaging;
+
+  /**
+   * Realtime Auth
+   */
+  public auth: Auth;
 
   constructor(private collectionManager: CollectionManagerService, private websocket: WebsocketService) {
     this.messaging = new Messaging(this.websocket);
+    this.auth = new Auth(this.websocket);
   }
 
   /**

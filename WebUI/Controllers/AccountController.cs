@@ -50,20 +50,20 @@ namespace WebUI.Controllers
             return Ok();
         }
 
-        [HttpPost("claim")]
-        public async Task<IActionResult> AddClaim(string username, string type, string claim)
-        {
-            AppUser appUser = await userManager.FindByNameAsync(username);
+        //[HttpPost("claim")]
+        //public async Task<IActionResult> AddClaim(string username, string type, string claim)
+        //{
+        //    AppUser appUser = await userManager.FindByNameAsync(username);
 
-            if (appUser != null)
-            {
-                await userManager.AddClaimAsync(appUser, new Claim(type, claim));
+        //    if (appUser != null)
+        //    {
+        //        await userManager.AddClaimAsync(appUser, new Claim(type, claim));
 
-                return Ok();
-            }
+        //        return Ok();
+        //    }
 
-            return BadRequest();
-        }
+        //    return BadRequest();
+        //}
 
         [HttpPost("role")]
         public async Task<IActionResult> AddRole(string username, string rolename)

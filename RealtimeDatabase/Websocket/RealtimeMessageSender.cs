@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Websocket
 {
@@ -25,7 +26,7 @@ namespace RealtimeDatabase.Websocket
                 {
                     connection.Websocket.Send(new MessageResponse() {
                         Data = message
-                    });
+                    }).Wait();
                 }
             }
         }
@@ -39,7 +40,7 @@ namespace RealtimeDatabase.Websocket
                     connection.Websocket.Send(new MessageResponse()
                     {
                         Data = message
-                    });
+                    }).Wait();
                 }
             }
         }
@@ -58,7 +59,7 @@ namespace RealtimeDatabase.Websocket
                         {
                             ReferenceId = subscriptionId,
                             Message = message
-                        });
+                        }).Wait();
                     }
                 }
             }

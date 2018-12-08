@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.CSharp.RuntimeBinder;
+using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Commands;
@@ -16,30 +18,27 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>
     {
+        private readonly ActionMapper actionMapper;
         private readonly IServiceProvider serviceProvider;
-        private readonly ActionHandlerAccesor actionHandlerAccesor;
 
-        public ExecuteCommandHandler(DbContextAccesor contextAccesor, WebsocketConnection websocketConnection,
-            ActionHandlerAccesor _actionHandlerAccesor, IServiceProvider _serviceProvider)
-            : base(contextAccesor, websocketConnection)
+        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper _actionMapper, IServiceProvider _serviceProvider)
+            : base(contextAccesor)
         {
-            actionHandlerAccesor = _actionHandlerAccesor;
+            actionMapper = _actionMapper;
             serviceProvider = _serviceProvider;
         }
 
-        public async Task Handle(ExecuteCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, ExecuteCommand command)
         {
             try
             {
-                ActionMapper actionMapper = (ActionMapper)serviceProvider.GetService(typeof(ActionMapper));
-
                 Type actionHandlerType = actionMapper.GetHandler(command);
 
                 if (actionHandlerType != null)
                 {
                     if (!actionHandlerType.CanExecuteAction(websocketConnection))
                     {
-                        await SendMessage(new ExecuteResponse()
+                        await SendMessage(websocketConnection, new ExecuteResponse()
                         {
                             ReferenceId = command.ReferenceId,
                             Error = new Exception("User is not allowed to execute action.")
@@ -54,7 +53,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     {
                         if (!actionMethod.CanExecuteAction(websocketConnection))
                         {
-                            await SendMessage(new ExecuteResponse()
+                            await SendMessage(websocketConnection, new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Error = new Exception("User is not allowed to execute action.")
@@ -63,21 +62,42 @@ namespace RealtimeDatabase.Internal.CommandHandler
                             return;
                         }
 
-                        ActionHandlerBase actionHandler = actionHandlerAccesor.GetActionHandler(actionHandlerType);
+                        ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
 
                         if (actionHandler != null)
                         {
                             actionHandler.WebsocketConnection = websocketConnection;
                             actionHandler.ExecuteCommand = command;
 
-                            object result = actionMethod.Invoke(actionHandler, command.Parameters);
+                            object[] parameters = actionMethod.GetParameters().Select(parameter => {
+                                object parameterValue = command.Parameters[parameter.Position];
 
-                            if (result != null && result.GetType().BaseType == typeof(Task))
+                                if (parameterValue.GetType() == typeof(JObject))
+                                {
+                                    return ((JObject)parameterValue).ToObject(parameter.ParameterType);
+                                }
+
+                                return parameterValue;
+                            }).ToArray();
+
+                            object result = actionMethod.Invoke(actionHandler, parameters);
+
+                            if (result != null)
                             {
-                                result = result.GetType().GetProperty("Result").GetValue(result);
+                                Type type = result.GetType();
+
+                                if (type.BaseType.BaseType == typeof(Task))
+                                {
+                                    result = await (dynamic)result;
+                                }
+                                else if (type.BaseType == typeof(Task))
+                                {
+                                    await (dynamic)result;
+                                    result = null;
+                                }
                             }
 
-                            await SendMessage(new ExecuteResponse()
+                            await SendMessage(websocketConnection, new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Result = result
@@ -88,16 +108,23 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     }
                 }
 
-                await SendMessage(new ExecuteResponse()
+                await SendMessage(websocketConnection, new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("No action to execute was found.")
                 });
             }
+            catch (RuntimeBinderException)
+            {
+                await SendMessage(websocketConnection, new ExecuteResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Result = null
+                });
+            }
             catch (Exception ex)
             {
-                
-                await SendMessage(new ExecuteResponse()
+                await SendMessage(websocketConnection, new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex

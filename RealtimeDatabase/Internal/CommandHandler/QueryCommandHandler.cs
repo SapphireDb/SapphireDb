@@ -14,18 +14,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class QueryCommandHandler : CommandHandlerBase, ICommandHandler<QueryCommand>
     {
-        public QueryCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
-            : base(dbContextAccesor, websocketConnection)
+        public QueryCommandHandler(DbContextAccesor dbContextAccesor)
+            : base(dbContextAccesor)
         {
 
         }
 
-        public async Task Handle(QueryCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, QueryCommand command)
         {
-            await HandleInner(command);
+            await HandleInner(websocketConnection, command);
         }
 
-        public async Task<List<object[]>> HandleInner(QueryCommand command)
+        public async Task<List<object[]>> HandleInner(WebsocketConnection websocketConnection, QueryCommand command)
         {
             RealtimeDbContext db = GetContext();
 
@@ -35,7 +35,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if (!property.Key.CanQuery(websocketConnection))
                 {
-                    await SendMessage(new QueryResponse()
+                    await SendMessage(websocketConnection, new QueryResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         Collection = new List<object>(),
@@ -58,7 +58,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     ReferenceId = command.ReferenceId,
                 };
 
-                await SendMessage(queryResponse);
+                await SendMessage(websocketConnection, queryResponse);
 
                 return collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
             }

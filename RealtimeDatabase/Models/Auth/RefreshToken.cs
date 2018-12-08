@@ -1,10 +1,9 @@
-﻿using System;
+﻿using RealtimeDatabase.Internal;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using WebUI.Helper;
+using System.Text;
 
-namespace WebUI.Data.Authentication
+namespace RealtimeDatabase.Models.Auth
 {
     public class RefreshToken
     {

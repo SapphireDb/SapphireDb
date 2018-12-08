@@ -2,6 +2,7 @@
  * Public API Surface of ng-realtime-database
  */
 
+export * from './lib/models/realtime-database-options';
 export * from './lib/realtime-database.service';
 export * from './lib/realtime-database.module';
 
@@ -15,3 +16,10 @@ export * from './lib/helper/action-helper';
 
 export * from './lib/models/collection';
 export * from './lib/models/auth-collection-info';
+export * from './lib/models/auth';
+export * from './lib/models/messaging';
+export * from './lib/models/user-data';
+export * from './lib/models/command-result';
+export * from './lib/models/action-result';
+
+export * from './lib/models/response/execute-response';

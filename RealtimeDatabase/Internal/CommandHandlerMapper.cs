@@ -12,45 +12,31 @@ namespace RealtimeDatabase.Internal
 {
     class CommandHandlerMapper
     {
-        private readonly IServiceProvider serviceProvider;
-        private readonly Dictionary<string, Type> commandHandlerTypes;
+        public readonly Dictionary<string, Type> commandHandlerTypes;
 
-        public CommandHandlerMapper(IServiceProvider _serviceProvider)
+        public CommandHandlerMapper()
         {
-            serviceProvider = _serviceProvider;
-
             commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.Namespace == "RealtimeDatabase.Internal.CommandHandler" && t.Name.EndsWith("Handler"))
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
         }
 
-        public void ExecuteCommand(CommandBase command, DbContextAccesor dbContextAccesor, ActionHandlerAccesor actionHandlerAccesor, WebsocketConnection websocketConnection)
+        public void ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, WebsocketConnection websocketConnection)
         {
             string commandTypeName = command.GetType().Name;
 
             if (commandHandlerTypes.ContainsKey(commandTypeName))
             {
                 Type handlerType = commandHandlerTypes[commandTypeName];
+                object handler = serviceProvider.GetService(handlerType);
 
-                object handler;
-
-                if (handlerType == typeof(ExecuteCommandHandler))
+                if (handler != null)
                 {
-                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, actionHandlerAccesor, serviceProvider);
+                    new Thread(() =>
+                    {
+                        handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection, command });
+                    }).Start();
                 }
-                else if (handlerType == typeof(PublishCommandHandler) || handlerType == typeof(MessageCommandHandler))
-                {
-                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection, serviceProvider);
-                }
-                else
-                {
-                    handler = Activator.CreateInstance(handlerType, dbContextAccesor, websocketConnection);
-                }
-
-                new Thread(() =>
-                {
-                    handlerType.GetMethod("Handle").Invoke(handler, new[] { command });
-                }).Start();
             }
         }
     }

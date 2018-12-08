@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace WebUI.Data.ViewModels.Auth
+namespace RealtimeDatabase.Models.Commands
 {
-    public class RenewViewModel
+    class RenewCommand : CommandBase
     {
         public string UserId { get; set; }
 

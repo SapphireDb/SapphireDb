@@ -14,13 +14,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class SubscribeCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeCommand>
     {
-        public SubscribeCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection)
-            : base(dbContextAccesor, websocketConnection)
+        public SubscribeCommandHandler(DbContextAccesor dbContextAccesor)
+            : base(dbContextAccesor)
         {
 
         }
 
-        public async Task Handle(SubscribeCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, SubscribeCommand command)
         {
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {
@@ -35,7 +35,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
         
             collectionSubscription.TransmittedData =
-                await new QueryCommandHandler(contextAccesor, websocketConnection).HandleInner(command);
+                await new QueryCommandHandler(contextAccesor).HandleInner(websocketConnection, command);
         }
     }
 }

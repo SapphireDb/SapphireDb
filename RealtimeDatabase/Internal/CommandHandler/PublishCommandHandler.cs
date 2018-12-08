@@ -10,19 +10,19 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class PublishCommandHandler : CommandHandlerBase, ICommandHandler<PublishCommand>
     {
-        private IServiceProvider serviceProvider;
+        private readonly IServiceProvider serviceProvider;
+        private readonly RealtimeMessageSender messageSender;
 
-        public PublishCommandHandler(DbContextAccesor dbContextAccesor, WebsocketConnection websocketConnection, IServiceProvider _serviceProvider)
-            : base(dbContextAccesor, websocketConnection)
+        public PublishCommandHandler(DbContextAccesor dbContextAccesor, RealtimeMessageSender messageSender, IServiceProvider serviceProvider)
+            : base(dbContextAccesor)
         {
-            serviceProvider = _serviceProvider;
+            this.serviceProvider = serviceProvider;
+            this.messageSender = messageSender;
         }
 
-        public Task Handle(PublishCommand command)
+        public Task Handle(WebsocketConnection websocketConnection, PublishCommand command)
         {
-            RealtimeMessageSender messageSender = (RealtimeMessageSender)serviceProvider.GetService(typeof(RealtimeMessageSender));
             messageSender.Publish(command.Topic, command.Data);
-
             return Task.CompletedTask;
         }
     }
