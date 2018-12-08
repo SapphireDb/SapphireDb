@@ -343,6 +343,32 @@ Check if any of the roles can remove objects from the collection user:
 this.db.collection('user').authInfo.canRemove(['user', 'admin']);
 ````
 
+## Realtime Auth
+Realtime auth provides a JWT Auth Provider. You can use it if the server is configured.
+
+### Login
+
+To login the user use:
+
+```
+this.db.auth.login(username, password).subscribe(...);
+```
+
+### Get User Data
+```
+this.db.auth.getUserData();
+```
+
+### Logout
+```
+this.db.auth.logout();
+```
+
+### Check if logged in
+```
+this.db.auth.isLoggedIn();
+```
+
 ## Actions
 
 You can call actions at server using the websocket connection
@@ -377,3 +403,33 @@ Example with parameters:
 this.db.execute('example', 'TestWithParams', 'test1234', 'test2345')
   .subscribe(console.log);
 ````
+
+## Messaging
+
+You can use realtime database for communication.
+
+
+### Receive Messages
+The client can receive general messages using:
+
+```
+this.db.messaging.messages().subscribe(console.warn);
+```
+
+### Subscribe to topic
+You can also subscribe to a topic and only get messages of this category.
+
+```
+this.db.messaging.topic('test').subscribe(alert);
+```
+
+### Send a message
+You can send a message to all client using:
+```
+this.db.messaging.send({data: this.message});
+```
+
+You can also publish a message to a topic using:
+```
+this.db.messaging.publish('test', this.message);
+```

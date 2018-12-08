@@ -16,7 +16,7 @@
     <PackageTags>realtime, authentication, core, .net, entityframework, database, websocket</PackageTags>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RealtimeDatabaseCert.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -192,35 +192,39 @@ public class User : Base
 }
 ```
 
-#### Use JWT for authentication
 
-If you want to use JWT as an authentication method you have to use a little trick,
-because the browser WebSocket is not able to send custom headers.
-You have to enable the usage of the bearer parameter as JWT.
+## Realtime Auth
 
-Use this snippet to enable that:
-```csharp
-services.AddAuthentication(cfg => {
-    cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(cfg => {
-    cfg.Events = new JwtBearerEvents()
-    {
-        OnMessageReceived = ctx =>
-        {
-            // When using JWT as authentication for WebSocket add this
-            // to enable authentication
-            string bearer = ctx.Request.Query["bearer"];
-            if (!String.IsNullOrEmpty(bearer))
-            {
-                ctx.Token = bearer;
-            }
+Realtime database comes with a JWT Provider. The client can call the methods for login etc. over websocket.
+ 
+You only have to add this to your appsettings.json:
 
-            return Task.CompletedTask;
-        }
-    };
-});
 ```
+{
+  "JwtOptions": {
+    "Issuer": "RealtimeDatabase",
+    "SecretKey": "secret",
+    "ValidFor": 60
+  }
+}
+```
+
+You have to enable the provider using:
+
+```
+services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(
+    new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
+    cfg => cfg.UseFileContext(databasename: "auth"));
+```
+
+Also add this to your request pipeline:
+
+```
+app.UseRealtimeAuth();
+```
+
+Now the client can login using realtime database authentication.
+
 
 ## Actions
 
@@ -232,8 +236,9 @@ by the client.
 First of all create a class that acts as your action handler.
 Here you can define custom methods as you like. You can use
 all primitive types as parameters. (string, int etc.)
+Realtime database automatically discovers all handlers that end with `Actions`.
 
-The client has to call the exact name of the method to execute it.
+The client can call the camel cased name of the action and the handler.
 
 ````
 public class ExampleActions : ActionHandlerBase
@@ -244,6 +249,8 @@ public class ExampleActions : ActionHandlerBase
     }
 }
 ````
+
+The name would be: example.test
 
 You can also use dependency injection:
 
@@ -258,20 +265,6 @@ public class ExampleActions : ActionHandlerBase
     }
 }
 ````
-
-### Register Action Handler
-
-To tell realtime database to use action handler you have to
-add it in the `AddRealtimeDatabase` method in Startup.
-
-For example register the `ExampleActions`:
-
-````
-services.AddRealtimeDatabase<RealtimeContext>(
-    new ActionHandlerInformation("example", typeof(ExampleActions)));
-````
-
-Now you can call the actions in ExampleActions from the client.
 
 ### Send notifications
 
@@ -331,3 +324,36 @@ public class ExampleActions : ActionHandlerBase
     }
 }
 ````
+
+## Messaging
+
+Realtime database also brings features for commincation with the client.
+You can send messages to the client and the client also supports a publish/subscribe pattern.
+
+You can send messages to the client using the `RealtimeMessageSender`.
+
+Just use DI to get it:
+```
+public MessageActions(RealtimeMessageSender messageSender)
+{
+
+}
+```
+
+### Send
+
+Using the method `Send(message)` you can send a message to all client.
+
+You can also filter the clients using a Lambda:
+```
+MessageSender.Send(c => c.HttpContext.User.IsInRole("admin"), message);
+```
+
+### Publish
+
+Using the method `Publish(topic, message)` you can publish a message to a specific topic.
+Only client subscribing this topic will get the message:
+
+```
+MessageSender.Publish("test", "test Message");
+```
