@@ -5,13 +5,19 @@ site_url: 'https://morrisj.de/realtime-database'
 
 repo_name: 'morrisjdev/RealtimeDatabase'
 repo_url: 'https://github.com/morrisjdev/RealtimeDatabase'
-edit_uri: '../RealtimeDatabaseDocumentation/edit/master/docs/'
+edit_uri: 'edit/master/Documentation/docs/'
 
 copyright: 'Copyright &copy; 2018 Morris Janatzek'
 
 nav:
   - Home: index.md
-  - About: about.md
+  - Server:
+      - Installation on server: server/installation.md
+  - Client:
+      - Installation on client: client/installation.md
+  - About:
+      - License: license.md
+      - Release notes: release-notes.md
 
 theme:
   name: 'material'
@@ -25,7 +31,7 @@ extra:
   social:
   - type: 'github'
     link: 'https://github.com/morrisjdev'
-  disqus: 'realtime-database'
+#  disqus: 'realtime-database'
 
 google_analytics:
 - 'UA-130702488-1'
