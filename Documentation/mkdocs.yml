@@ -1,0 +1,57 @@
+site_name: 'Realtime Database'
+site_description: 'Realtime database for .NET Core and Angular'
+site_author: 'Morris Janatzek'
+site_url: 'https://morrisj.de/realtime-database'
+
+repo_name: 'morrisjdev/RealtimeDatabase'
+repo_url: 'https://github.com/morrisjdev/RealtimeDatabase'
+edit_uri: '../RealtimeDatabaseDocumentation/edit/master/docs/'
+
+copyright: 'Copyright &copy; 2018 Morris Janatzek'
+
+nav:
+  - Home: index.md
+  - About: about.md
+
+theme:
+  name: 'material'
+#  logo: 'img/favicon.ico'
+#  favicon: 'img/favicon.ico'
+  palette:
+    primary: 'indigo'
+    accent: 'indigo'
+
+extra:
+  social:
+  - type: 'github'
+    link: 'https://github.com/morrisjdev'
+  disqus: 'realtime-database'
+
+google_analytics:
+- 'UA-130702488-1'
+- 'auto'
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - footnotes
+  - meta
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
