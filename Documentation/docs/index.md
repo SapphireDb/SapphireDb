@@ -55,13 +55,12 @@ This enables easy data synchronization.
         ```
         
     2. Register the services
-        ``` java
+        ``` csharp
         services.AddRealtimeDatabase<MyDbContext>();
         services.AddDbContext<MyDbContext>(cfg => ...);
         ```
     
     3. Configure Request pipeline
-        ``` java 
         app.UseRealtimeDatabase();
         ```
     
@@ -81,7 +80,7 @@ This enables easy data synchronization.
         ```
     
     3. Query a collection
-        ``` 
+        ``` typescript
         constructor(private db: RealtimeDatabase) { }
                 
         ngOnInit() {

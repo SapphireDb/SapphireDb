@@ -1,0 +1,7 @@
+<h1>Welcome to Realtime Demo</h1>
+
+<ng-container *ngFor="let user of users$ | async">
+  {{user | json}} <br>
+</ng-container>
+
+<button type="button" (click)="create()">Create</button>

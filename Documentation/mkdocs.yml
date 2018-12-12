@@ -15,6 +15,7 @@ nav:
       - Installation on server: server/installation.md
   - Client:
       - Installation on client: client/installation.md
+  - Issues: https://github.com/morrisjdev/RealtimeDatabase/issues
   - About:
       - License: license.md
       - Release notes: release-notes.md
