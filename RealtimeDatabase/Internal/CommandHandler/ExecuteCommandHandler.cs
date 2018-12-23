@@ -36,22 +36,24 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (actionHandlerType != null)
                 {
-                    if (!actionHandlerType.CanExecuteAction(websocketConnection))
-                    {
-                        await SendMessage(websocketConnection, new ExecuteResponse()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            Error = new Exception("User is not allowed to execute action.")
-                        });
-
-                        return;
-                    }
-
                     MethodInfo actionMethod = actionMapper.GetAction(command, actionHandlerType);
 
                     if (actionMethod != null)
                     {
-                        if (!actionMethod.CanExecuteAction(websocketConnection))
+                        ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
+
+                        if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
+                        {
+                            await SendMessage(websocketConnection, new ExecuteResponse()
+                            {
+                                ReferenceId = command.ReferenceId,
+                                Error = new Exception("User is not allowed to execute actions of this handler.")
+                            });
+
+                            return;
+                        }
+
+                        if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
                         {
                             await SendMessage(websocketConnection, new ExecuteResponse()
                             {
@@ -61,8 +63,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                             return;
                         }
-
-                        ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
 
                         if (actionHandler != null)
                         {

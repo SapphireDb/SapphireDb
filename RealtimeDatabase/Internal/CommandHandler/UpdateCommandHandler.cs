@@ -5,6 +5,7 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,27 +27,37 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.CanUpdate(websocketConnection))
-                {
-                    await SendMessage(websocketConnection, new UpdateResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("The user is not authorized for this action.")
-                    });
-
-                    return;
-                }
-
-                object updateValue = command.UpdateValue.ToObject(property.Key);
-
                 try
                 {
+                    object updateValue = command.UpdateValue.ToObject(property.Key);
+
+                    if (!property.Key.CanUpdate(websocketConnection, updateValue))
+                    {
+                        await SendMessage(websocketConnection, new UpdateResponse()
+                        {
+                            ReferenceId = command.ReferenceId,
+                            Error = new Exception("The user is not authorized for this action.")
+                        });
+
+                        return;
+                    }
+
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);
                     object value = db.Find(property.Key, primaryKeys);
 
                     if (value != null)
                     {
                         property.Key.UpdateFields(value, updateValue, db, websocketConnection);
+
+                        MethodInfo mi = property.Key.GetMethod("OnUpdate");
+
+                        if (mi != null &&
+                            mi.ReturnType == typeof(void) &&
+                            mi.GetParameters().Count() == 1 &&
+                            mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                        {
+                            mi.Invoke(value, new object[] { websocketConnection });
+                        }
 
                         if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
                         {
@@ -73,7 +84,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 {
                     await SendMessage(websocketConnection, new UpdateResponse()
                     {
-                        UpdatedObject = updateValue,
                         ReferenceId = command.ReferenceId,
                         Error = ex
                     });

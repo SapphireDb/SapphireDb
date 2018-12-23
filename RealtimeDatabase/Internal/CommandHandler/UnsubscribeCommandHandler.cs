@@ -19,8 +19,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             lock (websocketConnection)
             {
-                websocketConnection.Subscriptions.RemoveAt(
-                    websocketConnection.Subscriptions.FindIndex(s => s.ReferenceId == command.ReferenceId));
+                int index = websocketConnection.Subscriptions.FindIndex(s => s.ReferenceId == command.ReferenceId);
+
+                if (index != -1)
+                {
+                    websocketConnection.Subscriptions.RemoveAt(index);
+                }
             }
 
             return Task.CompletedTask;

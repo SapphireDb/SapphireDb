@@ -1,4 +1,5 @@
 ﻿using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace RealtimeDatabase.Internal
 {
     static class AuthHelper
     {
-        public static bool CanQuery(this Type t, WebsocketConnection connection)
+        public static bool CanQuery(this Type t, WebsocketConnection connection, object entityObject)
         {
             QueryAuthAttribute queryAuthAttribute = t.GetCustomAttribute<QueryAuthAttribute>();
 
@@ -28,6 +29,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return queryAuthAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(queryAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = t.GetMethod(queryAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -37,7 +48,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanQuery(this PropertyInfo pi, WebsocketConnection connection)
+        public static bool CanQuery(this PropertyInfo pi, WebsocketConnection connection, object entityObject)
         {
             QueryAuthAttribute queryAuthAttribute = pi.GetCustomAttribute<QueryAuthAttribute>();
 
@@ -54,6 +65,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return queryAuthAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(queryAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = pi.DeclaringType.GetMethod(queryAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -63,7 +84,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanCreate(this Type t, WebsocketConnection connection)
+        public static bool CanCreate(this Type t, WebsocketConnection connection, object entityObject)
         {
             CreateAuthAttribute createAuthAttribute = t.GetCustomAttribute<CreateAuthAttribute>();
 
@@ -80,6 +101,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return createAuthAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(createAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = t.GetMethod(createAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -89,7 +120,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanRemove(this Type t, WebsocketConnection connection)
+        public static bool CanRemove(this Type t, WebsocketConnection connection, object entityObject)
         {
             RemoveAuthAttribute removeAuthAttribute = t.GetCustomAttribute<RemoveAuthAttribute>();
 
@@ -106,6 +137,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return removeAuthAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(removeAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = t.GetMethod(removeAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -115,7 +156,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanUpdate(this Type t, WebsocketConnection connection)
+        public static bool CanUpdate(this Type t, WebsocketConnection connection, object entityObject)
         {
             UpdateAuthAttribute updateAuthAttribute = t.GetCustomAttribute<UpdateAuthAttribute>();
 
@@ -132,6 +173,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return updateAuthAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(updateAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = t.GetMethod(updateAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -141,7 +192,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanUpdate(this PropertyInfo pi, WebsocketConnection connection)
+        public static bool CanUpdate(this PropertyInfo pi, WebsocketConnection connection, object entityObject)
         {
             UpdateAuthAttribute updateAuthAttribute = pi.GetCustomAttribute<UpdateAuthAttribute>();
 
@@ -157,6 +208,16 @@ namespace RealtimeDatabase.Internal
                 if (updateAuthAttribute.Roles != null)
                 {
                     return updateAuthAttribute.Roles.Any(r => user.IsInRole(r));
+                }
+                else if (!String.IsNullOrEmpty(updateAuthAttribute.FunctionName))
+                {
+                    MethodInfo mi = pi.DeclaringType.GetMethod(updateAuthAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool) 
+                        && mi.GetParameters().Count() == 1 
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(entityObject, new object[] { connection });
+                    }
                 }
                 else
                 {
@@ -180,7 +241,7 @@ namespace RealtimeDatabase.Internal
 
             foreach (PropertyInfo pi in propertyInfos)
             {
-                if (pi.CanQuery(websocketConnection))
+                if (pi.CanQuery(websocketConnection, model))
                 {
                     value.Add(pi.Name.ToCamelCase(), pi.GetValue(model));
                 }
@@ -189,7 +250,7 @@ namespace RealtimeDatabase.Internal
             return value;
         }
 
-        public static bool CanExecuteAction(this Type type, WebsocketConnection websocketConnection)
+        public static bool CanExecuteAction(this Type type, WebsocketConnection websocketConnection, ActionHandlerBase actionHandler)
         {
             ActionAuthAttribute authAttribute = type.GetCustomAttribute<ActionAuthAttribute>();
 
@@ -206,6 +267,16 @@ namespace RealtimeDatabase.Internal
                 {
                     return authAttribute.Roles.Any(r => user.IsInRole(r));
                 }
+                else if (!String.IsNullOrEmpty(authAttribute.FunctionName))
+                {
+                    MethodInfo mi = type.GetMethod(authAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(actionHandler, new object[] { websocketConnection });
+                    }
+                }
                 else
                 {
                     return true;
@@ -215,7 +286,7 @@ namespace RealtimeDatabase.Internal
             return false;
         }
 
-        public static bool CanExecuteAction(this MethodInfo methodInfo, WebsocketConnection websocketConnection)
+        public static bool CanExecuteAction(this MethodInfo methodInfo, WebsocketConnection websocketConnection, ActionHandlerBase actionHandler)
         {
             ActionAuthAttribute authAttribute = methodInfo.GetCustomAttribute<ActionAuthAttribute>();
 
@@ -231,6 +302,16 @@ namespace RealtimeDatabase.Internal
                 if (authAttribute.Roles != null)
                 {
                     return authAttribute.Roles.Any(r => user.IsInRole(r));
+                }
+                else if (!String.IsNullOrEmpty(authAttribute.FunctionName))
+                {
+                    MethodInfo mi = methodInfo.DeclaringType.GetMethod(authAttribute.FunctionName);
+                    if (mi != null && mi.ReturnType == typeof(bool)
+                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+                    {
+                        return (bool)mi.Invoke(actionHandler, new object[] { websocketConnection });
+                    }
                 }
                 else
                 {

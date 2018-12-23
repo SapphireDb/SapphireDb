@@ -33,18 +33,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.CanQuery(websocketConnection))
-                {
-                    await SendMessage(websocketConnection, new QueryResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Collection = new List<object>(),
-                        Error = new Exception("The user is not authorized for this action.")
-                    });
-
-                    return new List<object[]>();
-                }
-
                 IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
 
                 foreach (IPrefilter prefilter in command.Prefilters)
@@ -54,7 +42,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Collection = collectionSet.Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)),
+                    Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs)).Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)),
                     ReferenceId = command.ReferenceId,
                 };
 

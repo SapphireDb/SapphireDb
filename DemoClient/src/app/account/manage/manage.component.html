@@ -1,0 +1,15 @@
+<button (click)="createUser()">Create User</button>
+
+<div *ngFor="let user of users$ | async">
+  {{user | json}}
+  <button type="button" (click)="updateUser(user)">Update</button>
+  <button type="button" (click)="deleteUser(user)">Delete</button>
+</div>
+
+<button (click)="createRole()">Create Role</button>
+
+<div *ngFor="let role of roles$ | async">
+  {{role | json}}
+  <button type="button" (click)="updateRole(role)">Update</button>
+  <button type="button" (click)="deleteRole(role)">Delete</button>
+</div>

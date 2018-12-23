@@ -39,10 +39,7 @@ namespace RealtimeDatabase.Websocket
 
                     if (property.Key != null)
                     {
-                        if (!property.Key.CanQuery(connection))
-                        {
-                            continue;
-                        }
+                        relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value));
 
                         IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
 

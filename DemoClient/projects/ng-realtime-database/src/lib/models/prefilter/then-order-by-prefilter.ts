@@ -14,4 +14,8 @@ export class ThenOrderByPrefilter implements IPrefilter {
   public execute(values: any[]) {
     return ArrayHelper.thenOrderBy(values, v => v[this.propertyName], this.descending);
   }
+
+  public hash() {
+    return `${this.prefilterType},${this.propertyName},${this.descending}`;
+  }
 }

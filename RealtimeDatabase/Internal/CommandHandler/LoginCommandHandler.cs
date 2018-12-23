@@ -38,11 +38,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 return;
             }
 
-            object usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+            dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
-            IdentityUser userToVerify =
-                await (dynamic)contextTypeContainer.UserManagerType.GetMethod("FindByNameAsync").Invoke(usermanager, new object[] { command.Username }) ??
-                await (dynamic)contextTypeContainer.UserManagerType.GetMethod("FindByEmailAsync").Invoke(usermanager, new object[] { command.Username });
+            IdentityUser userToVerify = await usermanager.FindByNameAsync(command.Username) ??
+                await usermanager.FindByEmailAsync(command.Username);
 
             if (userToVerify != null)
             {
@@ -67,10 +66,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
                         RefreshToken = rT.RefreshKey
                     };
 
-                    loginResponse.GenerateUserData(userToVerify);
+                    loginResponse.UserData = ModelHelper.GenerateUserData(userToVerify);
                     loginResponse.UserData["Roles"] =
                         await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { userToVerify });
-
 
                     await SendMessage(websocketConnection, loginResponse);
                     return;

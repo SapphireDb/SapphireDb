@@ -6,6 +6,7 @@ import {AppComponent} from './app.component';
 import {RealtimeDatabaseModule} from 'ng-realtime-database';
 import {ReactiveFormsModule} from '@angular/forms';
 import {HttpClientModule} from '@angular/common/http';
+import {Angular2PromiseButtonModule} from 'angular2-promise-buttons';
 
 @NgModule({
   declarations: [
@@ -15,11 +16,12 @@ import {HttpClientModule} from '@angular/common/http';
     BrowserModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RealtimeDatabaseModule,
-    // RealtimeDatabaseModule.config({
-    //   serverBaseUrl: `${location.hostname}:${location.port}`
-    // }),
-    AppRoutingModule
+    RealtimeDatabaseModule.config({
+      serverBaseUrl: `${location.hostname}:${location.port}`,
+      // secret: 'test123'
+    }),
+    AppRoutingModule,
+    Angular2PromiseButtonModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

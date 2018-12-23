@@ -9,14 +9,21 @@ namespace RealtimeDatabase.Attributes
     {
         public string[] Roles { get; set; }
 
+        public string FunctionName { get; set; }
+
         public UpdateAuthAttribute()
         {
             
         }
 
-        public UpdateAuthAttribute(params string[] roles)
+        public UpdateAuthAttribute(string[] roles)
         {
             Roles = roles;
+        }
+
+        public UpdateAuthAttribute(string function)
+        {
+            FunctionName = function;
         }
     }
 }

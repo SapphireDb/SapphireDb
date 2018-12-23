@@ -27,21 +27,21 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (property.Key != null)
             {
-                if (!property.Key.CanRemove(websocketConnection))
-                {
-                    await SendMessage(websocketConnection, new DeleteResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("The user is not authorized for this action.")
-                    });
-
-                    return;
-                }
-
                 try
                 {
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.PrimaryKeys);
                     object value = db.Find(property.Key, primaryKeys);
+
+                    if (!property.Key.CanRemove(websocketConnection, value))
+                    {
+                        await SendMessage(websocketConnection, new DeleteResponse()
+                        {
+                            ReferenceId = command.ReferenceId,
+                            Error = new Exception("The user is not authorized for this action.")
+                        });
+
+                        return;
+                    }
 
                     if (value != null)
                     {

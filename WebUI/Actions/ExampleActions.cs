@@ -1,5 +1,6 @@
 ﻿using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Actions;
+using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,11 @@ namespace WebUI.Actions
 
             return db.Users.Count();
         }
+
+        //public bool test(WebsocketConnection connection)
+        //{
+        //    return DateTime.UtcNow.Second % 2 == 0;
+        //}
 
         public string TestWithParams(string param1, string param2)
         {

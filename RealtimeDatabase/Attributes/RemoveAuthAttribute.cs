@@ -9,14 +9,21 @@ namespace RealtimeDatabase.Attributes
     {
         public string[] Roles { get; set; }
 
+        public string FunctionName { get; set; }
+
         public RemoveAuthAttribute()
         {
 
         }
 
-        public RemoveAuthAttribute(params string[] roles)
+        public RemoveAuthAttribute(string[] roles)
         {
             Roles = roles;
+        }
+
+        public RemoveAuthAttribute(string function)
+        {
+            FunctionName = function;
         }
     }
 }

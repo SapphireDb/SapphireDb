@@ -11,4 +11,8 @@ export class SkipPrefilter implements IPrefilter {
   execute(values: any[]) {
     return values;
   }
+
+  public hash() {
+    return `${this.prefilterType},${this.number}`;
+  }
 }

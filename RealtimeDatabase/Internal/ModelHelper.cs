@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Responses;
@@ -46,7 +47,7 @@ namespace RealtimeDatabase.Internal
                 {
                     if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
                     {
-                        if (pi.CanUpdate(websocketConnection))
+                        if (pi.CanUpdate(websocketConnection, entityObject))
                         {
                             pi.SetValue(entityObject, pi.GetValue(newValues));
                         }
@@ -61,7 +62,7 @@ namespace RealtimeDatabase.Internal
                     {
                         if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
                         {
-                            if (pi.CanUpdate(websocketConnection))
+                            if (pi.CanUpdate(websocketConnection, entityObject))
                             {
                                 pi.SetValue(entityObject, pi.GetValue(newValues));
                             }
@@ -179,6 +180,30 @@ namespace RealtimeDatabase.Internal
             }
 
             return infoResponse;
+        }
+
+        public static Dictionary<string, object> GenerateUserData(IdentityUser identityUser)
+        {
+            Dictionary<string, object> userData = new Dictionary<string, object>();
+            Type t = identityUser.GetType();
+
+            IEnumerable<PropertyInfo> properties =
+                t.GetProperties().Where(p => p.GetCustomAttribute<AuthUserInformationAttribute>() != null
+                || p.Name == "Id" || p.Name == "UserName" || p.Name == "Email");
+
+            foreach (PropertyInfo property in properties)
+            {
+                if (property.Name != "Roles")
+                {
+                    userData[property.Name] = property.GetValue(identityUser);
+                }
+                else
+                {
+                    userData["_Roles"] = property.GetValue(identityUser);
+                }
+            }
+
+            return userData;
         }
     }
 }

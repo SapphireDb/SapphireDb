@@ -39,10 +39,14 @@ export class WebsocketService {
       return;
     }
 
-    let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket`;
+    let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket?`;
+
+    if (this.options.secret) {
+      wsUrl += `secret=${this.options.secret}&`;
+    }
 
     if (!!this.bearer) {
-      wsUrl += `?bearer=${this.bearer}`;
+      wsUrl += `bearer=${this.bearer}`;
     }
 
     this.socket = new WebSocket(wsUrl);
@@ -69,6 +73,16 @@ export class WebsocketService {
     };
 
     this.socket.onclose = () => {
+      for (const key of Object.keys(this.commandReferences)) {
+        const commandReference = this.commandReferences[key];
+
+        if (!commandReference.keep) {
+          commandReference.subject$.error('Websocket connection lost.');
+          commandReference.subject$.complete();
+          delete this.commandReferences[key];
+        }
+      }
+
       setTimeout(() => {
         this.connectToWebsocket();
       }, 1000);

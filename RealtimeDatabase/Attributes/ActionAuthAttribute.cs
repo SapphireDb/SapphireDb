@@ -7,16 +7,23 @@ namespace RealtimeDatabase.Attributes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class ActionAuthAttribute : Attribute
     {
-        public string[] Roles;
+        public string[] Roles { get; set; }
+
+        public string FunctionName { get; set; }
 
         public ActionAuthAttribute()
         {
 
         }
 
-        public ActionAuthAttribute(params string[] roles)
+        public ActionAuthAttribute(string[] roles)
         {
             Roles = roles;
+        }
+
+        public ActionAuthAttribute(string function)
+        {
+            FunctionName = function;
         }
     }
 }

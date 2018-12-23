@@ -6,13 +6,16 @@ import { MainComponent } from './main/main.component';
 import {FormsModule} from '@angular/forms';
 import { TestComponent } from './test/test.component';
 import { AuthComponent } from './auth/auth.component';
+import { CollectionTestComponent } from './collection-test/collection-test.component';
+import {Angular2PromiseButtonModule} from 'angular2-promise-buttons';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
-    DashboardRoutingModule
+    DashboardRoutingModule,
+    Angular2PromiseButtonModule
   ],
-  declarations: [MainComponent, TestComponent, AuthComponent]
+  declarations: [MainComponent, TestComponent, AuthComponent, CollectionTestComponent]
 })
 export class DashboardModule { }

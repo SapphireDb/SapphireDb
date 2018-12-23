@@ -1,9 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {Collection, RealtimeDatabase, SkipPrefilter, TakePrefilter,
   ActionResult, ActionHelper, ExecuteResponseType, UserData} from 'ng-realtime-database';
-import {BehaviorSubject, combineLatest, Observable, pipe} from 'rxjs';
+import {BehaviorSubject, combineLatest, Observable, of, pipe, Subscription} from 'rxjs';
 import {User} from '../../model/user';
-import {filter, map, switchMap, take} from 'rxjs/operators';
+import {concatMap, filter, map, switchMap, take, takeUntil, takeWhile} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
 
 @Component({
@@ -20,6 +20,8 @@ export class MainComponent implements OnInit {
   message: string;
 
   rangeValue: Observable<number>;
+
+  testSub: Subscription;
 
   constructor(private db: RealtimeDatabase, private account: AccountService) { }
 
@@ -119,7 +121,18 @@ export class MainComponent implements OnInit {
 
     this.rangeValue = this.db.execute('example', 'GenerateRandomNumber').pipe(
       filter((r: ActionResult<number, number>) => r.type === ExecuteResponseType.Notify),
-      map((r: ActionResult<number, number>) => r.notification));
+      map((r: ActionResult<number, number>) => r.notification),
+      concatMap(v => {
+        if (v === 100) {
+          return of(v, null);
+        }
+
+        return of(v);
+      }),
+      takeWhile(v => v !== null)
+    );
+
+    this.testSub = this.rangeValue.subscribe(console.log);
   }
 
   send() {

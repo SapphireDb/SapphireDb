@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {RealtimeDatabase} from 'ng-realtime-database';
+import * as faker from 'faker';
+import {User} from '../../model/user';
 
 @Component({
   selector: 'app-test',
@@ -8,15 +10,24 @@ import {RealtimeDatabase} from 'ng-realtime-database';
 })
 export class TestComponent implements OnInit {
 
-  username: string;
-
   constructor(private db: RealtimeDatabase) { }
 
   ngOnInit() {
-  }
+    const collection = this.db.collection<User>('users');
 
-  createUser() {
-    this.db.execute('user', 'CreateUser',
-      {firstName: this.username, lastName: this.username, email: this.username, password: 'pw1234'}, 'test').subscribe(console.log);
+    collection.values().subscribe(v => {
+      v.forEach(u => {
+        collection.remove(u).subscribe(console.log);
+      });
+    });
+
+    // for (let i = 0; i < 50; i++) {
+    //   collection.add({
+    //     username: faker.internet.password(),
+    //     firstName: faker.name.firstName(),
+    //     lastName: faker.name.lastName()
+    //   }).subscribe(console.log);
+    // }
+
   }
 }

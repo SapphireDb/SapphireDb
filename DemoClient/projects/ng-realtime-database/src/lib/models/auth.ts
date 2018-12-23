@@ -8,6 +8,23 @@ import {AuthData} from './auth-data';
 import {RenewCommand} from './command/renew-command';
 import {RenewResponse} from './response/renew-response';
 import {LocalstoragePaths} from '../helper/localstorage-paths';
+import {QueryUsersCommand} from './command/query-users-command';
+import {QueryUsersResponse} from './response/query-users-response';
+import {QueryRolesCommand} from './command/query-roles-command';
+import {QueryRolesResponse} from './response/query-roles-response';
+import {RoleData} from './role-data';
+import {CreateUserResponse} from './response/create-user-response';
+import {CreateUserCommand} from './command/create-user-command';
+import {UpdateUserCommand} from './command/update-user-command';
+import {UpdateUserResponse} from './response/update-user-response';
+import {DeleteUserResponse} from './response/delete-user-response';
+import {DeleteUserCommand} from './command/delete-user-command';
+import {CreateRoleResponse} from './response/create-role-response';
+import {CreateRoleCommand} from './command/create-role-command';
+import {UpdateRoleResponse} from './response/update-role-response';
+import {UpdateRoleCommand} from './command/update-role-command';
+import {DeleteRoleResponse} from './response/delete-role-response';
+import {DeleteRoleCommand} from './command/delete-role-command';
 
 export class Auth {
   private authData$: BehaviorSubject<AuthData> = new BehaviorSubject(null);
@@ -131,5 +148,78 @@ export class Auth {
 
       return of(false);
     }));
+  }
+
+  /**
+   * Get a list of all users
+   */
+  public getUsers(): Observable<UserData[]> {
+    return this.websocket.sendCommand(new QueryUsersCommand()).pipe(map((response: QueryUsersResponse) => {
+      return response.users;
+    }));
+  }
+
+  /**
+   * Create a new user
+   */
+  public createUser(userName: string, email: string, password: string, roles: string[], addtionalData: { [key: string]: any })
+    : Observable<CreateUserResponse> {
+    return <Observable<CreateUserResponse>>this.websocket.sendCommand(
+      new CreateUserCommand(userName, email, password, roles, addtionalData));
+  }
+
+  /**
+   * Update an existing user
+   */
+  public updateUser(id: string, userName?: string, email?: string,
+                    password?: string, roles?: string[], addtionalData?: { [key: string]: any })
+    : Observable<UpdateUserResponse> {
+    return <Observable<UpdateUserResponse>>this.websocket.sendCommand(
+      new UpdateUserCommand(id, userName, email, password, roles, addtionalData));
+  }
+
+  /**
+   * Delete user
+   */
+  public deleteUser(id: string)
+    : Observable<DeleteUserResponse> {
+    return <Observable<DeleteUserResponse>>this.websocket.sendCommand(
+      new DeleteUserCommand(id));
+  }
+
+  /**
+   * Get a list of all roles
+   */
+  public getRoles(): Observable<RoleData[]> {
+    return this.websocket.sendCommand(new QueryRolesCommand()).pipe(map((response: QueryRolesResponse) => {
+      return response.roles;
+    }));
+  }
+
+  /**
+   * Create a new role
+   */
+  public createRole(name: string)
+    : Observable<CreateRoleResponse> {
+    return <Observable<CreateRoleResponse>>this.websocket.sendCommand(
+      new CreateRoleCommand(name));
+  }
+
+  /**
+   * Update an existing role
+   */
+  public updateRole(id: string, name: string)
+    : Observable<UpdateRoleResponse> {
+    return <Observable<UpdateRoleResponse>>this.websocket.sendCommand(
+      new UpdateRoleCommand(id, name));
+  }
+
+  /**
+   * Delete role
+   */
+  public deleteRole(id: string)
+    : Observable<DeleteRoleResponse> {
+    return <Observable<DeleteRoleResponse>>this.websocket.sendCommand(
+      new DeleteRoleCommand(id));
   }
 }

@@ -1,0 +1,24 @@
+<h1>Chat example</h1>
+
+<h2>Users</h2>
+<div>
+  <button (click)="selectUser(user)" *ngFor="let user of users$ | async">{{user.userName}}</button>
+</div>
+
+<!--<h2>Roles</h2>-->
+<!--<div *ngFor="let role of roles$ | async">-->
+  <!--{{role | json}}-->
+<!--</div>-->
+
+<h2>Messages</h2>
+<ng-container *ngIf="currentUser$ | async as currentUser">
+  <div *ngFor="let msg of userMessages$ | async">
+    <div *ngIf="msg.userId !== currentUser.id" style="text-align: right">{{msg.content}}</div>
+    <div *ngIf="msg.userId === currentUser.id">{{msg.content}}</div>
+  </div>
+</ng-container>
+
+
+
+<input type="text" [(ngModel)]="message">
+<button type="button" (click)="send()">Send</button>

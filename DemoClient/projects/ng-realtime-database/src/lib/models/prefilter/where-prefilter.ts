@@ -17,4 +17,8 @@ export class WherePrefilter implements IPrefilter {
   public execute(values: any[]) {
     return values;
   }
+
+  public hash() {
+    return `${this.prefilterType},${this.propertyName},${this.comparision},${this.compareValue}`;
+  }
 }

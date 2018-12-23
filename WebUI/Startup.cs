@@ -35,10 +35,13 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
-
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>();
+            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"),
+                new RealtimeDatabase.Models.RealtimeDatabaseOptions() {
+                    Authentication = RealtimeDatabase.Models.RealtimeDatabaseOptions.AuthenticationMode.Custom,
+                    EnableAuthCommands = true
+                });
+
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => cfg.UseFileContext(databasename: "auth"));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(cfg => {
@@ -66,8 +69,7 @@ namespace WebUI
             }
 
             //Add Middleware
-            app.UseRealtimeAuth();
-            app.UseRealtimeDatabase();
+            app.UseRealtimeDatabase(true);
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

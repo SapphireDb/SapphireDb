@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Internal;
+using RealtimeDatabase.Internal.CommandHandler;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Websocket;
@@ -20,8 +22,13 @@ namespace RealtimeDatabase.Extensions
 {
     public static class RealtimeDatabaseExtension
     {
-        public static IApplicationBuilder UseRealtimeDatabase(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseRealtimeDatabase(this IApplicationBuilder builder, bool useAuth = false)
         {
+            if (useAuth)
+            {
+                builder.UseAuthentication();
+            }
+
             builder.Map("/realtimedatabase", (realtimeApp) =>
             {
                 realtimeApp.Map("/socket", (socket) =>
@@ -35,21 +42,24 @@ namespace RealtimeDatabase.Extensions
             return builder;
         }
 
-        public static IApplicationBuilder UseRealtimeAuth(this IApplicationBuilder builder)
-        {
-            builder.UseAuthentication();
-            return builder;
-        }
-
-        public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services)
+        public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services, Action<DbContextOptionsBuilder> dbContextOptions = null, RealtimeDatabaseOptions options = null)
             where ContextType : RealtimeDbContext
         {
-            CommandHandlerMapper commandHandlerMapper = new CommandHandlerMapper();
+            services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
+
+            if (options == null)
+            {
+                options = new RealtimeDatabaseOptions();
+            }
+
+            services.AddSingleton(options);
+
+            CommandHandlerMapper commandHandlerMapper = new CommandHandlerMapper(options);
             services.AddSingleton(commandHandlerMapper);
 
             foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.commandHandlerTypes)
             {
-                services.AddScoped(handler.Value);
+                services.AddTransient(handler.Value);
             }
 
             services.AddSingleton(new DbContextTypeContainer() { DbContextType = typeof(ContextType) });
@@ -91,17 +101,38 @@ namespace RealtimeDatabase.Extensions
                 };
             }
 
-            services.AddDbContext<ContextType>(dbContextOptionsAction);
+            services.AddDbContext<ContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
 
             services.AddSingleton(jwtOptions);
 
             services.AddSingleton(new AuthDbContextTypeContainer() {
                 DbContextType = typeof(ContextType),
-                UserManagerType = typeof(UserManager<UserType>) });
+                UserManagerType = typeof(UserManager<UserType>),
+                UserType = typeof(UserType)
+            });
 
             services.AddScoped<AuthDbContextAccesor>();
 
             services.AddScoped<JwtIssuer>();
+
+            RealtimeDatabaseOptions realtimeDatabaseOptions =
+                (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
+
+            if (realtimeDatabaseOptions.EnableAuthCommands)
+            {
+                CommandHandlerMapper commandHandlerMapper =
+                (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;
+
+                foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.authCommandHandlerTypes)
+                {
+                    services.AddTransient(handler.Value);
+                }
+            }
+            else
+            {
+                services.AddTransient<LoginCommandHandler>();
+                services.AddTransient<RenewCommandHandler>();
+            }
 
             services.AddIdentity<UserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<ContextType>();
 

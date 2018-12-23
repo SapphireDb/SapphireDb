@@ -10,7 +10,7 @@
 <br>
 
 <input type="range" min="0" max="100" value="12" [ngModel]="rangeValue | async">
-<button type="button" (click)="execute()">Execute</button>
+<button type="button" (click)="execute()" [promiseBtn]="testSub">Execute</button>
 
 <br>
 

@@ -19,12 +19,14 @@ import {LoadResponse} from './response/load-response';
 import {CollectionHelper} from '../helper/collection-helper';
 import {QueryCommand} from './command/query-command';
 import {AuthCollectionInfo} from './auth-collection-info';
+import {CollectionValue} from './collection-value';
 
 export class Collection<T> {
   /**
    * Information about Authentication and Authorization of the collection
    */
   public authInfo: AuthCollectionInfo;
+  private collectionValues: CollectionValue<T>[] = [];
 
   constructor(public collectionName: string,
               private websocket: WebsocketService,
@@ -57,29 +59,41 @@ export class Collection<T> {
    * @param prefilters Additional prefilters to query only specific data
    */
   public values(...prefilters: IPrefilter[]): Observable<T[]> {
-    let wsSubscription: Subscription;
+    const index = this.collectionValues.findIndex(c => c.samePrefilters(prefilters));
 
-    const collectionData = new BehaviorSubject<T[]>([]);
-    const subscribeCommand = new SubscribeCommand(this.collectionName, prefilters);
+    let collectionValue: CollectionValue<T>;
+    if (index !== -1) {
+       collectionValue = this.collectionValues[index];
+       collectionValue.subscriberCount++;
+    } else {
+      const subscribeCommand = new SubscribeCommand(this.collectionName, prefilters);
+      collectionValue = new CollectionValue(subscribeCommand.referenceId, prefilters);
 
-    wsSubscription = this.websocket.sendCommand(subscribeCommand, true)
-      .subscribe((response: (QueryResponse | ChangeResponse | UnloadResponse | LoadResponse)) => {
-        if (response.responseType === 'QueryResponse') {
-          collectionData.next((<QueryResponse>response).collection);
-        } else if (response.responseType === 'ChangeResponse') {
-          CollectionHelper.updateCollection<T>(collectionData, this.collectionInformation, <ChangeResponse>response);
-        } else if (response.responseType === 'UnloadResponse') {
-          CollectionHelper.unloadItem<T>(collectionData, this.collectionInformation, <UnloadResponse>response);
-        } else if (response.responseType === 'LoadResponse') {
-          CollectionHelper.loadItem<T>(collectionData, <LoadResponse>response);
-        }
-      });
+      const wsSubscription = this.websocket.sendCommand(subscribeCommand, true)
+        .subscribe((response: (QueryResponse | ChangeResponse | UnloadResponse | LoadResponse)) => {
+          if (response.responseType === 'QueryResponse') {
+            collectionValue.subject.next((<QueryResponse>response).collection);
+          } else if (response.responseType === 'ChangeResponse') {
+            CollectionHelper.updateCollection<T>(collectionValue.subject, this.collectionInformation, <ChangeResponse>response);
+          } else if (response.responseType === 'UnloadResponse') {
+            CollectionHelper.unloadItem<T>(collectionValue.subject, this.collectionInformation, <UnloadResponse>response);
+          } else if (response.responseType === 'LoadResponse') {
+            CollectionHelper.loadItem<T>(collectionValue.subject, <LoadResponse>response);
+          }
+        });
 
-    return collectionData.pipe(finalize(() => {
-      this.websocket.sendCommand(new UnsubscribeCommand(this.collectionName, subscribeCommand.referenceId));
+      collectionValue.setSubscription(wsSubscription);
+      this.collectionValues.push(collectionValue);
+    }
 
-      if (wsSubscription) {
-        wsSubscription.unsubscribe();
+    return collectionValue.subject.pipe(finalize(() => {
+      collectionValue.subscriberCount--;
+
+      if (collectionValue.subscriberCount === 0) {
+        this.websocket.sendCommand(new UnsubscribeCommand(this.collectionName, collectionValue.referenceId));
+        collectionValue.socketSubscription.unsubscribe();
+        const indexToRemove = this.collectionValues.findIndex(c => c.referenceId === collectionValue.referenceId);
+        this.collectionValues.splice(indexToRemove, 1);
       }
     }), pipe(map((array: T[]) => {
       for (const prefilter of prefilters) {

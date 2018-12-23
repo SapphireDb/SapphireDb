@@ -57,9 +57,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             context.RefreshTokens.Remove(rT);
 
-            object usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+            dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
-            IdentityUser user = await (dynamic)contextTypeContainer.UserManagerType.GetMethod("FindByIdAsync").Invoke(usermanager, new object[] { command.UserId });
+            IdentityUser user = await usermanager.FindByIdAsync(command.UserId);
 
             if (user != null)
             {
@@ -80,9 +80,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     RefreshToken = newrT.RefreshKey
                 };
 
-                renewResponse.GenerateUserData(user);
+                renewResponse.UserData = ModelHelper.GenerateUserData(user);
                 renewResponse.UserData["Roles"] =
-                    await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
+                        await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
 
                 await SendMessage(websocketConnection, renewResponse);
                 return;

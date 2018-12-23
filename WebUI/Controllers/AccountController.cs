@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebUI.Data.Authentication;
 using WebUI.Data.ViewModels.Account;
 
@@ -69,11 +70,10 @@ namespace WebUI.Controllers
         public async Task<IActionResult> AddRole(string username, string rolename)
         {
             AppUser appUser = await userManager.FindByNameAsync(username);
-
             if (appUser != null)
             {
                 IdentityRole role = await roleManager.FindByNameAsync(rolename);
-
+           
                 if (role == null)
                 {
                     role = new IdentityRole(rolename);

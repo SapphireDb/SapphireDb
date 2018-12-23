@@ -132,7 +132,7 @@ export class AuthCollectionInfo {
   }
 
   /**
-   * Check if any of the roles can delete in the collection
+   * Check if any of the roles can deleteUser in the collection
    * @param roles The roles to check
    */
   public canRemove(roles: string[]): Observable<boolean> {
@@ -144,7 +144,7 @@ export class AuthCollectionInfo {
   }
 
   /**
-   * Check if any of the roles can delete in the collection
+   * Check if any of the roles can deleteUser in the collection
    * @param roles The roles to check
    */
   public canUpdate(roles: string[]): Observable<boolean> {
