@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, SubscribeCommand command)
+        public Task Handle(WebsocketConnection websocketConnection, SubscribeCommand command)
         {
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {
@@ -33,9 +33,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 websocketConnection.Subscriptions.Add(collectionSubscription);
             }
-        
-            collectionSubscription.TransmittedData =
-                await new QueryCommandHandler(contextAccesor).HandleInner(websocketConnection, command);
+
+            collectionSubscription.TransmittedData = ModelHelper.GetAndSendCollectionSet(GetContext(), command, websocketConnection);
+
+            return Task.CompletedTask;
         }
     }
 }

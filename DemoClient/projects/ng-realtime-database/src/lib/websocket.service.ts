@@ -1,5 +1,5 @@
 import {Inject, Injectable} from '@angular/core';
-import {Observable, Subject} from 'rxjs';
+import {Observable, of, Subject} from 'rxjs';
 import {SubscribeCommand} from './models/command/subscribe-command';
 import {ResponseBase} from './models/response/response-base';
 import {CommandReferences} from './models/command-references';
@@ -93,7 +93,7 @@ export class WebsocketService {
     };
   }
 
-  public sendCommand(command: CommandBase, keep?: boolean): Observable<ResponseBase> {
+  public sendCommand(command: CommandBase, keep?: boolean, onlySend?: boolean): Observable<ResponseBase> {
     this.connectToWebsocket();
 
     const referenceSubject = new Subject<ResponseBase>();
@@ -113,9 +113,17 @@ export class WebsocketService {
       }
     }
 
-    return referenceSubject.pipe(finalize(() => {
+    if (onlySend === true) {
+      referenceSubject.complete();
+      referenceSubject.unsubscribe();
       delete this.commandReferences[command.referenceId];
-    }));
+
+      return of(null);
+    } else {
+      return referenceSubject.pipe(finalize(() => {
+        delete this.commandReferences[command.referenceId];
+      }));
+    }
   }
 
   public registerServerMessageHandler(): Observable<ResponseBase> {

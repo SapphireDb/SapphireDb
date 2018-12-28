@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,15 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class CreateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<CreateUserCommand>
     {
+        private readonly WebsocketConnectionManager connectionManager;
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RoleManager<IdentityRole> roleManager;
 
-        public CreateUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, 
+        public CreateUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, WebsocketConnectionManager connectionManager,
             AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager)
             : base(authDbContextAccesor, serviceProvider)
         {
+            this.connectionManager = connectionManager;
             this.contextTypeContainer = contextTypeContainer;
             this.roleManager = roleManager;
         }
@@ -62,15 +65,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     await usermanager.AddToRolesAsync(newUser, command.Roles);
 
-                    Dictionary<string, object> newUserData = ModelHelper.GenerateUserData(newUser);
-                    newUserData["Roles"] =
-                        await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { newUser });
-
                     await SendMessage(websocketConnection, new CreateUserResponse()
                     {
                         ReferenceId = command.ReferenceId,
-                        NewUser = newUserData
+                        NewUser = await ModelHelper.GenerateUserData(newUser, contextTypeContainer, usermanager)
                     });
+
+                    await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                    await MessageHelper.SendRolesUpdate(context, connectionManager);
                 }
                 else
                 {

@@ -24,7 +24,7 @@ export class MainComponent implements OnInit {
     this.messageCollection = this.db.collection<Message>('messages');
     this.messages$ = this.messageCollection.values();
 
-    this.users$ = combineLatest(this.db.auth.getUsers(), this.db.auth.getUserData()).pipe(map(([users, user]: [UserData[], UserData]) => {
+    this.users$ = combineLatest(this.db.auth.info.getUsers(), this.db.auth.getUserData()).pipe(map(([users, user]: [UserData[], UserData]) => {
       return users.filter(u => u.id !== user.id);
     }));
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,15 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UpdateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateUserCommand>
     {
+        private readonly WebsocketConnectionManager connectionManager;
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RoleManager<IdentityRole> roleManager;
 
-        public UpdateUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, 
+        public UpdateUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, WebsocketConnectionManager connectionManager,
             AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager)
             : base(authDbContextAccesor, serviceProvider)
         {
+            this.connectionManager = connectionManager;
             this.contextTypeContainer = contextTypeContainer;
             this.roleManager = roleManager;
         }
@@ -89,16 +92,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
                             await usermanager.AddToRolesAsync(user, newRoles);
                         }
 
-
-                        Dictionary<string, object> newUserData = ModelHelper.GenerateUserData(user);
-                        newUserData["Roles"] =
-                            await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
-
                         await SendMessage(websocketConnection, new UpdateUserResponse()
                         {
                             ReferenceId = command.ReferenceId,
-                            NewUser = newUserData
+                            NewUser = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
                         });
+
+                        await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                        await MessageHelper.SendRolesUpdate(context, connectionManager);
                     }
                     else
                     {

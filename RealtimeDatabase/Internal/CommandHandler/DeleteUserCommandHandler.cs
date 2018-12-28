@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -15,11 +16,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
     class DeleteUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<DeleteUserCommand>
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
+        private readonly WebsocketConnectionManager connectionManager;
 
-        public DeleteUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
+        public DeleteUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, 
+            IServiceProvider serviceProvider, WebsocketConnectionManager connectionManager)
             : base(authDbContextAccesor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;
+            this.connectionManager = connectionManager;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, DeleteUserCommand command)
@@ -44,6 +48,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     {
                         ReferenceId = command.ReferenceId
                     });
+
+                    await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+                    await MessageHelper.SendRolesUpdate(db, connectionManager);
+
                     return;
                 }
             }

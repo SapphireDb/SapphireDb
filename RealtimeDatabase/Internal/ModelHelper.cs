@@ -2,7 +2,10 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -10,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal
 {
@@ -72,117 +76,7 @@ namespace RealtimeDatabase.Internal
             }
         }
 
-        public static InfoResponse GetInfoResponse(this Type t, RealtimeDbContext db)
-        {
-            string[] primaryKeys = t.GetPrimaryKeyNames(db);
-
-            InfoResponse infoResponse = new InfoResponse()
-            {
-                PrimaryKeys = primaryKeys
-            };
-
-            QueryAuthAttribute queryAuthAttribute = t.GetCustomAttribute<QueryAuthAttribute>();
-
-            Dictionary<string, AuthInfo> propertiesQueryAuthInfo = t.GetProperties()
-                .Where(pi => pi.GetCustomAttribute<QueryAuthAttribute>() != null)
-                .ToDictionary(
-                    pi => pi.Name.ToCamelCase(), 
-                    pi => new AuthInfo()
-                    {
-                        Authentication = true,
-                        Roles = pi.GetCustomAttribute<QueryAuthAttribute>().Roles
-                    }
-                );
-
-            if (queryAuthAttribute != null)
-            {
-                infoResponse.QueryAuth = new PropertyAuthInfo()
-                {
-                    Authentication = true,
-                    Roles = queryAuthAttribute.Roles,
-                    Properties = propertiesQueryAuthInfo
-                };
-            }
-            else
-            {
-                infoResponse.QueryAuth = new PropertyAuthInfo()
-                {
-                    Authentication = false,
-                    Properties = propertiesQueryAuthInfo
-                };
-            }
-
-            CreateAuthAttribute createAuthAttribute= t.GetCustomAttribute<CreateAuthAttribute>();
-
-            if (createAuthAttribute != null)
-            {
-                infoResponse.CreateAuth = new AuthInfo()
-                {
-                    Authentication = true,
-                    Roles = createAuthAttribute.Roles
-                };
-            }
-            else
-            {
-                infoResponse.CreateAuth = new AuthInfo()
-                {
-                    Authentication = false
-                };
-            }
-
-            RemoveAuthAttribute removeAuthAttribute = t.GetCustomAttribute<RemoveAuthAttribute>();
-
-            if (removeAuthAttribute != null)
-            {
-                infoResponse.RemoveAuth = new AuthInfo()
-                {
-                    Authentication = true,
-                    Roles = removeAuthAttribute.Roles
-                };
-            }
-            else
-            {
-                infoResponse.RemoveAuth = new AuthInfo()
-                {
-                    Authentication = false
-                };
-            }
-
-            UpdateAuthAttribute updateAuthAttribute = t.GetCustomAttribute<UpdateAuthAttribute>();
-
-            Dictionary<string, AuthInfo> propertiesUpdateAuthInfo = t.GetProperties()
-                .Where(pi => pi.GetCustomAttribute<UpdatableAttribute>() != null && pi.GetCustomAttribute<UpdateAuthAttribute>() != null)
-                .ToDictionary(
-                    pi => pi.Name.ToCamelCase(),
-                    pi => new AuthInfo()
-                    {
-                        Authentication = true,
-                        Roles = pi.GetCustomAttribute<UpdateAuthAttribute>().Roles
-                    }
-                );
-
-            if (updateAuthAttribute != null)
-            {
-                infoResponse.UpdateAuth = new PropertyAuthInfo()
-                {
-                    Authentication = true,
-                    Roles = updateAuthAttribute.Roles,
-                    Properties = propertiesUpdateAuthInfo
-                };
-            }
-            else
-            {
-                infoResponse.UpdateAuth = new PropertyAuthInfo()
-                {
-                    Authentication = false,
-                    Properties = propertiesUpdateAuthInfo
-                };
-            }
-
-            return infoResponse;
-        }
-
-        public static Dictionary<string, object> GenerateUserData(IdentityUser identityUser)
+        public static async Task<Dictionary<string, object>> GenerateUserData(IdentityUser identityUser, AuthDbContextTypeContainer typeContainer, object usermanager)
         {
             Dictionary<string, object> userData = new Dictionary<string, object>();
             Type t = identityUser.GetType();
@@ -203,7 +97,72 @@ namespace RealtimeDatabase.Internal
                 }
             }
 
+            userData["Roles"] =
+                await(dynamic)typeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { identityUser });
+
             return userData;
+        }
+
+        public static List<object[]> GetAndSendCollectionSet(RealtimeDbContext db, QueryCommand command, WebsocketConnection websocketConnection)
+        {
+            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
+
+            if (property.Key != null)
+            {
+                IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
+
+                foreach (IPrefilter prefilter in command.Prefilters)
+                {
+                    collectionSet = prefilter.Execute(collectionSet);
+                }
+
+                QueryResponse queryResponse = new QueryResponse()
+                {
+                    Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs)).Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)),
+                    ReferenceId = command.ReferenceId,
+                };
+
+                lock (websocketConnection)
+                {
+                    websocketConnection.Websocket.Send(queryResponse).Wait();
+                }
+
+                return collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+            }
+
+            return new List<object[]>();
+        }
+
+        public static IEnumerable<Dictionary<string, object>> GetUsers(IRealtimeAuthContext db,
+            AuthDbContextTypeContainer typeContainer, object usermanager)
+        {
+            IEnumerable<IdentityUser> users = (IQueryable<IdentityUser>)typeContainer
+                .UserManagerType.GetProperty("Users").GetValue(usermanager);
+
+            
+            IEnumerable<Dictionary<string, object>> usersConverted = users
+                .Select(u => GenerateUserData(u, typeContainer, usermanager).Result);
+
+            return usersConverted;
+        }
+
+        public static Dictionary<string, object> GenerateRoleData(IdentityRole identityRole, 
+            IEnumerable<IdentityUserRole<string>> userRoles = null)
+        {
+            return new Dictionary<string, object>
+            {
+                ["Id"] = identityRole.Id,
+                ["Name"] = identityRole.Name,
+                ["NormalizedName"] = identityRole.NormalizedName,
+                ["UserIds"] = userRoles?.Where(ur => ur.RoleId == identityRole.Id).Select(ur => ur.UserId)
+            };
+        }
+
+        public static IEnumerable<Dictionary<string, object>> GetRoles(IRealtimeAuthContext db)
+        {
+            IEnumerable<IdentityUserRole<string>> userRoles = db.UserRoles;
+
+            return db.Roles.Select(r => ModelHelper.GenerateRoleData(r, userRoles));
         }
     }
 }

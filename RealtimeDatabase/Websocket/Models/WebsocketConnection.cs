@@ -22,10 +22,14 @@ namespace RealtimeDatabase.Websocket.Models
 
         public WebSocket Websocket { get; set; }
 
+        public HttpContext HttpContext { get; set; }
+
         public List<CollectionSubscription> Subscriptions { get; set; }
 
         public Dictionary<string, string> MessageSubscriptions { get; set; }
 
-        public HttpContext HttpContext { get; set; }
+        public string UsersSubscription { get; set; }
+
+        public string RolesSubscription { get; set; }
     }
 }

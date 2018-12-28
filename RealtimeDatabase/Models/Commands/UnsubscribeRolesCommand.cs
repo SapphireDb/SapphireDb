@@ -4,7 +4,8 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class QueryRolesCommand : CommandBase
+    class UnsubscribeRolesCommand : CommandBase
     {
+
     }
 }

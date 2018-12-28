@@ -16,15 +16,15 @@ export class ManageComponent implements OnInit {
   constructor(private db: RealtimeDatabase) { }
 
   ngOnInit() {
-    this.users$ = this.db.auth.getUsers();
-    this.roles$ = this.db.auth.getRoles();
+    this.users$ = this.db.auth.info.getUsers();
+    this.roles$ = this.db.auth.info.getRoles();
   }
 
   createUser() {
-    this.db.auth.createUser(
+    this.db.auth.info.createUser(
       faker.internet.userName(),
       faker.internet.email(),
-      faker.internet.password(),
+      'pw1234',
       ['admin', 'superTest'],
       {
         firstName: faker.name.firstName(),
@@ -35,27 +35,27 @@ export class ManageComponent implements OnInit {
   }
 
   updateUser(user: UserData) {
-    this.db.auth.updateUser(user.id, null,
+    this.db.auth.info.updateUser(user.id, null,
       null, null, ['user', 'test123'], { firstName: 'test123' })
       .subscribe(console.log);
   }
 
   deleteUser(user: UserData) {
-    this.db.auth.deleteUser(user.id).subscribe(console.log);
+    this.db.auth.info.deleteUser(user.id).subscribe(console.log);
   }
 
   createRole() {
-    this.db.auth.createRole(faker.random.word())
+    this.db.auth.info.createRole(faker.random.word())
       .subscribe(console.log);
   }
 
   updateRole(role: RoleData) {
-    this.db.auth.updateRole(role.id, faker.random.word())
+    this.db.auth.info.updateRole(role.id, faker.random.word())
       .subscribe(console.log);
   }
 
   deleteRole(role: RoleData) {
-    this.db.auth.deleteRole(role.id)
+    this.db.auth.info.deleteRole(role.id)
       .subscribe(console.log);
   }
 }

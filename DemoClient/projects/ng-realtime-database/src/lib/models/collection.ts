@@ -90,7 +90,7 @@ export class Collection<T> {
       collectionValue.subscriberCount--;
 
       if (collectionValue.subscriberCount === 0) {
-        this.websocket.sendCommand(new UnsubscribeCommand(this.collectionName, collectionValue.referenceId));
+        this.websocket.sendCommand(new UnsubscribeCommand(this.collectionName, collectionValue.referenceId), false, true);
         collectionValue.socketSubscription.unsubscribe();
         const indexToRemove = this.collectionValues.findIndex(c => c.referenceId === collectionValue.referenceId);
         this.collectionValues.splice(indexToRemove, 1);

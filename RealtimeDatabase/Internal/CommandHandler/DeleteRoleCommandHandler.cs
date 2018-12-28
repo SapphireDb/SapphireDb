@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,17 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class DeleteRoleCommandHandler : AuthCommandHandlerBase, ICommandHandler<DeleteRoleCommand>
     {
+        private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly WebsocketConnectionManager connectionManager;
 
-        public DeleteRoleCommandHandler(AuthDbContextAccesor authDbContextAccesor,
-            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager)
+        public DeleteRoleCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer,
+            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager, WebsocketConnectionManager connectionManager)
             : base(authDbContextAccesor, serviceProvider)
         {
+            this.contextTypeContainer = contextTypeContainer;
             this.roleManager = roleManager;
+            this.connectionManager = connectionManager;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, DeleteRoleCommand command)
@@ -42,6 +47,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     {
                         ReferenceId = command.ReferenceId
                     });
+
+                    await MessageHelper.SendRolesUpdate(db, connectionManager);
+                    
+                    dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+                    await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
                 }
                 else
                 {

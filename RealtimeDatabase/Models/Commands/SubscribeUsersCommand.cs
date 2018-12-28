@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class QueryUsersCommand : CommandBase
+    class SubscribeUsersCommand : CommandBase
     {
     }
 }

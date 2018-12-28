@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,17 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UpdateRoleCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateRoleCommand>
     {
+        private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly WebsocketConnectionManager connectionManager;
 
-        public UpdateRoleCommandHandler(AuthDbContextAccesor authDbContextAccesor,
-            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager)
+        public UpdateRoleCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer,
+            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager, WebsocketConnectionManager connectionManager)
             : base(authDbContextAccesor, serviceProvider)
         {
+            this.contextTypeContainer = contextTypeContainer;
             this.roleManager = roleManager;
+            this.connectionManager = connectionManager;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, UpdateRoleCommand command)
@@ -40,13 +45,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     await SendMessage(websocketConnection, new UpdateRoleResponse()
                     {
                         ReferenceId = command.ReferenceId,
-                        NewRole = new Dictionary<string, object>()
-                        {
-                            ["Id"] = role.Id,
-                            ["Name"] = role.Name,
-                            ["NormalizedName"] = role.NormalizedName
-                        }
+                        NewRole = ModelHelper.GenerateRoleData(role)
                     });
+
+                    IRealtimeAuthContext db = GetContext();
+
+                    await MessageHelper.SendRolesUpdate(db, connectionManager);
+
+                    if (db.UserRoles.Where(ur => ur.RoleId == role.Id).Any())
+                    {
+                        dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+                        await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+                    }
                 }
                 else
                 {

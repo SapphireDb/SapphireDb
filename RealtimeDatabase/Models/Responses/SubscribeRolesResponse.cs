@@ -4,8 +4,8 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Responses
 {
-    class QueryUsersResponse : ResponseBase
+    class SubscribeRolesResponse : ResponseBase
     {
-        public List<Dictionary<string, object>> Users { get; set; }
+        public List<Dictionary<string, object>> Roles { get; set; }
     }
 }

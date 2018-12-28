@@ -77,12 +77,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     AuthToken = await jwtIssuer.GenerateEncodedToken(user),
                     ExpiresAt = jwtOptions.Expiration,
                     ValidFor = jwtOptions.ValidFor.TotalSeconds,
-                    RefreshToken = newrT.RefreshKey
+                    RefreshToken = newrT.RefreshKey,
+                    UserData = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
                 };
-
-                renewResponse.UserData = ModelHelper.GenerateUserData(user);
-                renewResponse.UserData["Roles"] =
-                        await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
 
                 await SendMessage(websocketConnection, renewResponse);
                 return;

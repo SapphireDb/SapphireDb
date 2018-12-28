@@ -33,7 +33,7 @@ export class Messaging {
         return response.message;
       }),
       finalize(() => {
-        this.websocket.sendCommand(new UnsubscribeMessageCommand(topic, subscribeCommand.referenceId));
+        this.websocket.sendCommand(new UnsubscribeMessageCommand(topic, subscribeCommand.referenceId), false, true);
       })
     );
   }
@@ -43,7 +43,7 @@ export class Messaging {
    * @param data The data to send
    */
   public send(data: any) {
-    this.websocket.sendCommand(new MessageCommand(data));
+    this.websocket.sendCommand(new MessageCommand(data), false, true);
   }
 
   /**
@@ -52,6 +52,6 @@ export class Messaging {
    * @param data The data to publish
    */
   public publish(topic: string, data: any) {
-    this.websocket.sendCommand(new PublishCommand(topic, data));
+    this.websocket.sendCommand(new PublishCommand(topic, data), false, true);
   }
 }

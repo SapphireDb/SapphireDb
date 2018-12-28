@@ -17,6 +17,7 @@ export * from './lib/helper/action-helper';
 export * from './lib/models/collection';
 export * from './lib/models/auth-collection-info';
 export * from './lib/models/auth';
+export * from './lib/models/auth-info';
 export * from './lib/models/messaging';
 export * from './lib/models/user-data';
 export * from './lib/models/role-data';

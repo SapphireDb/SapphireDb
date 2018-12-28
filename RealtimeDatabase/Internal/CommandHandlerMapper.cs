@@ -61,7 +61,7 @@ namespace RealtimeDatabase.Internal
                         return;
                     }
 
-                    if (handlerType == typeof(QueryUsersCommandHandler) || handlerType == typeof(QueryRolesCommandHandler))
+                    if (handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler))
                     {
                         if (!options.AuthInfoAllowFunction(websocketConnection))
                         {
