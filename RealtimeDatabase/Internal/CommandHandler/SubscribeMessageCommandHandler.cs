@@ -15,14 +15,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, SubscribeMessageCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, SubscribeMessageCommand command)
         {
-            lock (websocketConnection)
+            await websocketConnection.Lock.WaitAsync();
+
+            try
             {
                 websocketConnection.MessageSubscriptions.Add(command.ReferenceId, command.Topic);
             }
-
-            return Task.CompletedTask;
+            finally
+            {
+                websocketConnection.Lock.Release();
+            }
         }
     }
 }

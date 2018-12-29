@@ -92,7 +92,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                             await usermanager.AddToRolesAsync(user, newRoles);
                         }
 
-                        await SendMessage(websocketConnection, new UpdateUserResponse()
+                        await websocketConnection.Send(new UpdateUserResponse()
                         {
                             ReferenceId = command.ReferenceId,
                             NewUser = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
@@ -103,7 +103,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     }
                     else
                     {
-                        await SendMessage(websocketConnection, new UpdateUserResponse()
+                        await websocketConnection.Send(new UpdateUserResponse()
                         {
                             ReferenceId = command.ReferenceId,
                             IdentityErrors = result.Errors
@@ -112,7 +112,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 else
                 {
-                    await SendMessage(websocketConnection, new UpdateUserResponse()
+                    await websocketConnection.Send(new UpdateUserResponse()
                     {
                         Error = new Exception("No user with this id was found.")
                     });
@@ -120,7 +120,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (Exception ex)
             {
-                await SendMessage(websocketConnection, new CreateUserResponse()
+                await websocketConnection.Send(new CreateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex

@@ -15,9 +15,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, UnsubscribeCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, UnsubscribeCommand command)
         {
-            lock (websocketConnection)
+            await websocketConnection.Lock.WaitAsync();
+
+            try
             {
                 int index = websocketConnection.Subscriptions.FindIndex(s => s.ReferenceId == command.ReferenceId);
 
@@ -26,8 +28,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     websocketConnection.Subscriptions.RemoveAt(index);
                 }
             }
-
-            return Task.CompletedTask;
+            finally
+            {
+                websocketConnection.Lock.Release();
+            }
         }
     }
 }

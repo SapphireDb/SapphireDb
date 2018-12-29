@@ -103,36 +103,6 @@ namespace RealtimeDatabase.Internal
             return userData;
         }
 
-        public static List<object[]> GetAndSendCollectionSet(RealtimeDbContext db, QueryCommand command, WebsocketConnection websocketConnection)
-        {
-            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
-
-            if (property.Key != null)
-            {
-                IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
-
-                foreach (IPrefilter prefilter in command.Prefilters)
-                {
-                    collectionSet = prefilter.Execute(collectionSet);
-                }
-
-                QueryResponse queryResponse = new QueryResponse()
-                {
-                    Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs)).Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)),
-                    ReferenceId = command.ReferenceId,
-                };
-
-                lock (websocketConnection)
-                {
-                    websocketConnection.Websocket.Send(queryResponse).Wait();
-                }
-
-                return collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
-            }
-
-            return new List<object[]>();
-        }
-
         public static IEnumerable<Dictionary<string, object>> GetUsers(IRealtimeAuthContext db,
             AuthDbContextTypeContainer typeContainer, object usermanager)
         {
@@ -162,7 +132,7 @@ namespace RealtimeDatabase.Internal
         {
             IEnumerable<IdentityUserRole<string>> userRoles = db.UserRoles;
 
-            return db.Roles.Select(r => ModelHelper.GenerateRoleData(r, userRoles));
+            return db.Roles.Select(r => GenerateRoleData(r, userRoles));
         }
     }
 }

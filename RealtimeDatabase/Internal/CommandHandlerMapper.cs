@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal
 {
@@ -34,7 +35,7 @@ namespace RealtimeDatabase.Internal
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
         }
 
-        public void ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, WebsocketConnection websocketConnection)
+        public async Task ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, WebsocketConnection websocketConnection)
         {
             string commandTypeName = command.GetType().Name;
 
@@ -53,11 +54,11 @@ namespace RealtimeDatabase.Internal
                 {
                     if (!websocketConnection.HttpContext.User.Identity.IsAuthenticated)
                     {
-                        websocketConnection.Websocket.Send(new ResponseBase()
+                        await websocketConnection.Send(new ResponseBase()
                         {
                             ReferenceId = command.ReferenceId,
                             Error = new Exception("User needs authentication to execute auth commands.")
-                        }).Wait();
+                        });
                         return;
                     }
 
@@ -65,21 +66,21 @@ namespace RealtimeDatabase.Internal
                     {
                         if (!options.AuthInfoAllowFunction(websocketConnection))
                         {
-                            websocketConnection.Websocket.Send(new ResponseBase()
+                            await websocketConnection.Send(new ResponseBase()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Error = new Exception("User is not allowed to execute auth info commands.")
-                            }).Wait();
+                            });
                             return;
                         }
                     }
                     else if (!options.AuthAllowFunction(websocketConnection))
                     {
-                        websocketConnection.Websocket.Send(new ResponseBase()
+                        await websocketConnection.Send(new ResponseBase()
                         {
                             ReferenceId = command.ReferenceId,
                             Error = new Exception("User is not allowed to execute auth commands.")
-                        }).Wait();
+                        });
                     }
                 }
             }
@@ -88,11 +89,11 @@ namespace RealtimeDatabase.Internal
             {
                 if (handlerType != typeof(LoginCommandHandler) && !websocketConnection.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    websocketConnection.Websocket.Send(new ResponseBase()
+                    await websocketConnection.Send(new ResponseBase()
                     {
                         ReferenceId = command.ReferenceId,
                         Error = new Exception("Authentication required to perform this action")
-                    }).Wait();
+                    });
                     return;
                 }
             }

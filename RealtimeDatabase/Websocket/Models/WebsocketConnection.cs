@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Websocket.Models
 {
@@ -16,6 +18,7 @@ namespace RealtimeDatabase.Websocket.Models
             MessageSubscriptions = new Dictionary<string, string>();
             Websocket = _webSocket;
             HttpContext = _context;
+            Lock = new SemaphoreSlim(1, 1);
         }
 
         public Guid Id { get; set; }
@@ -31,5 +34,21 @@ namespace RealtimeDatabase.Websocket.Models
         public string UsersSubscription { get; set; }
 
         public string RolesSubscription { get; set; }
+
+        public SemaphoreSlim Lock { get; }
+
+        public async Task Send(object message)
+        {
+            await Lock.WaitAsync();
+
+            try
+            {
+                await Websocket.Send(message);
+            }
+            finally
+            {
+                Lock.Release();
+            }
+        }
     }
 }

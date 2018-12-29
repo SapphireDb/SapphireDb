@@ -41,11 +41,11 @@ namespace RealtimeDatabase.Websocket
                 {
                     try
                     {
-                        commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection);
+                        await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection);
                     }
                     catch (Exception ex)
                     {
-                        await connection.Websocket.Send(new ResponseBase()
+                        await connection.Send(new ResponseBase()
                         {
                             ReferenceId = command.ReferenceId,
                             Error = ex

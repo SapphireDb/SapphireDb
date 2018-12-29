@@ -65,7 +65,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     await usermanager.AddToRolesAsync(newUser, command.Roles);
 
-                    await SendMessage(websocketConnection, new CreateUserResponse()
+                    await websocketConnection.Send(new CreateUserResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         NewUser = await ModelHelper.GenerateUserData(newUser, contextTypeContainer, usermanager)
@@ -76,7 +76,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 else
                 {
-                    await SendMessage(websocketConnection, new CreateUserResponse()
+                    await websocketConnection.Send(new CreateUserResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
@@ -85,7 +85,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (Exception ex)
             {
-                await SendMessage(websocketConnection, new CreateUserResponse()
+                await websocketConnection.Send(new CreateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex

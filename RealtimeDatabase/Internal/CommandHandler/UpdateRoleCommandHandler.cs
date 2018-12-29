@@ -42,7 +42,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (result.Succeeded)
                 {
-                    await SendMessage(websocketConnection, new UpdateRoleResponse()
+                    await websocketConnection.Send(new UpdateRoleResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         NewRole = ModelHelper.GenerateRoleData(role)
@@ -60,7 +60,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 else
                 {
-                    await SendMessage(websocketConnection, new UpdateRoleResponse()
+                    await websocketConnection.Send(new UpdateRoleResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
@@ -69,7 +69,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await SendMessage(websocketConnection, new UpdateRoleResponse()
+                await websocketConnection.Send(new UpdateRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Role not found")

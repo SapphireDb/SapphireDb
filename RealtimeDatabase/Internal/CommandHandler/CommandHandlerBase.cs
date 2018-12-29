@@ -20,13 +20,5 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             return contextAccesor.GetContext();
         }
-
-        public Task SendMessage(WebsocketConnection websocketConnection, object message)
-        {
-            lock (websocketConnection)
-            {
-                return websocketConnection.Websocket.Send(message);
-            }
-        }
     }
 }

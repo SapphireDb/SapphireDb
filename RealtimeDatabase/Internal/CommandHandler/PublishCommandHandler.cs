@@ -20,10 +20,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.messageSender = messageSender;
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, PublishCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, PublishCommand command)
         {
-            messageSender.Publish(command.Topic, command.Data);
-            return Task.CompletedTask;
+            await messageSender.Publish(command.Topic, command.Data);
         }
     }
 }

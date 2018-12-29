@@ -17,13 +17,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
         public QueryCommandHandler(DbContextAccesor dbContextAccesor)
             : base(dbContextAccesor)
         {
-
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, QueryCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, QueryCommand command)
         {
-            ModelHelper.GetAndSendCollectionSet(GetContext(), command, websocketConnection);
-            return Task.CompletedTask;
+            await MessageHelper.SendCollection(GetContext(), command, websocketConnection);
         }
     }
 }

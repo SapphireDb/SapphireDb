@@ -6,6 +6,7 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Models.Actions
 {
@@ -14,17 +15,14 @@ namespace RealtimeDatabase.Models.Actions
         public WebsocketConnection WebsocketConnection;
         public ExecuteCommand ExecuteCommand;
 
-        public void Notify(object data)
+        public async Task Notify(object data)
         {
-            lock (WebsocketConnection)
+            await WebsocketConnection.Send(new ExecuteResponse()
             {
-                WebsocketConnection.Websocket.Send(new ExecuteResponse()
-                {
-                    ReferenceId = ExecuteCommand.ReferenceId,
-                    Result = data,
-                    Type = ExecuteResponse.ExecuteResponseType.Notify
-                }).Wait();
-            }
+                ReferenceId = ExecuteCommand.ReferenceId,
+                Result = data,
+                Type = ExecuteResponse.ExecuteResponseType.Notify
+            });
         }
     }
 }

@@ -8,7 +8,6 @@ using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -44,7 +43,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
                         {
-                            await SendMessage(websocketConnection, new ExecuteResponse()
+                            await websocketConnection.Send(new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Error = new Exception("User is not allowed to execute actions of this handler.")
@@ -55,7 +54,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                         if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
                         {
-                            await SendMessage(websocketConnection, new ExecuteResponse()
+                            await websocketConnection.Send(new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Error = new Exception("User is not allowed to execute action.")
@@ -97,7 +96,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                                 }
                             }
 
-                            await SendMessage(websocketConnection, new ExecuteResponse()
+                            await websocketConnection.Send(new ExecuteResponse()
                             {
                                 ReferenceId = command.ReferenceId,
                                 Result = result
@@ -108,7 +107,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     }
                 }
 
-                await SendMessage(websocketConnection, new ExecuteResponse()
+                await websocketConnection.Send(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("No action to execute was found.")
@@ -116,7 +115,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (RuntimeBinderException)
             {
-                await SendMessage(websocketConnection, new ExecuteResponse()
+                await websocketConnection.Send(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Result = null
@@ -124,7 +123,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (Exception ex)
             {
-                await SendMessage(websocketConnection, new ExecuteResponse()
+                await websocketConnection.Send(new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex

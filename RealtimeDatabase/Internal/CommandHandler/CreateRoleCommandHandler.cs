@@ -34,7 +34,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (result.Succeeded)
             {
-                await SendMessage(websocketConnection, new CreateRoleResponse()
+                await websocketConnection.Send(new CreateRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     NewRole = ModelHelper.GenerateRoleData(newRole)
@@ -44,7 +44,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await SendMessage(websocketConnection, new CreateRoleResponse()
+                await websocketConnection.Send(new CreateRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     IdentityErrors = result.Errors

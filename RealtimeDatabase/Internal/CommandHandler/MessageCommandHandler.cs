@@ -20,10 +20,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, MessageCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, MessageCommand command)
         {
-            messageSender.Send(command.Data);
-            return Task.CompletedTask;
+            await messageSender.Send(command.Data);
         }
     }
 }

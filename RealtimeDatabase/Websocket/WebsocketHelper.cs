@@ -1,4 +1,5 @@
 ﻿using RealtimeDatabase.Internal;
+using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;

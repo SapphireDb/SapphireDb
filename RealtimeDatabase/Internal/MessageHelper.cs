@@ -1,4 +1,6 @@
 ﻿using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
@@ -130,7 +132,7 @@ namespace RealtimeDatabase.Internal
 
             foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !String.IsNullOrEmpty(wsc.UsersSubscription)))
             {
-                await ws.Websocket.Send(new SubscribeUsersResponse()
+                await ws.Send(new SubscribeUsersResponse()
                 {
                     ReferenceId = ws.UsersSubscription,
                     Users = users
@@ -144,12 +146,42 @@ namespace RealtimeDatabase.Internal
 
             foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !String.IsNullOrEmpty(wsc.RolesSubscription)))
             {
-                await ws.Websocket.Send(new SubscribeRolesResponse()
+                await ws.Send(new SubscribeRolesResponse()
                 {
                     ReferenceId = ws.RolesSubscription,
                     Roles = roles
                 });
             }
+        }
+
+        public static async Task<List<object[]>> SendCollection(RealtimeDbContext db, QueryCommand command, WebsocketConnection websocketConnection)
+        {
+            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
+
+            if (property.Key != null)
+            {
+                IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
+
+                foreach (IPrefilter prefilter in command.Prefilters)
+                {
+                    collectionSet = prefilter.Execute(collectionSet);
+                }
+
+                collectionSet = collectionSet.ToList();
+
+                QueryResponse queryResponse = new QueryResponse()
+                {
+                    Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs))
+                                .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)).ToList(),
+                    ReferenceId = command.ReferenceId,
+                };
+
+                List<object[]> result = collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+                await websocketConnection.Send(queryResponse);
+                return result;
+            }
+
+            return new List<object[]>();
         }
     }
 }

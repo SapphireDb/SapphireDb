@@ -42,9 +42,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     IRealtimeAuthContext db = GetContext();
 
                     db.UserRoles.RemoveRange(db.UserRoles.Where(ur => ur.UserId == user.Id));
+                    db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(rt => rt.UserId == user.Id));
                     db.SaveChanges();
 
-                    await SendMessage(websocketConnection, new DeleteUserResponse()
+                    await websocketConnection.Send(new DeleteUserResponse()
                     {
                         ReferenceId = command.ReferenceId
                     });
@@ -56,7 +57,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
             }
 
-            await SendMessage(websocketConnection, new DeleteUserResponse()
+            await websocketConnection.Send(new DeleteUserResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Error = new Exception("Deleting user failed")

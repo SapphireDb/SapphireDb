@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -25,12 +26,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             object usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
-            lock (websocketConnection)
+            await websocketConnection.Lock.WaitAsync();
+
+            try
             {
                 websocketConnection.UsersSubscription = command.ReferenceId;
             }
+            finally
+            {
+                websocketConnection.Lock.Release();
+            }
 
-            await SendMessage(websocketConnection, new SubscribeUsersResponse()
+            await websocketConnection.Send(new SubscribeUsersResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Users = ModelHelper.GetUsers(GetContext(), contextTypeContainer, usermanager).ToList()

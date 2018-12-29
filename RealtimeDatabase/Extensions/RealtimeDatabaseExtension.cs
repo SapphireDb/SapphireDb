@@ -63,13 +63,13 @@ namespace RealtimeDatabase.Extensions
             }
 
             services.AddSingleton(new DbContextTypeContainer() { DbContextType = typeof(ContextType) });
-            services.AddScoped<DbContextAccesor>();
+            services.AddTransient<DbContextAccesor>();
 
             services.AddScoped<RealtimeDatabaseNotifier>();
 
             services.AddSingleton<WebsocketConnectionManager>();
-            services.AddScoped<WebsocketChangeNotifier>();
-            services.AddScoped<WebsocketCommandHandler>();
+            services.AddTransient<WebsocketChangeNotifier>();
+            services.AddTransient<WebsocketCommandHandler>();
 
             services.AddSingleton<RealtimeMessageSender>();
 
@@ -111,9 +111,9 @@ namespace RealtimeDatabase.Extensions
                 UserType = typeof(UserType)
             });
 
-            services.AddScoped<AuthDbContextAccesor>();
+            services.AddTransient<AuthDbContextAccesor>();
 
-            services.AddScoped<JwtIssuer>();
+            services.AddTransient<JwtIssuer>();
 
             RealtimeDatabaseOptions realtimeDatabaseOptions =
                 (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;

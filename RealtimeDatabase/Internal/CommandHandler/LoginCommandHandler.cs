@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             if (String.IsNullOrEmpty(command.Username) || String.IsNullOrEmpty(command.Password))
             {
-                await SendMessage(websocketConnection, new LoginResponse()
+                await websocketConnection.Send(new LoginResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Username and password cannot be empty")
@@ -67,12 +68,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
                         UserData = await ModelHelper.GenerateUserData(userToVerify, contextTypeContainer, usermanager)
                     };
 
-                    await SendMessage(websocketConnection, loginResponse);
+                    await websocketConnection.Send(loginResponse);
                     return;
                 }
             }
 
-            await SendMessage(websocketConnection, new LoginResponse()
+            await websocketConnection.Send(new LoginResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Error = new Exception("Login failed")

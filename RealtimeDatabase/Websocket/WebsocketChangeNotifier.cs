@@ -22,7 +22,7 @@ namespace RealtimeDatabase.Websocket
             dbContextAccesor = _dbContextAccesor;
         }
 
-        public async Task HandleChanges(List<ChangeResponse> changes)
+        public Task HandleChanges(List<ChangeResponse> changes)
         {
             RealtimeDbContext db = dbContextAccesor.GetContext();
 
@@ -71,15 +71,15 @@ namespace RealtimeDatabase.Websocket
                                     {
                                         change.ReferenceId = cs.ReferenceId;
                                         change.Value = change.Value.GetAuthenticatedQueryModel(connection);
-                                        await connection.Websocket.Send(JsonHelper.Serialize(change));
+                                        _ = connection.Send(change);
                                     }
                                 }
                                 else
                                 {
-                                    await connection.Websocket.Send(JsonHelper.Serialize(new LoadResponse() {
+                                    _ = connection.Send(new LoadResponse() {
                                         NewObject = obj.GetAuthenticatedQueryModel(connection),
                                         ReferenceId = cs.ReferenceId
-                                    }));
+                                    });
                                 }
                             }
 
@@ -87,10 +87,10 @@ namespace RealtimeDatabase.Websocket
                             {
                                 if (!currentCollectionPrimaryValues.Any(pks => !pks.Except(transmittedObject).Any()))
                                 {
-                                    await connection.Websocket.Send(JsonHelper.Serialize(new UnloadResponse() {
+                                    _ = connection.Send(new UnloadResponse() {
                                         PrimaryValues = transmittedObject,
                                         ReferenceId = cs.ReferenceId
-                                    }));
+                                    });
                                 }
                             }
 
@@ -99,6 +99,8 @@ namespace RealtimeDatabase.Websocket
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }

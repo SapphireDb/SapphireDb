@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             if (String.IsNullOrEmpty(command.UserId) || String.IsNullOrEmpty(command.RefreshToken))
             {
-                await SendMessage(websocketConnection, new RenewResponse()
+                await websocketConnection.Send(new RenewResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Userid and refresh token cannot be empty")
@@ -47,7 +48,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (rT == null)
             {
-                await SendMessage(websocketConnection, new RenewResponse()
+                await websocketConnection.Send(new RenewResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Wrong refresh token")
@@ -81,11 +82,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     UserData = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
                 };
 
-                await SendMessage(websocketConnection, renewResponse);
+                await websocketConnection.Send(renewResponse);
                 return;
             }
 
-            await SendMessage(websocketConnection, new RenewResponse()
+            await websocketConnection.Send(new RenewResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Error = new Exception("Renew failed")

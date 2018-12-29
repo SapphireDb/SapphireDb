@@ -29,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 InfoResponse infoResponse = property.Key.GetInfoResponse(db);
                 infoResponse.ReferenceId = command.ReferenceId;
-                await SendMessage(websocketConnection, infoResponse);
+                await websocketConnection.Send(infoResponse);
             }
         }
     }

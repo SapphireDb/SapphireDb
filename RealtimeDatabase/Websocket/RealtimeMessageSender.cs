@@ -18,34 +18,29 @@ namespace RealtimeDatabase.Websocket
             WebsocketConnectionManager = websocketConnectionManager;
         }
 
-        public void Send(object message)
+        public async Task Send(object message)
         {
             foreach (WebsocketConnection connection in WebsocketConnectionManager.connections)
             {
-                lock (connection)
+                await connection.Send(new MessageResponse()
                 {
-                    connection.Websocket.Send(new MessageResponse() {
-                        Data = message
-                    }).Wait();
-                }
+                    Data = message
+                });
             }
         }
 
-        public void Send(Func<WebsocketConnection, bool> filter, object message)
+        public async Task Send(Func<WebsocketConnection, bool> filter, object message)
         {
             foreach (WebsocketConnection connection in WebsocketConnectionManager.connections.Where(filter))
             {
-                lock (connection)
+                await connection.Send(new MessageResponse()
                 {
-                    connection.Websocket.Send(new MessageResponse()
-                    {
-                        Data = message
-                    }).Wait();
-                }
+                    Data = message
+                });
             }
         }
 
-        public void Publish(string topic, object message)
+        public async Task Publish(string topic, object message)
         {
             foreach (WebsocketConnection connection in 
                 WebsocketConnectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
@@ -53,14 +48,11 @@ namespace RealtimeDatabase.Websocket
                 foreach (string subscriptionId in 
                     connection.MessageSubscriptions.Where(s => s.Value.ToLowerInvariant() == topic).Select(s => s.Key))
                 {
-                    lock (connection)
+                    await connection.Send(new TopicResponse()
                     {
-                        connection.Websocket.Send(new TopicResponse()
-                        {
-                            ReferenceId = subscriptionId,
-                            Message = message
-                        }).Wait();
-                    }
+                        ReferenceId = subscriptionId,
+                        Message = message
+                    });
                 }
             }
         }

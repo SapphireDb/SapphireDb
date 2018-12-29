@@ -43,7 +43,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     db.UserRoles.RemoveRange(db.UserRoles.Where(ur => ur.RoleId == role.Id));
                     db.SaveChanges();
 
-                    await SendMessage(websocketConnection, new DeleteRoleResponse()
+                    await websocketConnection.Send(new DeleteRoleResponse()
                     {
                         ReferenceId = command.ReferenceId
                     });
@@ -55,7 +55,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 else
                 {
-                    await SendMessage(websocketConnection, new DeleteRoleResponse()
+                    await websocketConnection.Send(new DeleteRoleResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
@@ -64,7 +64,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await SendMessage(websocketConnection, new DeleteRoleResponse()
+                await websocketConnection.Send(new DeleteRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Role not found")

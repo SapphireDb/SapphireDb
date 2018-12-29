@@ -16,14 +16,14 @@ namespace WebUI.Actions
             MessageSender = messageSender;
         }
 
-        public void Publish(string message)
+        public async Task Publish(string message)
         {
-            MessageSender.Send(message);
+            await MessageSender.Send(message);
         }
 
-        public void SendToAdmin(string message)
+        public async Task SendToAdmin(string message)
         {
-            MessageSender.Send(c => c.HttpContext.User.IsInRole("admin"), message);
+            await MessageSender.Send(c => c.HttpContext.User.IsInRole("admin"), message);
         }
     }
 }

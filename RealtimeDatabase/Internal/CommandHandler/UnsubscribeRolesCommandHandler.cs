@@ -15,14 +15,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public Task Handle(WebsocketConnection websocketConnection, UnsubscribeRolesCommand command)
+        public async Task Handle(WebsocketConnection websocketConnection, UnsubscribeRolesCommand command)
         {
-            lock (websocketConnection)
+            await websocketConnection.Lock.WaitAsync();
+
+            try
             {
                 websocketConnection.RolesSubscription = null;
             }
-
-            return Task.CompletedTask;
+            finally
+            {
+                websocketConnection.Lock.Release();
+            }
         }
     }
 }
