@@ -4,6 +4,7 @@ import {RealtimeDatabaseOptions} from './models/realtime-database-options';
 import {WebsocketService} from './websocket.service';
 import {CollectionInformationService} from './collection-information.service';
 import {CollectionManagerService} from './collection-manager.service';
+import {RealtimeAuthGuard} from './realtime-auth.guard';
 
 const defaultOptions: RealtimeDatabaseOptions = {
   serverBaseUrl: `${location.hostname}:${location.port}`,
@@ -18,7 +19,8 @@ const defaultOptions: RealtimeDatabaseOptions = {
     WebsocketService,
     CollectionInformationService,
     CollectionManagerService,
-    { provide: 'realtimedatabase.options', useValue: defaultOptions}
+    { provide: 'realtimedatabase.options', useValue: defaultOptions},
+    RealtimeAuthGuard
   ]
 })
 export class RealtimeDatabaseModule {

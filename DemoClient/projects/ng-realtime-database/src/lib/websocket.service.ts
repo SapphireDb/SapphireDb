@@ -73,15 +73,15 @@ export class WebsocketService {
     };
 
     this.socket.onclose = () => {
-      for (const key of Object.keys(this.commandReferences)) {
-        const commandReference = this.commandReferences[key];
+      // for (const key of Object.keys(this.commandReferences)) {
+      //   const commandReference = this.commandReferences[key];
 
-        if (!commandReference.keep) {
-          commandReference.subject$.error('Websocket connection lost.');
-          commandReference.subject$.complete();
-          delete this.commandReferences[key];
-        }
-      }
+        // if (!commandReference.keep) {
+        //   commandReference.subject$.error('Websocket connection lost.');
+        //   commandReference.subject$.complete();
+        //   delete this.commandReferences[key];
+        // }
+      // }
 
       setTimeout(() => {
         this.connectToWebsocket();

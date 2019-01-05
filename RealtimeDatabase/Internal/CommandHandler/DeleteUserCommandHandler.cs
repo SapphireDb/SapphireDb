@@ -34,8 +34,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (user != null)
             {
-                IdentityResult result = 
-                    await(dynamic)contextTypeContainer.UserManagerType.GetMethod("DeleteAsync").Invoke(usermanager, new object[] { user });
+                IdentityResult result =
+                    await (dynamic)contextTypeContainer.UserManagerType.GetMethod("DeleteAsync").Invoke(usermanager, new object[] { user });
 
                 if (result.Succeeded)
                 {
@@ -56,6 +56,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     return;
                 }
             }
+
 
             await websocketConnection.Send(new DeleteUserResponse()
             {

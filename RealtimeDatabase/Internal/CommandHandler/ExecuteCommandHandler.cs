@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.CSharp.RuntimeBinder;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Actions;
@@ -19,12 +20,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
     {
         private readonly ActionMapper actionMapper;
         private readonly IServiceProvider serviceProvider;
+        private readonly ILogger<ExecuteCommandHandler> logger;
 
-        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper _actionMapper, IServiceProvider _serviceProvider)
+        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper _actionMapper, IServiceProvider _serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccesor)
         {
             actionMapper = _actionMapper;
             serviceProvider = _serviceProvider;
+            this.logger = logger;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, ExecuteCommand command)
@@ -102,6 +105,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
                                 Result = result
                             });
 
+                            logger.LogInformation("Executed " + actionMethod.Name + " in " + actionMethod.DeclaringType.Name);
+
                             return;
                         }
                     }
@@ -121,14 +126,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     Result = null
                 });
             }
-            catch (Exception ex)
-            {
-                await websocketConnection.Send(new ExecuteResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = ex
-                });
-            }
+            //catch (Exception ex)
+            //{
+            //    await websocketConnection.Send(new ExecuteResponse()
+            //    {
+            //        ReferenceId = command.ReferenceId,
+            //        Error = ex
+            //    });
+            //}
         }
     }
 }

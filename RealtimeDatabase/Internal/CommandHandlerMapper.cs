@@ -1,4 +1,5 @@
-﻿using RealtimeDatabase.Internal.CommandHandler;
+﻿using Microsoft.Extensions.Logging;
+using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
@@ -35,7 +36,7 @@ namespace RealtimeDatabase.Internal
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
         }
 
-        public async Task ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, WebsocketConnection websocketConnection)
+        public async Task ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, WebsocketConnection websocketConnection, ILogger<WebsocketConnection> logger)
         {
             string commandTypeName = command.GetType().Name;
 
@@ -106,7 +107,23 @@ namespace RealtimeDatabase.Internal
                 {
                     new Thread(() =>
                     {
-                        handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection, command });
+                        try
+                        {
+                            ((dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection, command })).Wait();
+                            logger.LogInformation("Handled " + command.GetType().Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            websocketConnection.Send(new ResponseBase()
+                            {
+                                ReferenceId = command.ReferenceId,
+                                Error = ex
+                            }).Wait();
+
+                            logger.LogError("Error handling " + command.GetType().Name);
+                            logger.LogError(ex.Message);
+                        }
+                        
                     }).Start();
                 }
             }

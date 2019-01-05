@@ -5,6 +5,7 @@
 export * from './lib/models/realtime-database-options';
 export * from './lib/realtime-database.service';
 export * from './lib/realtime-database.module';
+export * from './lib/realtime-auth.guard';
 
 export * from './lib/models/prefilter/order-by-prefilter';
 export * from './lib/models/prefilter/skip-prefilter';

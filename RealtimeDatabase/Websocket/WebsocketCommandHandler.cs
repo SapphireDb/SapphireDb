@@ -39,20 +39,7 @@ namespace RealtimeDatabase.Websocket
 
                 if (command != null)
                 {
-                    try
-                    {
-                        await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection);
-                    }
-                    catch (Exception ex)
-                    {
-                        await connection.Send(new ResponseBase()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            Error = ex
-                        });
-
-                        logger.LogError(ex.Message);
-                    }
+                    await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
                 }  
             }
         }

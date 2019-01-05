@@ -1,4 +1,4 @@
-import {BehaviorSubject, Observable, pipe, Subscription} from 'rxjs';
+import {Observable, pipe} from 'rxjs';
 import {WebsocketService} from '../websocket.service';
 import {CreateCommand} from './command/create-command';
 import {CreateResponse} from './response/create-response';
@@ -8,7 +8,7 @@ import {UpdateCommand} from './command/update-command';
 import {UpdateResponse} from './response/update-response';
 import {DeleteCommand} from './command/delete-command';
 import {SubscribeCommand} from './command/subscribe-command';
-import {filter, finalize, map, switchMap, take} from 'rxjs/operators';
+import {finalize, map, switchMap} from 'rxjs/operators';
 import {QueryResponse} from './response/query-response';
 import {InfoResponse} from './response/info-response';
 import {ChangeResponse} from './response/change-response';

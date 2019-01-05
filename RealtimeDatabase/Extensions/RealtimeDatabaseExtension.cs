@@ -136,6 +136,13 @@ namespace RealtimeDatabase.Extensions
 
             services.AddIdentity<UserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<ContextType>();
 
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IUserStore<UserType>)));
+            services.AddTransient<IUserStore<UserType>, UserStore<UserType, IdentityRole, RealtimeAuthContext<UserType>, string>>();
+
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(UserManager<UserType>)));
+            services.AddTransient<UserManager<UserType>>();
+            //ServiceDescriptor userManagerDesriptor = new ServiceDescriptor(typeof(UserManager<UserType>), typeof(UserManager<UserType>), ServiceLifetime.Transient);
+
             services.AddAuthentication(cfg => {
                 cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
