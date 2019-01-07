@@ -63,16 +63,18 @@ export class Auth {
   public login(username: string, password: string): Observable<UserData> {
     return this.websocket.sendCommand(new LoginCommand(username, password))
       .pipe(switchMap((response: LoginResponse) => {
-        this.authData$.next({
+        const newAuthData: AuthData = {
           authToken: response.authToken,
           expiresAt: response.expiresAt,
           validFor: response.validFor,
           refreshToken: response.refreshToken,
           userData: response.userData
-        });
+        };
 
-        localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(this.authData$.value));
-        this.websocket.setBearer(this.authData$.value.authToken);
+        localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
+        this.websocket.setBearer(newAuthData.authToken);
+
+        this.authData$.next(newAuthData);
 
         return this.getUserData();
       }));
@@ -106,20 +108,22 @@ export class Auth {
                 this.renewSubject$.next(response);
 
                 if (response) {
-                  this.authData$.next({
+                  const newAuthData: AuthData = {
                     userData: response.userData,
                     refreshToken: response.refreshToken,
                     validFor: response.validFor,
                     expiresAt: response.expiresAt,
                     authToken: response.authToken
-                  });
+                  };
 
-                  localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(this.authData$.value));
-                  this.websocket.setBearer(response.authToken);
+                  localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
+                  this.websocket.setBearer(newAuthData.authToken);
+
+                  this.authData$.next(newAuthData);
                 } else {
-                  this.authData$.next(null);
                   localStorage.removeItem(LocalstoragePaths.authPath);
                   this.websocket.setBearer();
+                  this.authData$.next(null);
                 }
               }, (err: any) => {
 

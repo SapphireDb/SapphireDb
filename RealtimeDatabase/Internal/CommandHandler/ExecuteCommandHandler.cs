@@ -82,6 +82,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
                                 return parameterValue;
                             }).ToArray();
 
+                            logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
+
                             object result = actionMethod.Invoke(actionHandler, parameters);
 
                             if (result != null)
@@ -105,7 +107,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                                 Result = result
                             });
 
-                            logger.LogInformation("Executed " + actionMethod.Name + " in " + actionMethod.DeclaringType.Name);
+                            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
 
                             return;
                         }

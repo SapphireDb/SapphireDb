@@ -52,7 +52,7 @@ namespace RealtimeDatabase.Websocket
 
                 connectionManager.AddConnection(connection);
 
-                while (!webSocket.CloseStatus.HasValue)
+                while (webSocket.State == WebSocketState.Open || webSocket.State == WebSocketState.Connecting)
                 {
                     try
                     {

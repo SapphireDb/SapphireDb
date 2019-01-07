@@ -8,7 +8,7 @@ import {AuthGuard} from '../shared/auth.guard';
 import {RealtimeAuthGuard} from 'ng-realtime-database';
 
 const routes: Routes = [
-  { path: '', component: MainComponent, canActivate: [RealtimeAuthGuard], data: { roles: ['test'] } },
+  { path: '', component: MainComponent, canActivate: [RealtimeAuthGuard], data: { roles: ['admin'] } },
   { path: 'test', component: TestComponent },
   { path: 'auth', component: AuthComponent },
   { path: 'collection', component: CollectionTestComponent }

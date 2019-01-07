@@ -103,6 +103,8 @@ namespace RealtimeDatabase.Internal
             {
                 object handler = serviceProvider.GetService(handlerType);
 
+                logger.LogInformation("Handling " + command.GetType().Name + (handler != null ? " with " + handler.GetType().Name : " failed"));
+
                 if (handler != null)
                 {
                     new Thread(() =>
