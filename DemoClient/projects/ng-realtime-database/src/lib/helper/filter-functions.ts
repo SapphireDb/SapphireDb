@@ -17,7 +17,7 @@ export class FilterFunctions {
     };
   }
 
-  static comparePrefilterFunction<T>(prefilters: IPrefilter[]) {
+  static comparePrefilterFunction<T>(prefilters: IPrefilter<T>[]) {
     return (data: CollectionData<T>) => {
       if (data.prefilters.length !== prefilters.length) {
         return false;

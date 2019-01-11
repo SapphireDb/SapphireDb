@@ -1,59 +1,37 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using NiL.JS.BaseLibrary;
+using NiL.JS.Core;
+using NiL.JS.Extensions;
+using RealtimeDatabase.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RealtimeDatabase.Models.Prefilter
 {
     class WherePrefilter : IPrefilter
     {
-        public string PropertyName { get; set; }
+        public string CompareFunctionString { get; set; }
 
-        public string Comparision { get; set; }
-
-        public string CompareValue { get; set; }
+        public Dictionary<string, string> ContextData { get; set; }
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
-            object firstValue = array.FirstOrDefault();
-
-            if (firstValue != null)
+            if (array.Any())
             {
-                Type arrayObjectType = firstValue.GetType();
-
-                if (arrayObjectType != null)
+                try
                 {
-                    PropertyInfo prop =
-                        arrayObjectType.GetProperties().FirstOrDefault(p => p.Name.ToLowerInvariant() == PropertyName.ToLowerInvariant());
+                    Func<object, bool> function = CompareFunctionString.CreateFunction(array.FirstOrDefault().GetType(), ContextData)
+                        .MakeDelegate<Func<object, bool>>();
 
-                    if (prop != null)
-                    {
-                        if (Comparision == "==")
-                        {
-                            return array.Where(v => prop.GetValue(v).ToString() == CompareValue);
-                        }
-                        else if (Comparision == "!=")
-                        {
-                            return array.Where(v => prop.GetValue(v).ToString() != CompareValue);
-                        }
-                        else if (Comparision == "<")
-                        {
-                            return array.Where(v => ((IComparable)CompareValue).CompareTo(prop.GetValue(v).ToString()) > 0);
-                        }
-                        else if (Comparision == "<=")
-                        {
-                            return array.Where(v => ((IComparable)CompareValue).CompareTo(prop.GetValue(v).ToString()) >= 0);
-                        }
-                        else if (Comparision == ">")
-                        {
-                            return array.Where(v => ((IComparable)CompareValue).CompareTo(prop.GetValue(v).ToString()) < 0);
-                        }
-                        else if (Comparision == ">=")
-                        {
-                            return array.Where(v => ((IComparable)CompareValue).CompareTo(prop.GetValue(v).ToString()) <= 0);
-                        }
-                    }
+                    return array.Where(function);
+                }
+                catch
+                {
+
                 }
             }
 

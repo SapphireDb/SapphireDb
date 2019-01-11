@@ -1,5 +1,5 @@
-export interface IPrefilter {
+export interface IPrefilter<T> {
   prefilterType: string;
-  execute(values: any[]): any[];
+  execute(values: T[]): T[];
   hash(): string;
 }

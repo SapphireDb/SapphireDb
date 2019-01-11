@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RealtimeDatabase.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,44 +9,35 @@ namespace RealtimeDatabase.Models.Prefilter
 {
     class ThenOrderByPrefilter : IPrefilter
     {
-        public string PropertyName { get; set; }
+        public string SelectFunctionString { get; set; }
+
+        public Dictionary<string, string> ContextData { get; set; }
 
         public bool Descending { get; set; }
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
-            object firstValue = array.FirstOrDefault();
-
-            if (firstValue != null)
+            if (array.Any())
             {
-                Type arrayObjectType = firstValue.GetType();
-
-                if (arrayObjectType != null)
+                try
                 {
-                    PropertyInfo prop =
-                        arrayObjectType.GetProperties().FirstOrDefault(p => p.Name.ToLowerInvariant() == PropertyName.ToLowerInvariant());
+                    Func<object, IComparable> function = SelectFunctionString.CreateFunction(array.FirstOrDefault().GetType(), ContextData)
+                        .MakeDelegate<Func<object, IComparable>>();
 
-                    if (prop != null)
+                    IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
+
+                    if (Descending)
                     {
-                        try
-                        {
-                            IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
-
-                            if (Descending)
-                            {
-                                return orderedArray.ThenByDescending(o => prop.GetValue(o));
-                            }
-                            else
-                            {
-                                return orderedArray.ThenBy(o => prop.GetValue(o));
-                            }
-                        }
-                        catch
-                        {
-                            
-                        }
-                        
+                        return orderedArray.ThenByDescending(function);
                     }
+                    else
+                    {
+                        return orderedArray.ThenBy(function);
+                    }
+                }
+                catch
+                {
+
                 }
             }
 

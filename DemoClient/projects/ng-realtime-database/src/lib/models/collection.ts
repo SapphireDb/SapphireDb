@@ -38,7 +38,7 @@ export class Collection<T> {
    * Get a snapshot of the values of the collection
    * @param prefilters Additional prefilters to query only specific data
    */
-  public snapshot(...prefilters: IPrefilter[]): Observable<T[]> {
+  public snapshot(...prefilters: IPrefilter<T>[]): Observable<T[]> {
     const queryCommand = new QueryCommand(this.collectionName, prefilters);
 
     return this.websocket.sendCommand(queryCommand).pipe(
@@ -58,7 +58,7 @@ export class Collection<T> {
    * Get the values of the collection and also get updates if the collection has changed
    * @param prefilters Additional prefilters to query only specific data
    */
-  public values(...prefilters: IPrefilter[]): Observable<T[]> {
+  public values(...prefilters: IPrefilter<T>[]): Observable<T[]> {
     const index = this.collectionValues.findIndex(c => c.samePrefilters(prefilters));
 
     let collectionValue: CollectionValue<T>;

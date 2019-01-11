@@ -3,6 +3,7 @@ import {Collection, RealtimeDatabase, UserData, RoleData} from 'ng-realtime-data
 import {Message} from '../../model/message';
 import {BehaviorSubject, combineLatest, Observable, of} from 'rxjs';
 import {map, publish, share, shareReplay, switchMap} from 'rxjs/operators';
+import {WherePrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/where-prefilter';
 
 @Component({
   selector: 'app-main',
@@ -22,7 +23,10 @@ export class MainComponent implements OnInit {
 
   constructor(private db: RealtimeDatabase) {
     this.messageCollection = this.db.collection<Message>('messages');
-    this.messages$ = this.messageCollection.values();
+    this.messages$ = this.db.auth.getUserData().pipe(switchMap(u => {
+      return this.messageCollection.values(new WherePrefilter(x => x.userId === u.id || x.toId === u.id, {u: u}));
+    }));
+    // this.messages$ = this.messageCollection.values(new WherePrefilter('', '<', '', (x) => x.userId == ));
 
     this.users$ = combineLatest(this.db.auth.info.getUsers(), this.db.auth.getUserData()).pipe(map(([users, user]: [UserData[], UserData]) => {
       return users.filter(u => u.id !== user.id);

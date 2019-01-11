@@ -107,11 +107,11 @@ namespace RealtimeDatabase.Internal
 
                 if (handler != null)
                 {
-                    new Thread(() =>
+                    new Thread(async () =>
                     {
                         try
                         {
-                            ((dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection, command })).Wait();
+                            await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection, command });
                             logger.LogInformation("Handled " + command.GetType().Name);
                         }
                         catch (Exception ex)

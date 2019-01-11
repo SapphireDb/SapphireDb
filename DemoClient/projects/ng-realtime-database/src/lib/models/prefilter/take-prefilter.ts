@@ -1,6 +1,6 @@
 import {IPrefilter} from './iprefilter';
 
-export class TakePrefilter implements IPrefilter {
+export class TakePrefilter<T> implements IPrefilter<T> {
   prefilterType = 'TakePrefilter';
   number: number;
 
@@ -8,7 +8,7 @@ export class TakePrefilter implements IPrefilter {
     this.number = number;
   }
 
-  execute(values: any[]) {
+  execute(values: T[]) {
     return values;
   }
 

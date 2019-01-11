@@ -1,24 +1,29 @@
 import {IPrefilter} from './iprefilter';
 
-export type comparisonType = '==' | '!=' | '<' | '<='| '>' | '>=';
-
-export class WherePrefilter implements IPrefilter {
+export class WherePrefilter<T> implements IPrefilter<T> {
   prefilterType = 'WherePrefilter';
-  propertyName: string;
-  comparision: comparisonType;
-  compareValue: string;
+  compareFunction: (x: T) => boolean;
+  compareFunctionString: string;
+  contextData: { [key: string]: string };
 
-  constructor(propertyName: string, comparision: comparisonType, compareValue: string) {
-    this.propertyName = propertyName;
-    this.comparision = comparision;
-    this.compareValue = compareValue;
+  constructor(compareFunction: (x: T) => boolean, contextData?: { [key: string]: any }) {
+    this.compareFunction = compareFunction;
+    this.compareFunctionString = compareFunction.toString();
+
+    if (contextData) {
+      this.contextData = {};
+
+      for (const key of Object.keys(contextData)) {
+        this.contextData[key] = JSON.stringify(contextData[key]);
+      }
+    }
   }
 
-  public execute(values: any[]) {
+  public execute(values: T[]) {
     return values;
   }
 
   public hash() {
-    return `${this.prefilterType},${this.propertyName},${this.comparision},${this.compareValue}`;
+    return `${this.prefilterType},${this.compareFunctionString},${JSON.stringify(this.contextData)}`;
   }
 }

@@ -1,6 +1,6 @@
 import {WebsocketService} from '../websocket.service';
 import {BehaviorSubject, Observable, of, Subject} from 'rxjs';
-import {catchError, map, switchMap, take} from 'rxjs/operators';
+import {catchError, filter, map, switchMap, take} from 'rxjs/operators';
 import {LoginCommand} from './command/login-command';
 import {UserData} from './user-data';
 import {LoginResponse} from './response/login-response';
@@ -71,12 +71,16 @@ export class Auth {
           userData: response.userData
         };
 
-        localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
-        this.websocket.setBearer(newAuthData.authToken);
-
         this.authData$.next(newAuthData);
 
-        return this.getUserData();
+        localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
+        const userData$ = this.getUserData();
+
+        userData$.pipe(filter(v => !!v), take(1)).subscribe(() => {
+          this.websocket.setBearer(newAuthData.authToken);
+        });
+
+        return userData$;
       }));
   }
 
@@ -116,10 +120,10 @@ export class Auth {
                     authToken: response.authToken
                   };
 
+                  this.authData$.next(newAuthData);
+
                   localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
                   this.websocket.setBearer(newAuthData.authToken);
-
-                  this.authData$.next(newAuthData);
                 } else {
                   localStorage.removeItem(LocalstoragePaths.authPath);
                   this.websocket.setBearer();

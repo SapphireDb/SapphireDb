@@ -1,6 +1,6 @@
 import {IPrefilter} from './iprefilter';
 
-export class SkipPrefilter implements IPrefilter {
+export class SkipPrefilter<T> implements IPrefilter<T> {
   prefilterType = 'SkipPrefilter';
   number: number;
 
@@ -8,7 +8,7 @@ export class SkipPrefilter implements IPrefilter {
     this.number = number;
   }
 
-  execute(values: any[]) {
+  execute(values: T[]) {
     return values;
   }
 

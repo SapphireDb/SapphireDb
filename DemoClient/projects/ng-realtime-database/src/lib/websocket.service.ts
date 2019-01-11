@@ -4,7 +4,7 @@ import {SubscribeCommand} from './models/command/subscribe-command';
 import {ResponseBase} from './models/response/response-base';
 import {CommandReferences} from './models/command-references';
 import {CommandBase} from './models/command/command-base';
-import {finalize} from 'rxjs/operators';
+import {finalize, shareReplay, switchMap, take} from 'rxjs/operators';
 import {UnsubscribeCommand} from './models/command/unsubscribe-command';
 import {RealtimeDatabaseOptions} from './models/realtime-database-options';
 import {SubscribeMessageCommand} from './models/command/subscribe-message-command';
@@ -12,12 +12,17 @@ import {UnsubscribeMessageCommand} from './models/command/unsubscribe-message-co
 import {GuidHelper} from './helper/guid-helper';
 import {LocalstoragePaths} from './helper/localstorage-paths';
 import {AuthData} from './models/auth-data';
+import {UnsubscribeUsersCommand} from './models/command/unsubscribe-users-command';
+import {UnsubscribeRolesCommand} from './models/command/unsubscribe-roles-command';
+import {SubscribeUsersCommand} from './models/command/subscribe-users-command';
+import {SubscribeRolesCommand} from './models/command/subscribe-roles-command';
 
 @Injectable()
 export class WebsocketService {
   private bearer: string;
 
   private socket: WebSocket;
+  private connectSubject$;
 
   private unsendCommandStorage: CommandBase[] = [];
 
@@ -34,96 +39,98 @@ export class WebsocketService {
     }
   }
 
-  private connectToWebsocket() {
-    if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
-      return;
+  private connectToWebsocket(connectionFailed: boolean = false): Observable<boolean> {
+    if (!this.connectSubject$ && this.socket && this.socket.readyState === WebSocket.OPEN) {
+      return of(true);
     }
 
-    let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket?`;
-
-    if (this.options.secret) {
-      wsUrl += `secret=${this.options.secret}&`;
-    }
-
-    if (!!this.bearer) {
-      wsUrl += `bearer=${this.bearer}`;
-    }
-
-    this.socket = new WebSocket(wsUrl);
-
-    this.socket.onopen = () => {
-      const waitCommand = () => {
-        if (this.socket.readyState !== WebSocket.OPEN) {
-          setTimeout(waitCommand, 25);
-        }
-
-        this.unsendCommandStorage.forEach(cmd => {
-          this.socket.send(JSON.stringify(cmd));
-        });
-
-        this.unsendCommandStorage = this.unsendCommandStorage
-          .filter(cmd => cmd instanceof SubscribeCommand || cmd instanceof SubscribeMessageCommand);
-      };
-
-      waitCommand();
-    };
-
-    this.socket.onmessage = (msg: MessageEvent) => {
-      this.handleResponse(JSON.parse(msg.data));
-    };
-
-    this.socket.onclose = () => {
-      for (const key of Object.keys(this.commandReferences)) {
-        const commandReference = this.commandReferences[key];
-
-        if (!commandReference.keep) {
-          commandReference.subject$.error('Websocket connection lost.');
-          commandReference.subject$.complete();
-          delete this.commandReferences[key];
-        }
+    if (!this.connectSubject$ || connectionFailed) {
+      if (!connectionFailed) {
+        this.connectSubject$ = new Subject<boolean>();
       }
 
-      setTimeout(() => {
-        this.connectToWebsocket();
-      }, 1000);
-    };
+      let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket?`;
 
-    this.socket.onerror = () => {
-      this.socket.close();
-    };
+      if (this.options.secret) {
+        wsUrl += `secret=${this.options.secret}&`;
+      }
+
+      if (!!this.bearer) {
+        wsUrl += `bearer=${this.bearer}`;
+      }
+
+      this.socket = new WebSocket(wsUrl);
+
+      this.socket.onopen = () => {
+        const waitCommand = () => {
+          if (this.socket.readyState !== WebSocket.OPEN) {
+            setTimeout(waitCommand, 25);
+          }
+
+          this.unsendCommandStorage.forEach(cmd => {
+            this.socket.send(JSON.stringify(cmd));
+          });
+
+          this.connectSubject$.next(true);
+          this.connectSubject$.complete();
+          this.connectSubject$ = null;
+        };
+
+        waitCommand();
+      };
+
+      this.socket.onmessage = (msg: MessageEvent) => {
+        this.handleResponse(JSON.parse(msg.data));
+      };
+
+      this.socket.onclose = () => {
+        setTimeout(() => {
+          this.connectToWebsocket(true);
+        }, 1000);
+      };
+
+      this.socket.onerror = () => {
+        this.socket.close();
+      };
+    }
+
+    return this.connectSubject$;
   }
 
   public sendCommand(command: CommandBase, keep?: boolean, onlySend?: boolean): Observable<ResponseBase> {
-    this.connectToWebsocket();
+    const makeHotSubject$ = new Subject<ResponseBase>();
 
-    const referenceSubject = new Subject<ResponseBase>();
-    this.commandReferences[command.referenceId] = { subject$: referenceSubject, keep: keep};
+    const referenceObservable$ = this.connectToWebsocket().pipe(take(1), switchMap((v) => {
+      const referenceSubject = new Subject<ResponseBase>();
+      this.commandReferences[command.referenceId] = { subject$: referenceSubject, keep: keep};
 
-    if (this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(command));
-    } else {
-      this.unsendCommandStorage.push(command);
-    }
 
-    if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand) {
-      this.unsendCommandStorage = this.unsendCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
-    } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand) {
-      if (this.unsendCommandStorage.findIndex(c => c.referenceId === command.referenceId) === -1) {
-        this.unsendCommandStorage.push(command);
+      if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand
+        || command instanceof UnsubscribeUsersCommand || command instanceof UnsubscribeRolesCommand) {
+        this.unsendCommandStorage = this.unsendCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
+      } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand
+        || command instanceof SubscribeUsersCommand || command instanceof SubscribeRolesCommand) {
+        if (this.unsendCommandStorage.findIndex(c => c.referenceId === command.referenceId) === -1) {
+          this.unsendCommandStorage.push(command);
+        }
       }
-    }
 
-    if (onlySend === true) {
-      referenceSubject.complete();
-      referenceSubject.unsubscribe();
-      delete this.commandReferences[command.referenceId];
-
-      return of(null);
-    } else {
-      return referenceSubject.pipe(finalize(() => {
+      if (onlySend === true) {
+        referenceSubject.complete();
+        referenceSubject.unsubscribe();
         delete this.commandReferences[command.referenceId];
-      }));
-    }
+
+        return of(null);
+      } else {
+        return referenceSubject;
+      }
+    })).pipe(shareReplay());
+
+    referenceObservable$.subscribe(c => makeHotSubject$.next(c));
+    return makeHotSubject$.asObservable().pipe(finalize(() => {
+      delete this.commandReferences[command.referenceId];
+    }));
   }
 
   public registerServerMessageHandler(): Observable<ResponseBase> {

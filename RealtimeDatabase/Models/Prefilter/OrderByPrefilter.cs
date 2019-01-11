@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RealtimeDatabase.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,34 +9,33 @@ namespace RealtimeDatabase.Models.Prefilter
 {
     class OrderByPrefilter : IPrefilter
     {
-        public string PropertyName { get; set; }
+        public string SelectFunctionString { get; set; }
+
+        public Dictionary<string, string> ContextData { get; set; }
 
         public bool Descending { get; set; }
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
-            object firstValue = array.FirstOrDefault();
-
-            if (firstValue != null)
+            if (array.Any())
             {
-                Type arrayObjectType = firstValue.GetType();
-
-                if (arrayObjectType != null)
+                try
                 {
-                    PropertyInfo prop =
-                        arrayObjectType.GetProperties().FirstOrDefault(p => p.Name.ToLowerInvariant() == PropertyName.ToLowerInvariant());
+                    Func<object, IComparable> function = SelectFunctionString.CreateFunction(array.FirstOrDefault().GetType(), ContextData)
+                        .MakeDelegate<Func<object, IComparable>>();
 
-                    if (prop != null)
+                    if (Descending)
                     {
-                        if (Descending)
-                        {
-                            return array.OrderByDescending(o => prop.GetValue(o));
-                        }
-                        else
-                        {
-                            return array.OrderBy(o => prop.GetValue(o));
-                        }
+                        return array.OrderByDescending(function);
                     }
+                    else
+                    {
+                        return array.OrderBy(function);
+                    }
+                }
+                catch
+                {
+
                 }
             }
 
