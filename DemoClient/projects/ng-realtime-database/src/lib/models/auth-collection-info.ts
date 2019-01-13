@@ -10,78 +10,42 @@ export class AuthCollectionInfo {
    * Check if the collection needs authentication for queries
    */
   public queryAuth(): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.queryAuth.authentication;
-      })
-    );
+    return this.getAuthentication$('query');
   }
 
   /**
    * Check if the property needs authentication for queries
    */
   public queryPropertyAuth(propertyName: string): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        const propertyInfo = info.queryAuth.properties[propertyName];
-
-        if (propertyInfo) {
-          return propertyInfo.authentication;
-        }
-
-        return false;
-      })
-    );
+    return this.hasPropertyAuth$('query', propertyName);
   }
 
   /**
    * Check if the collection needs authentication for updates
    */
   public updateAuth(): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.updateAuth.authentication;
-      })
-    );
+    return this.getAuthentication$('update');
   }
 
   /**
    * Check if the property needs authentication for updates
    */
   public updatePropertyAuth(propertyName: string): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        const propertyInfo = info.updateAuth.properties[propertyName];
-
-        if (propertyInfo) {
-          return propertyInfo.authentication;
-        }
-
-        return false;
-      })
-    );
+    return this.hasPropertyAuth$('update', propertyName);
   }
 
   /**
    * Check if the collection needs authentication to create data
    */
   public createAuth(): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.createAuth.authentication;
-      })
-    );
+    return this.getAuthentication$('create');
   }
 
   /**
    * Check if the collection needs authentication to remove data
    */
   public removeAuth(): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.removeAuth.authentication;
-      })
-    );
+    return this.getAuthentication$('remove');
   }
 
   /**
@@ -106,17 +70,7 @@ export class AuthCollectionInfo {
    * @param roles The roles to check
    */
   public canQueryProperty(propertyName: string, roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        const propertyInfo = info.queryAuth.properties[propertyName];
-
-        if (propertyInfo) {
-          return propertyInfo.roles == null || ArrayHelper.isAnyRolePresent(propertyInfo.roles, roles);
-        }
-
-        return true;
-      })
-    );
+    return this.canAccessProperty$('query', propertyName, roles);
   }
 
   /**
@@ -124,11 +78,7 @@ export class AuthCollectionInfo {
    * @param roles The roles to check
    */
   public canCreate(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.createAuth.roles == null || ArrayHelper.isAnyRolePresent(info.createAuth.roles, roles);
-      })
-    );
+    return this.hasRolesForOperation$('create', roles);
   }
 
   /**
@@ -136,11 +86,7 @@ export class AuthCollectionInfo {
    * @param roles The roles to check
    */
   public canRemove(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.removeAuth.roles == null || ArrayHelper.isAnyRolePresent(info.removeAuth.roles, roles);
-      })
-    );
+    return this.hasRolesForOperation$('remove', roles);
   }
 
   /**
@@ -148,11 +94,7 @@ export class AuthCollectionInfo {
    * @param roles The roles to check
    */
   public canUpdate(roles: string[]): Observable<boolean> {
-    return this.collectionInformation.pipe(
-      map((info: InfoResponse) => {
-        return info.updateAuth.roles == null || ArrayHelper.isAnyRolePresent(info.updateAuth.roles, roles);
-      })
-    );
+    return this.hasRolesForOperation$('update', roles);
   }
 
   /**
@@ -161,9 +103,35 @@ export class AuthCollectionInfo {
    * @param roles The roles to check
    */
   public canUpdateProperty(propertyName: string, roles: string[]): Observable<boolean> {
+    return this.canAccessProperty$('update', propertyName, roles);
+  }
+
+  private getAuthentication$(operation: 'query'|'update'|'remove'|'create'): Observable<boolean> {
     return this.collectionInformation.pipe(
       map((info: InfoResponse) => {
-        const propertyInfo = info.updateAuth.properties[propertyName];
+        return info[operation + 'Auth'].authentication;
+      })
+    );
+  }
+
+  private hasPropertyAuth$(operation: 'query'|'update', propertyName: string): Observable<boolean> {
+    return this.collectionInformation.pipe(
+      map((info: InfoResponse) => {
+        const propertyInfo = info[operation + 'Auth'].properties[propertyName];
+
+        if (propertyInfo) {
+          return propertyInfo.authentication;
+        }
+
+        return false;
+      })
+    );
+  }
+
+  private canAccessProperty$(operation: 'query'|'update', propertyName: string, roles: string[]): Observable<boolean> {
+    return this.collectionInformation.pipe(
+      map((info: InfoResponse) => {
+        const propertyInfo = info[operation + 'Auth'].properties[propertyName];
 
         if (propertyInfo) {
           return propertyInfo.roles == null || ArrayHelper.isAnyRolePresent(propertyInfo.roles, roles);
@@ -172,5 +140,11 @@ export class AuthCollectionInfo {
         return true;
       })
     );
+  }
+
+  private hasRolesForOperation$(operation: 'create'|'remove'|'update', roles: string[]): Observable<boolean> {
+    return this.collectionInformation.pipe(map((info: InfoResponse) => {
+      return info[operation + 'Auth'].roles == null || ArrayHelper.isAnyRolePresent(info[operation + 'Auth'].roles, roles);
+    }));
   }
 }

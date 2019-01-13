@@ -39,6 +39,42 @@ export class WebsocketService {
     }
   }
 
+  private createWebsocket(wsUrl: string) {
+    this.socket = new WebSocket(wsUrl);
+
+    this.socket.onopen = () => {
+      const waitCommand = () => {
+        if (this.socket.readyState !== WebSocket.OPEN) {
+          setTimeout(waitCommand, 25);
+        }
+
+        this.unsendCommandStorage.forEach(cmd => {
+          this.socket.send(JSON.stringify(cmd));
+        });
+
+        this.connectSubject$.next(true);
+        this.connectSubject$.complete();
+        this.connectSubject$ = null;
+      };
+
+      waitCommand();
+    };
+
+    this.socket.onmessage = (msg: MessageEvent) => {
+      this.handleResponse(JSON.parse(msg.data));
+    };
+
+    this.socket.onclose = () => {
+      setTimeout(() => {
+        this.connectToWebsocket(true);
+      }, 1000);
+    };
+
+    this.socket.onerror = () => {
+      this.socket.close();
+    };
+  }
+
   private connectToWebsocket(connectionFailed: boolean = false): Observable<boolean> {
     if (!this.connectSubject$ && this.socket && this.socket.readyState === WebSocket.OPEN) {
       return of(true);
@@ -59,39 +95,7 @@ export class WebsocketService {
         wsUrl += `bearer=${this.bearer}`;
       }
 
-      this.socket = new WebSocket(wsUrl);
-
-      this.socket.onopen = () => {
-        const waitCommand = () => {
-          if (this.socket.readyState !== WebSocket.OPEN) {
-            setTimeout(waitCommand, 25);
-          }
-
-          this.unsendCommandStorage.forEach(cmd => {
-            this.socket.send(JSON.stringify(cmd));
-          });
-
-          this.connectSubject$.next(true);
-          this.connectSubject$.complete();
-          this.connectSubject$ = null;
-        };
-
-        waitCommand();
-      };
-
-      this.socket.onmessage = (msg: MessageEvent) => {
-        this.handleResponse(JSON.parse(msg.data));
-      };
-
-      this.socket.onclose = () => {
-        setTimeout(() => {
-          this.connectToWebsocket(true);
-        }, 1000);
-      };
-
-      this.socket.onerror = () => {
-        this.socket.close();
-      };
+      this.createWebsocket(wsUrl);
     }
 
     return this.connectSubject$;

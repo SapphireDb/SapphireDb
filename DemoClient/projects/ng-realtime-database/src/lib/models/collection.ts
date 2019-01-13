@@ -104,15 +104,21 @@ export class Collection<T> {
     })));
   }
 
+  private createCommandResult$(observable$: Observable<CreateResponse|UpdateResponse>): Observable<CommandResult<T>> {
+    return observable$.pipe(map((response: CreateResponse|UpdateResponse) => {
+      return new CommandResult<T>(response.error, response.validationResults,
+        response.responseType === 'CreateResponse' ?
+          (<CreateResponse>response).newObject : (<UpdateResponse>response).updatedObject);
+    }));
+  }
+
   /**
    * Add a value to the collection
    * @param value The object to add to the collection
    */
   public add(value: T): Observable<CommandResult<T>> {
     const createCommand = new CreateCommand(this.collectionName, value);
-    return this.websocket.sendCommand(createCommand).pipe(map((response: CreateResponse) => {
-      return new CommandResult<T>(response.error, response.validationResults, response.newObject);
-    }));
+    return this.createCommandResult$(<any>this.websocket.sendCommand(createCommand));
   }
 
   /**
@@ -121,9 +127,7 @@ export class Collection<T> {
    */
   public update(value: T): Observable<CommandResult<T>> {
     const updateCommand = new UpdateCommand(this.collectionName, value);
-    return this.websocket.sendCommand(updateCommand).pipe(map((response: UpdateResponse) => {
-      return new CommandResult<T>(response.error, response.validationResults, response.updatedObject);
-    }));
+    return this.createCommandResult$(<any>this.websocket.sendCommand(updateCommand));
   }
 
   /**

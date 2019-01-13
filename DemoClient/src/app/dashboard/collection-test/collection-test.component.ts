@@ -17,9 +17,9 @@ export class CollectionTestComponent implements OnInit {
   ngOnInit() {
     this.collection = this.db.collection<User>('users');
 
-    const sub1 = this.collection.values(new OrderByPrefilter(x => x.id)).subscribe(console.table);
-    const sub2 = this.collection.values().subscribe(console.table);
-    const sub3 = this.collection.values(new OrderByPrefilter(x => x.firstName),
+    // const sub1 = this.collection.values(new OrderByPrefilter(x => x.id)).subscribe(console.table);
+    // const sub2 = this.collection.values().subscribe(console.table);
+    const sub3 = this.collection.values(new OrderByPrefilter(x => x.username),
       new ThenOrderByPrefilter(x => x.id, true)).subscribe(console.table);
   }
 
