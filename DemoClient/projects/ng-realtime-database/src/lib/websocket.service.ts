@@ -127,7 +127,7 @@ export class WebsocketService {
       }
     })).pipe(shareReplay());
 
-    referenceObservable$.subscribe(c => makeHotSubject$.next(c));
+    referenceObservable$.subscribe(c => makeHotSubject$.next(c), ex => makeHotSubject$.error(ex));
     return makeHotSubject$.asObservable().pipe(finalize(() => {
       delete this.commandReferences[command.referenceId];
     }));

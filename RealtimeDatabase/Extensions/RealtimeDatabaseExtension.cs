@@ -141,7 +141,6 @@ namespace RealtimeDatabase.Extensions
 
             services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(UserManager<UserType>)));
             services.AddTransient<UserManager<UserType>>();
-            //ServiceDescriptor userManagerDesriptor = new ServiceDescriptor(typeof(UserManager<UserType>), typeof(UserManager<UserType>), ServiceLifetime.Transient);
 
             services.AddAuthentication(cfg => {
                 cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

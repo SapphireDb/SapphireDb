@@ -129,8 +129,6 @@ export class Auth {
                   this.websocket.setBearer();
                   this.authData$.next(null);
                 }
-              }, (err: any) => {
-
               });
           }
 

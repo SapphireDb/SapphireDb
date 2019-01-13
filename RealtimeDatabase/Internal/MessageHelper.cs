@@ -163,7 +163,6 @@ namespace RealtimeDatabase.Internal
                 IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
                 collectionSet = collectionSet.ToList();
 
-
                 foreach (IPrefilter prefilter in command.Prefilters)
                 {
                     collectionSet = prefilter.Execute(collectionSet);
