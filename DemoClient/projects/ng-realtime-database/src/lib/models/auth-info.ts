@@ -108,25 +108,34 @@ export class AuthInfo {
       authSubscriptionReference = {
         count: 0,
         subject$: new BehaviorSubject<RoleData[]>([]),
-        subscription: this.websocket.sendCommand(subscribeCommand, true)
-          .pipe(map((response: (SubscribeRolesResponse|SubscribeUsersResponse)) => {
-            if (response.responseType === 'SubscribeRolesResponse') {
-              return (<SubscribeRolesResponse>response).roles;
-            } else {
-              return (<SubscribeUsersResponse>response).users;
-            }
-          }))
-          .subscribe((data: (RoleData|UserData)[]) => {
-            authSubscriptionReference.subject$.next(data);
-          }),
+        subscription: null,
         referenceId: subscribeCommand.referenceId
       };
 
+      authSubscriptionReference.subscription = this.websocketSubscribeData(subscribeCommand, authSubscriptionReference);
       authSubscriptionReference[type] = authSubscriptionReference;
     }
 
     authSubscriptionReference.count++;
+    return this.createAuthSubscriptionObservable$(authSubscriptionReference, type);
+  }
 
+  private websocketSubscribeData(subscribeCommand: SubscribeUsersCommand|SubscribeRolesCommand,
+                                 authSubscriptionReference: AuthSubscriptionReference) {
+    return this.websocket.sendCommand(subscribeCommand, true)
+      .pipe(map((response: (SubscribeRolesResponse|SubscribeUsersResponse)) => {
+        if (response.responseType === 'SubscribeRolesResponse') {
+          return (<SubscribeRolesResponse>response).roles;
+        } else {
+          return (<SubscribeUsersResponse>response).users;
+        }
+      }))
+      .subscribe((data: (RoleData|UserData)[]) => {
+        authSubscriptionReference.subject$.next(data);
+      });
+  }
+
+  private createAuthSubscriptionObservable$(authSubscriptionReference: AuthSubscriptionReference, type: string): Observable<(UserData|RoleData)[]> {
     return authSubscriptionReference.subject$.asObservable().pipe(finalize(() => {
       authSubscriptionReference.count--;
 

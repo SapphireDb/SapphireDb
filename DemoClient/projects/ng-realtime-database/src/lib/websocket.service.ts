@@ -16,6 +16,7 @@ import {UnsubscribeUsersCommand} from './models/command/unsubscribe-users-comman
 import {UnsubscribeRolesCommand} from './models/command/unsubscribe-roles-command';
 import {SubscribeUsersCommand} from './models/command/subscribe-users-command';
 import {SubscribeRolesCommand} from './models/command/subscribe-roles-command';
+import {MessageResponse} from './models/response/message-response';
 
 @Injectable()
 export class WebsocketService {
@@ -39,8 +40,8 @@ export class WebsocketService {
     }
   }
 
-  private createWebsocket(wsUrl: string) {
-    this.socket = new WebSocket(wsUrl);
+  private createWebsocket() {
+    this.socket = new WebSocket(this.createWebsocketConnectionString());
 
     this.socket.onopen = () => {
       const waitCommand = () => {
@@ -75,6 +76,20 @@ export class WebsocketService {
     };
   }
 
+  private createWebsocketConnectionString(): string {
+    let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket?`;
+
+    if (this.options.secret) {
+      wsUrl += `secret=${this.options.secret}&`;
+    }
+
+    if (!!this.bearer) {
+      wsUrl += `bearer=${this.bearer}`;
+    }
+
+    return wsUrl;
+  }
+
   private connectToWebsocket(connectionFailed: boolean = false): Observable<boolean> {
     if (!this.connectSubject$ && this.socket && this.socket.readyState === WebSocket.OPEN) {
       return of(true);
@@ -85,40 +100,38 @@ export class WebsocketService {
         this.connectSubject$ = new Subject<boolean>();
       }
 
-      let wsUrl = `${this.options.useSecuredSocket === true ? 'wss' : 'ws'}://${this.options.serverBaseUrl}/realtimedatabase/socket?`;
-
-      if (this.options.secret) {
-        wsUrl += `secret=${this.options.secret}&`;
-      }
-
-      if (!!this.bearer) {
-        wsUrl += `bearer=${this.bearer}`;
-      }
-
-      this.createWebsocket(wsUrl);
+      this.createWebsocket();
     }
 
     return this.connectSubject$;
   }
 
-  public sendCommand(command: CommandBase, keep?: boolean, onlySend?: boolean): Observable<ResponseBase> {
-    const makeHotSubject$ = new Subject<ResponseBase>();
+  private storeSubscribeCommands(command: CommandBase) {
+    if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand
+      || command instanceof UnsubscribeUsersCommand || command instanceof UnsubscribeRolesCommand) {
+      this.unsendCommandStorage = this.unsendCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
+    } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand
+      || command instanceof SubscribeUsersCommand || command instanceof SubscribeRolesCommand) {
+      if (this.unsendCommandStorage.findIndex(c => c.referenceId === command.referenceId) === -1) {
+        this.unsendCommandStorage.push(command);
+      }
+    }
+  }
 
+  private createHotCommandObservable(referenceObservable$: Observable<ResponseBase>, command: CommandBase): Observable<ResponseBase> {
+    const makeHotSubject$ = new Subject<ResponseBase>();
+    referenceObservable$.subscribe(c => makeHotSubject$.next(c), ex => makeHotSubject$.error(ex));
+    return makeHotSubject$.asObservable().pipe(finalize(() => {
+      delete this.commandReferences[command.referenceId];
+    }));
+  }
+
+  public sendCommand(command: CommandBase, keep?: boolean, onlySend?: boolean): Observable<ResponseBase> {
     const referenceObservable$ = this.connectToWebsocket().pipe(take(1), switchMap((v) => {
       const referenceSubject = new Subject<ResponseBase>();
       this.commandReferences[command.referenceId] = { subject$: referenceSubject, keep: keep};
-
       this.socket.send(JSON.stringify(command));
-
-      if (command instanceof UnsubscribeCommand || command instanceof UnsubscribeMessageCommand
-        || command instanceof UnsubscribeUsersCommand || command instanceof UnsubscribeRolesCommand) {
-        this.unsendCommandStorage = this.unsendCommandStorage.filter(cs => cs.referenceId !== command.referenceId);
-      } else if (command instanceof SubscribeCommand || command instanceof SubscribeMessageCommand
-        || command instanceof SubscribeUsersCommand || command instanceof SubscribeRolesCommand) {
-        if (this.unsendCommandStorage.findIndex(c => c.referenceId === command.referenceId) === -1) {
-          this.unsendCommandStorage.push(command);
-        }
-      }
+      this.storeSubscribeCommands(command);
 
       if (onlySend === true) {
         referenceSubject.complete();
@@ -131,10 +144,7 @@ export class WebsocketService {
       }
     })).pipe(shareReplay());
 
-    referenceObservable$.subscribe(c => makeHotSubject$.next(c), ex => makeHotSubject$.error(ex));
-    return makeHotSubject$.asObservable().pipe(finalize(() => {
-      delete this.commandReferences[command.referenceId];
-    }));
+    return this.createHotCommandObservable(referenceObservable$, command);
   }
 
   public registerServerMessageHandler(): Observable<ResponseBase> {
@@ -148,20 +158,23 @@ export class WebsocketService {
     }));
   }
 
+  private handleMessageResponse(response: MessageResponse) {
+    Object.keys(this.serverMessageHandler).map(k => this.serverMessageHandler[k]).forEach(handler => {
+      if (response.error) {
+        handler.subject$.error(response);
+      }
+
+      handler.subject$.next(response);
+    });
+  }
+
   private handleResponse(response: ResponseBase) {
     if (response.responseType === 'MessageResponse') {
-      Object.keys(this.serverMessageHandler).map(k => this.serverMessageHandler[k]).forEach(handler => {
-        if (response.error) {
-          handler.subject$.error(response);
-        }
-
-        handler.subject$.next(response);
-      });
+      this.handleMessageResponse(<MessageResponse>response);
     } else {
       const commandReference = this.commandReferences[response.referenceId];
 
       if (commandReference) {
-
         if (response.error) {
           commandReference.subject$.error(response.error);
         }

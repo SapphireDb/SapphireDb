@@ -68,7 +68,7 @@ export class MainComponent implements OnInit {
     }));
 
     this.db.collection<User>('users')
-      .snapshot(new SkipPrefilter(5), new TakePrefilter(5)).subscribe(console.table);
+      .snapshot(new SkipPrefilter(3), new TakePrefilter(5)).subscribe(console.table);
 
     // this.db.collection('tests').values();
 
@@ -77,9 +77,9 @@ export class MainComponent implements OnInit {
 
     this.db.execute('example', 'NoReturn').subscribe(console.log);
 
-    // this.db.messaging.topic('test').pipe(take(3)).subscribe(alert);
+    this.db.messaging.topic('test').pipe(take(3)).subscribe(alert);
 
-    // this.db.messaging.messages().subscribe(console.warn);
+    this.db.messaging.messages().subscribe(console.warn);
   }
 
   createUser() {

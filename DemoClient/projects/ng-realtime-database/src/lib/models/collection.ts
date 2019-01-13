@@ -66,26 +66,71 @@ export class Collection<T> {
        collectionValue = this.collectionValues[index];
        collectionValue.subscriberCount++;
     } else {
-      const subscribeCommand = new SubscribeCommand(this.collectionName, prefilters);
-      collectionValue = new CollectionValue(subscribeCommand.referenceId, prefilters);
-
-      const wsSubscription = this.websocket.sendCommand(subscribeCommand, true)
-        .subscribe((response: (QueryResponse | ChangeResponse | UnloadResponse | LoadResponse)) => {
-          if (response.responseType === 'QueryResponse') {
-            collectionValue.subject.next((<QueryResponse>response).collection);
-          } else if (response.responseType === 'ChangeResponse') {
-            CollectionHelper.updateCollection<T>(collectionValue.subject, this.collectionInformation, <ChangeResponse>response);
-          } else if (response.responseType === 'UnloadResponse') {
-            CollectionHelper.unloadItem<T>(collectionValue.subject, this.collectionInformation, <UnloadResponse>response);
-          } else if (response.responseType === 'LoadResponse') {
-            CollectionHelper.loadItem<T>(collectionValue.subject, <LoadResponse>response);
-          }
-        });
-
-      collectionValue.setSubscription(wsSubscription);
-      this.collectionValues.push(collectionValue);
+      collectionValue = this.createWebsocketValuesSubscription(prefilters);
     }
 
+    return this.createCollectionObservable$(collectionValue, prefilters);
+  }
+
+  /**
+   * Add a value to the collection
+   * @param value The object to add to the collection
+   */
+  public add(value: T): Observable<CommandResult<T>> {
+    return this.createCommandResult$(<any>this.websocket.sendCommand(new CreateCommand(this.collectionName, value)));
+  }
+
+  /**
+   * Update a value of the collection
+   * @param value The object to update in the collection
+   */
+  public update(value: T): Observable<CommandResult<T>> {
+    return this.createCommandResult$(<any>this.websocket.sendCommand(new UpdateCommand(this.collectionName, value)));
+  }
+
+  /**
+   * Remove a value from the collection
+   * @param value The object to remove from the collection
+   */
+  public remove(value: T): Observable<CommandResult<T>> {
+    return this.collectionInformation.pipe(
+      switchMap((info: InfoResponse) => {
+        const primaryValues = {};
+        info.primaryKeys.forEach(pk => {
+          primaryValues[pk] = value[pk];
+        });
+
+        const deleteCommand = new DeleteCommand(this.collectionName, primaryValues);
+        return this.websocket.sendCommand(deleteCommand).pipe(map((response: DeleteResponse) => {
+          return new CommandResult<T>(response.error, response.validationResults);
+        }));
+    }));
+  }
+
+  private createWebsocketValuesSubscription(prefilters: IPrefilter<T>[]): CollectionValue<T> {
+    const subscribeCommand = new SubscribeCommand(this.collectionName, prefilters);
+    const collectionValue = new CollectionValue<T>(subscribeCommand.referenceId, prefilters);
+
+    const wsSubscription = this.websocket.sendCommand(subscribeCommand, true)
+      .subscribe((response: (QueryResponse | ChangeResponse | UnloadResponse | LoadResponse)) => {
+        if (response.responseType === 'QueryResponse') {
+          collectionValue.subject.next((<QueryResponse>response).collection);
+        } else if (response.responseType === 'ChangeResponse') {
+          CollectionHelper.updateCollection<T>(collectionValue.subject, this.collectionInformation, <ChangeResponse>response);
+        } else if (response.responseType === 'UnloadResponse') {
+          CollectionHelper.unloadItem<T>(collectionValue.subject, this.collectionInformation, <UnloadResponse>response);
+        } else if (response.responseType === 'LoadResponse') {
+          CollectionHelper.loadItem<T>(collectionValue.subject, <LoadResponse>response);
+        }
+      });
+
+    collectionValue.setSubscription(wsSubscription);
+    this.collectionValues.push(collectionValue);
+
+    return collectionValue;
+  }
+
+  private createCollectionObservable$(collectionValue: CollectionValue<T>, prefilters: IPrefilter<T>[]): Observable<T[]> {
     return collectionValue.subject.pipe(finalize(() => {
       collectionValue.subscriberCount--;
 
@@ -109,43 +154,6 @@ export class Collection<T> {
       return new CommandResult<T>(response.error, response.validationResults,
         response.responseType === 'CreateResponse' ?
           (<CreateResponse>response).newObject : (<UpdateResponse>response).updatedObject);
-    }));
-  }
-
-  /**
-   * Add a value to the collection
-   * @param value The object to add to the collection
-   */
-  public add(value: T): Observable<CommandResult<T>> {
-    const createCommand = new CreateCommand(this.collectionName, value);
-    return this.createCommandResult$(<any>this.websocket.sendCommand(createCommand));
-  }
-
-  /**
-   * Update a value of the collection
-   * @param value The object to update in the collection
-   */
-  public update(value: T): Observable<CommandResult<T>> {
-    const updateCommand = new UpdateCommand(this.collectionName, value);
-    return this.createCommandResult$(<any>this.websocket.sendCommand(updateCommand));
-  }
-
-  /**
-   * Remove a value from the collection
-   * @param value The object to remove from the collection
-   */
-  public remove(value: T): Observable<CommandResult<T>> {
-    return this.collectionInformation.pipe(
-      switchMap((info: InfoResponse) => {
-        const primaryValues = {};
-        info.primaryKeys.forEach(pk => {
-          primaryValues[pk] = value[pk];
-        });
-
-        const deleteCommand = new DeleteCommand(this.collectionName, primaryValues);
-        return this.websocket.sendCommand(deleteCommand).pipe(map((response: DeleteResponse) => {
-          return new CommandResult<T>(response.error, response.validationResults);
-        }));
     }));
   }
 }

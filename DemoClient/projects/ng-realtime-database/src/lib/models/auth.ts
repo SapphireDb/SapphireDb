@@ -63,14 +63,7 @@ export class Auth {
   public login(username: string, password: string): Observable<UserData> {
     return this.websocket.sendCommand(new LoginCommand(username, password))
       .pipe(switchMap((response: LoginResponse) => {
-        const newAuthData: AuthData = {
-          authToken: response.authToken,
-          expiresAt: response.expiresAt,
-          validFor: response.validFor,
-          refreshToken: response.refreshToken,
-          userData: response.userData
-        };
-
+        const newAuthData: AuthData = response;
         this.authData$.next(newAuthData);
 
         localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
@@ -93,6 +86,31 @@ export class Auth {
     this.websocket.setBearer(null);
   }
 
+  private renewToken(authData: AuthData) {
+    this.renewPending = true;
+
+    this.websocket.sendCommand(new RenewCommand(authData.userData.id, authData.refreshToken))
+      .pipe(catchError((err: any) => {
+        return of(null);
+      }))
+      .subscribe((response: RenewResponse) => {
+        this.renewPending = false;
+        this.renewSubject$.next(response);
+
+        if (response) {
+          const newAuthData: AuthData = response;
+          this.authData$.next(newAuthData);
+
+          localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
+          this.websocket.setBearer(newAuthData.authToken);
+        } else {
+          localStorage.removeItem(LocalstoragePaths.authPath);
+          this.websocket.setBearer();
+          this.authData$.next(null);
+        }
+      });
+  }
+
   private isValid(): Observable<boolean> {
     return this.authData$.pipe(switchMap((authData: AuthData) => {
       if (authData) {
@@ -101,35 +119,7 @@ export class Auth {
 
         if (difference <= (authData.validFor / 2)) {
           if (!this.renewPending) {
-            this.renewPending = true;
-
-            this.websocket.sendCommand(new RenewCommand(authData.userData.id, authData.refreshToken))
-              .pipe(catchError((err: any) => {
-                return of(null);
-              }))
-              .subscribe((response: RenewResponse) => {
-                this.renewPending = false;
-                this.renewSubject$.next(response);
-
-                if (response) {
-                  const newAuthData: AuthData = {
-                    userData: response.userData,
-                    refreshToken: response.refreshToken,
-                    validFor: response.validFor,
-                    expiresAt: response.expiresAt,
-                    authToken: response.authToken
-                  };
-
-                  this.authData$.next(newAuthData);
-
-                  localStorage.setItem(LocalstoragePaths.authPath, JSON.stringify(newAuthData));
-                  this.websocket.setBearer(newAuthData.authToken);
-                } else {
-                  localStorage.removeItem(LocalstoragePaths.authPath);
-                  this.websocket.setBearer();
-                  this.authData$.next(null);
-                }
-              });
+            this.renewToken(authData);
           }
 
           return this.renewSubject$.pipe(

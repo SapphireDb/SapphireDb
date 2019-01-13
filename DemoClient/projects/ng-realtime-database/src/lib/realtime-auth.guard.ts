@@ -12,47 +12,46 @@ export class RealtimeAuthGuard implements CanActivate {
               @Inject('realtimedatabase.options') private options: RealtimeDatabaseOptions) {}
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    const roles: string[] = next.data['roles'];
-
     return this.db.auth.isLoggedIn().pipe(switchMap((loggedIn: boolean) => {
       if (!loggedIn) {
-        if (this.options.loginRedirect) {
-          this.router.navigate([this.options.loginRedirect], {
-            queryParams: {
-              return: state.url
-            }
-          });
-        }
-
+        this.redirect(this.options.loginRedirect, state.url);
         return of(false);
       }
 
-      return this.db.auth.getUserData().pipe(map((userData: UserData) => {
-        if (roles && roles.length > 0) {
-          let hasRole = false;
+      const roles: string[] = next.data['roles'];
+      return this.checkRoles(roles, state.url);
+    }));
+  }
 
-          for (const role of roles) {
-            if (userData.roles.indexOf(role) !== -1) {
-              hasRole = true;
-              break;
-            }
-          }
+  private checkRoles(roles: string[], returnUrl: string): Observable<boolean> {
+    return this.db.auth.getUserData().pipe(map((userData: UserData) => {
+      if (roles && roles.length > 0) {
+        let hasRole = false;
 
-          if (!hasRole) {
-            if (this.options.unauthorizedRedirect) {
-              this.router.navigate([this.options.unauthorizedRedirect], {
-                queryParams: {
-                  return: state.url
-                }
-              });
-            }
-
-            return false;
+        for (const role of roles) {
+          if (userData.roles.indexOf(role) !== -1) {
+            hasRole = true;
+            break;
           }
         }
 
-        return true;
-      }));
+        if (!hasRole) {
+          this.redirect(this.options.unauthorizedRedirect, returnUrl);
+          return false;
+        }
+      }
+
+      return true;
     }));
+  }
+
+  private redirect(url: string, returnUrl: string) {
+    if (url) {
+      this.router.navigate([url], {
+        queryParams: {
+          return: returnUrl
+        }
+      });
+    }
   }
 }
