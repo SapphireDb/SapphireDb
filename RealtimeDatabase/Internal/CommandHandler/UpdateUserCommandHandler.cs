@@ -29,6 +29,60 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.roleManager = roleManager;
         }
 
+        private void SetUserProperties(dynamic user, UpdateUserCommand command, dynamic usermanager)
+        {
+            if (!String.IsNullOrEmpty(command.Email))
+            {
+                user.Email = command.Email;
+            }
+
+            if (!String.IsNullOrEmpty(command.UserName))
+            {
+                user.UserName = command.UserName;
+            }
+
+            if (command.AdditionalData != null)
+            {
+                foreach (KeyValuePair<string, JValue> keyValue in command.AdditionalData)
+                {
+                    PropertyInfo pi = contextTypeContainer.UserType.GetProperty(keyValue.Key,
+                        BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                    if (pi != null && pi.DeclaringType == contextTypeContainer.UserType)
+                    {
+                        pi.SetValue(user, keyValue.Value.ToObject(pi.PropertyType));
+                    }
+                }
+            }
+
+            if (!String.IsNullOrEmpty(command.Password))
+            {
+                user.PasswordHash = usermanager.PasswordHasher.HashPassword(user, command.Password);
+            }
+        }
+
+        private async Task HandleRolesUpdate(UpdateUserCommand command, dynamic usermanager, dynamic user)
+        {
+            if (command.Roles != null)
+            {
+                List<string> originalRoles =
+                    await(dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
+                IEnumerable<string> newRoles = command.Roles.Where(r => !originalRoles.Any(or => or == r));
+                IEnumerable<string> deletedRoles = originalRoles.Where(or => !command.Roles.Any(r => r == or));
+
+                foreach (string roleStr in newRoles)
+                {
+                    if (!await roleManager.RoleExistsAsync(roleStr))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(roleStr));
+                    }
+                }
+
+                await usermanager.RemoveFromRolesAsync(user, deletedRoles);
+                await usermanager.AddToRolesAsync(user, newRoles);
+            }
+        }
+
         public async Task Handle(WebsocketConnection websocketConnection, UpdateUserCommand command)
         {
             IRealtimeAuthContext context = GetContext();
@@ -40,57 +94,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (user != null)
                 {
-                    if (!String.IsNullOrEmpty(command.Email))
-                    {
-                        user.Email = command.Email;
-                    }
-
-                    if (!String.IsNullOrEmpty(command.UserName))
-                    {
-                        user.UserName = command.UserName;
-                    }
-
-                    if (command.AdditionalData != null)
-                    {
-                        foreach (KeyValuePair<string, JValue> keyValue in command.AdditionalData)
-                        {
-                            PropertyInfo pi = contextTypeContainer.UserType.GetProperty(keyValue.Key,
-                                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                            if (pi != null && pi.DeclaringType == contextTypeContainer.UserType)
-                            {
-                                pi.SetValue(user, keyValue.Value.ToObject(pi.PropertyType));
-                            }
-                        }
-                    }
-
-                    if (!String.IsNullOrEmpty(command.Password))
-                    {
-                        user.PasswordHash = usermanager.PasswordHasher.HashPassword(user, command.Password);
-                    }
+                    SetUserProperties(user, command, usermanager);
 
                     IdentityResult result = await usermanager.UpdateAsync(user);
 
                     if (result.Succeeded)
                     {
-                        if (command.Roles != null)
-                        {
-                            List<string> originalRoles =
-                                await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
-                            IEnumerable<string> newRoles = command.Roles.Where(r => !originalRoles.Any(or => or == r));
-                            IEnumerable<string> deletedRoles = originalRoles.Where(or => !command.Roles.Any(r => r == or));
-
-                            foreach (string roleStr in newRoles)
-                            {
-                                if (!await roleManager.RoleExistsAsync(roleStr))
-                                {
-                                    await roleManager.CreateAsync(new IdentityRole(roleStr));
-                                }
-                            }
-
-                            await usermanager.RemoveFromRolesAsync(user, deletedRoles);
-                            await usermanager.AddToRolesAsync(user, newRoles);
-                        }
+                        HandleRolesUpdate(command, usermanager, user);
 
                         await websocketConnection.Send(new UpdateUserResponse()
                         {

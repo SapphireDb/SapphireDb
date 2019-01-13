@@ -136,6 +136,12 @@ namespace RealtimeDatabase.Extensions
 
             services.AddIdentity<UserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<ContextType>();
 
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IRoleStore<IdentityRole>)));
+            services.AddTransient<IRoleStore<IdentityRole>, RoleStore<IdentityRole, RealtimeAuthContext<UserType>, string>>();
+
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(RoleManager<IdentityRole>)));
+            services.AddTransient<RoleManager<IdentityRole>>();
+
             services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IUserStore<UserType>)));
             services.AddTransient<IUserStore<UserType>, UserStore<UserType, IdentityRole, RealtimeAuthContext<UserType>, string>>();
 
