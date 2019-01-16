@@ -13,6 +13,7 @@ export interface AuthInfo {
   authentication: boolean;
   authorization: boolean;
   roles?: string[];
+  functionName?: string;
 }
 
 export interface PropertyAuthInfo extends AuthInfo {

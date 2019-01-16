@@ -24,105 +24,65 @@ namespace RealtimeDatabase.Internal
                 PrimaryKeys = primaryKeys
             };
 
-            QueryAuthAttribute queryAuthAttribute = t.GetCustomAttribute<QueryAuthAttribute>();
-
-            Dictionary<string, AuthInfo> propertiesQueryAuthInfo = t.GetProperties()
+            GetAttributeData<QueryAuthAttribute>(t, infoResponse, true);
+            infoResponse.QueryAuth.Properties = t.GetProperties()
                 .Where(pi => pi.GetCustomAttribute<QueryAuthAttribute>() != null)
                 .ToDictionary(
                     pi => pi.Name.ToCamelCase(),
-                    pi => new AuthInfo()
-                    {
-                        Authentication = true,
-                        Roles = pi.GetCustomAttribute<QueryAuthAttribute>().Roles
+                    pi => {
+                        QueryAuthAttribute queryAuthAttribute = pi.GetCustomAttribute<QueryAuthAttribute>();
+
+                        return new AuthInfo()
+                        {
+                            Authentication = true,
+                            Roles = queryAuthAttribute.Roles,
+                            FunctionName = queryAuthAttribute.FunctionName
+                        };
                     }
                 );
 
-            if (queryAuthAttribute != null)
-            {
-                infoResponse.QueryAuth = new PropertyAuthInfo()
-                {
-                    Authentication = true,
-                    Roles = queryAuthAttribute.Roles,
-                    Properties = propertiesQueryAuthInfo
-                };
-            }
-            else
-            {
-                infoResponse.QueryAuth = new PropertyAuthInfo()
-                {
-                    Authentication = false,
-                    Properties = propertiesQueryAuthInfo
-                };
-            }
+            GetAttributeData<CreateAuthAttribute>(t, infoResponse);
+            GetAttributeData<RemoveAuthAttribute>(t, infoResponse);
 
-            CreateAuthAttribute createAuthAttribute = t.GetCustomAttribute<CreateAuthAttribute>();
-
-            if (createAuthAttribute != null)
-            {
-                infoResponse.CreateAuth = new AuthInfo()
-                {
-                    Authentication = true,
-                    Roles = createAuthAttribute.Roles
-                };
-            }
-            else
-            {
-                infoResponse.CreateAuth = new AuthInfo()
-                {
-                    Authentication = false
-                };
-            }
-
-            RemoveAuthAttribute removeAuthAttribute = t.GetCustomAttribute<RemoveAuthAttribute>();
-
-            if (removeAuthAttribute != null)
-            {
-                infoResponse.RemoveAuth = new AuthInfo()
-                {
-                    Authentication = true,
-                    Roles = removeAuthAttribute.Roles
-                };
-            }
-            else
-            {
-                infoResponse.RemoveAuth = new AuthInfo()
-                {
-                    Authentication = false
-                };
-            }
-
-            UpdateAuthAttribute updateAuthAttribute = t.GetCustomAttribute<UpdateAuthAttribute>();
-
-            Dictionary<string, AuthInfo> propertiesUpdateAuthInfo = t.GetProperties()
+            GetAttributeData<UpdateAuthAttribute>(t, infoResponse, true);
+            infoResponse.UpdateAuth.Properties = t.GetProperties()
                 .Where(pi => pi.GetCustomAttribute<UpdatableAttribute>() != null && pi.GetCustomAttribute<UpdateAuthAttribute>() != null)
                 .ToDictionary(
                     pi => pi.Name.ToCamelCase(),
-                    pi => new AuthInfo()
-                    {
-                        Authentication = true,
-                        Roles = pi.GetCustomAttribute<UpdateAuthAttribute>().Roles
+                    pi => {
+                        UpdateAuthAttribute updateAuthAttribute = pi.GetCustomAttribute<UpdateAuthAttribute>();
+
+                        return new AuthInfo()
+                        {
+                            Authentication = true,
+                            Roles = updateAuthAttribute.Roles,
+                            FunctionName = updateAuthAttribute.FunctionName
+                        };
                     }
                 );
 
-            if (updateAuthAttribute != null)
+            return infoResponse;
+        }
+
+        private static void GetAttributeData<T>(Type t, InfoResponse infoResponse, bool userPropertyAuth = false) where T : AuthAttributeBase
+        {
+            AuthAttributeBase authAttribute = t.GetCustomAttribute<T>();
+            AuthInfo authInfo = userPropertyAuth ? new PropertyAuthInfo() : new AuthInfo();
+
+            if (authAttribute != null)
             {
-                infoResponse.UpdateAuth = new PropertyAuthInfo()
-                {
-                    Authentication = true,
-                    Roles = updateAuthAttribute.Roles,
-                    Properties = propertiesUpdateAuthInfo
-                };
+                authInfo.Authentication = true;
+                authInfo.Roles = authAttribute.Roles;
+                authAttribute.FunctionName = authAttribute.FunctionName;
             }
             else
             {
-                infoResponse.UpdateAuth = new PropertyAuthInfo()
-                {
-                    Authentication = false,
-                    Properties = propertiesUpdateAuthInfo
-                };
+                authInfo.Authentication = false;
             }
 
-            return infoResponse;
+            Type attributeType = typeof(T);
+            string keyName = attributeType.Name.Remove(attributeType.Name.LastIndexOf("Attribute"));
+            typeof(InfoResponse).GetProperty(keyName).SetValue(infoResponse, authInfo);
         }
 
         public static async Task SendUsersUpdate(IRealtimeAuthContext db, AuthDbContextTypeContainer typeContainer, object usermanager,

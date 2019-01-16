@@ -5,12 +5,8 @@ using System.Text;
 namespace RealtimeDatabase.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class RemoveAuthAttribute : Attribute
+    public class RemoveAuthAttribute : AuthAttributeBase
     {
-        public string[] Roles { get; set; }
-
-        public string FunctionName { get; set; }
-
         public RemoveAuthAttribute()
         {
 

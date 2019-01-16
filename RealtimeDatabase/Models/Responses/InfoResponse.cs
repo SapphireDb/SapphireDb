@@ -33,6 +33,8 @@ namespace RealtimeDatabase.Models.Responses
         }
 
         public string[] Roles { get; set; }
+
+        public string FunctionName { get; set; }
     }
 
     class PropertyAuthInfo : AuthInfo

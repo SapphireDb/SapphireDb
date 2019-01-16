@@ -34,91 +34,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             try
             {
-                Type actionHandlerType = actionMapper.GetHandler(command);
-
-                if (actionHandlerType != null)
-                {
-                    MethodInfo actionMethod = actionMapper.GetAction(command, actionHandlerType);
-
-                    if (actionMethod != null)
-                    {
-                        ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
-
-                        if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
-                        {
-                            await websocketConnection.Send(new ExecuteResponse()
-                            {
-                                ReferenceId = command.ReferenceId,
-                                Error = new Exception("User is not allowed to execute actions of this handler.")
-                            });
-
-                            return;
-                        }
-
-                        if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
-                        {
-                            await websocketConnection.Send(new ExecuteResponse()
-                            {
-                                ReferenceId = command.ReferenceId,
-                                Error = new Exception("User is not allowed to execute action.")
-                            });
-
-                            return;
-                        }
-
-                        if (actionHandler != null)
-                        {
-                            actionHandler.WebsocketConnection = websocketConnection;
-                            actionHandler.ExecuteCommand = command;
-
-                            object[] parameters = actionMethod.GetParameters().Select(parameter => {
-                                object parameterValue = command.Parameters[parameter.Position];
-
-                                if (parameterValue.GetType() == typeof(JObject))
-                                {
-                                    return ((JObject)parameterValue).ToObject(parameter.ParameterType);
-                                }
-
-                                return parameterValue;
-                            }).ToArray();
-
-                            logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
-
-                            object result = actionMethod.Invoke(actionHandler, parameters);
-
-                            if (result != null)
-                            {
-                                Type type = result.GetType();
-
-                                if (type.BaseType.BaseType == typeof(Task))
-                                {
-                                    result = await (dynamic)result;
-                                }
-                                else if (type.BaseType == typeof(Task))
-                                {
-                                    await (dynamic)result;
-                                    result = null;
-                                }
-                            }
-
-                            await websocketConnection.Send(new ExecuteResponse()
-                            {
-                                ReferenceId = command.ReferenceId,
-                                Result = result
-                            });
-
-                            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
-
-                            return;
-                        }
-                    }
-                }
-
-                await websocketConnection.Send(new ExecuteResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("No action to execute was found.")
-                });
+                await GetActionDetails(command, websocketConnection);
             }
             catch (RuntimeBinderException)
             {
@@ -128,14 +44,104 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     Result = null
                 });
             }
-            //catch (Exception ex)
-            //{
-            //    await websocketConnection.Send(new ExecuteResponse()
-            //    {
-            //        ReferenceId = command.ReferenceId,
-            //        Error = ex
-            //    });
-            //}
+        }
+
+        private async Task GetActionDetails(ExecuteCommand command, WebsocketConnection websocketConnection)
+        {
+            Type actionHandlerType = actionMapper.GetHandler(command);
+
+            if (actionHandlerType != null)
+            {
+                MethodInfo actionMethod = actionMapper.GetAction(command, actionHandlerType);
+
+                if (actionMethod != null)
+                {
+                    ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
+
+                    if (actionHandler != null)
+                    {
+                        if (!await CheckAccessToHandler(actionHandlerType, actionMethod, command, actionHandler, websocketConnection))
+                            return;
+
+                        await ExecuteAction(actionHandler, websocketConnection, command, actionMethod);
+                    }
+                }
+                else
+                {
+                    await websocketConnection.Send(new ExecuteResponse()
+                    {
+                        ReferenceId = command.ReferenceId,
+                        Error = new Exception("No action to execute was found.")
+                    });
+                }
+            }
+        }
+
+        private async Task ExecuteAction(ActionHandlerBase actionHandler, WebsocketConnection websocketConnection, ExecuteCommand command,
+            MethodInfo actionMethod)
+        {
+            actionHandler.WebsocketConnection = websocketConnection;
+            actionHandler.ExecuteCommand = command;
+
+            logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
+
+            object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
+
+            if (result != null)
+            {
+                try { result = await (dynamic)result; }
+                catch { /* Do nothing because result is not an awaitable and already contains the expected result */ }
+            }
+
+            await websocketConnection.Send(new ExecuteResponse()
+            {
+                ReferenceId = command.ReferenceId,
+                Result = result
+            });
+
+            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
+        }
+
+        private async Task<bool> CheckAccessToHandler(Type actionHandlerType, MethodInfo actionMethod, ExecuteCommand command,
+            ActionHandlerBase actionHandler, WebsocketConnection websocketConnection)
+        {
+            if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
+            {
+                await websocketConnection.Send(new ExecuteResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = new Exception("User is not allowed to execute actions of this handler.")
+                });
+
+                return false;
+            }
+
+            if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
+            {
+                await websocketConnection.Send(new ExecuteResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = new Exception("User is not allowed to execute action.")
+                });
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private object[] GetParameters(MethodInfo actionMethod, ExecuteCommand command)
+        {
+            return actionMethod.GetParameters().Select(parameter => {
+                object parameterValue = command.Parameters[parameter.Position];
+
+                if (parameterValue.GetType() == typeof(JObject))
+                {
+                    return ((JObject)parameterValue).ToObject(parameter.ParameterType);
+                }
+
+                return parameterValue;
+            }).ToArray();
         }
     }
 }

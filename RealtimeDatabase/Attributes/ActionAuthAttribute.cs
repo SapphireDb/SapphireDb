@@ -5,25 +5,18 @@ using System.Text;
 namespace RealtimeDatabase.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class ActionAuthAttribute : Attribute
+    public class ActionAuthAttribute : AuthAttributeBase
     {
-        public string[] Roles { get; set; }
-
-        public string FunctionName { get; set; }
-
         public ActionAuthAttribute()
         {
-
         }
 
-        public ActionAuthAttribute(string[] roles)
+        public ActionAuthAttribute(string[] roles) : base(roles)
         {
-            Roles = roles;
         }
 
-        public ActionAuthAttribute(string function)
+        public ActionAuthAttribute(string function) : base(function)
         {
-            FunctionName = function;
         }
     }
 }

@@ -208,6 +208,6 @@ export class WebsocketService {
 
     setTimeout(() => {
       this.connectToWebsocket();
-    }, 0);
+    }, 10);
   }
 }

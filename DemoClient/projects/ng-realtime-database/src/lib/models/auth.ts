@@ -94,9 +94,6 @@ export class Auth {
         return of(null);
       }))
       .subscribe((response: RenewResponse) => {
-        this.renewPending = false;
-        this.renewSubject$.next(response);
-
         if (response) {
           const newAuthData: AuthData = response;
           this.authData$.next(newAuthData);
@@ -108,6 +105,9 @@ export class Auth {
           this.websocket.setBearer();
           this.authData$.next(null);
         }
+
+        this.renewPending = false;
+        this.renewSubject$.next(response);
       });
   }
 
