@@ -31,57 +31,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public async Task Handle(WebsocketConnection websocketConnection, CreateUserCommand command)
         {
-            IRealtimeAuthContext context = GetContext();
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
             try
             {
-                dynamic newUser = Activator.CreateInstance(contextTypeContainer.UserType);
-                newUser.Email = command.Email;
-                newUser.UserName = command.UserName;
-
-                foreach (KeyValuePair<string, JValue> keyValue in command.AdditionalData)
-                {
-                    PropertyInfo pi = contextTypeContainer.UserType.GetProperty(keyValue.Key, 
-                        BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                    if (pi != null && pi.DeclaringType == contextTypeContainer.UserType)
-                    {
-                        pi.SetValue(newUser, keyValue.Value.ToObject(pi.PropertyType));
-                    }
-                }
-
-                IdentityResult result = await usermanager.CreateAsync(newUser, command.Password);
-
-                if (result.Succeeded)
-                {
-                    foreach (string roleStr in command.Roles)
-                    {
-                        if (!await roleManager.RoleExistsAsync(roleStr))
-                        {
-                            await roleManager.CreateAsync(new IdentityRole(roleStr));
-                        }
-                    }
-
-                    await usermanager.AddToRolesAsync(newUser, command.Roles);
-
-                    await websocketConnection.Send(new CreateUserResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        NewUser = await ModelHelper.GenerateUserData(newUser, contextTypeContainer, usermanager)
-                    });
-
-                    await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
-                    await MessageHelper.SendRolesUpdate(context, connectionManager);
-                }
-                else
-                {
-                    await websocketConnection.Send(new CreateUserResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        IdentityErrors = result.Errors
-                    });
-                }
+                await SaveUserToDb(command, usermanager, websocketConnection);
             }
             catch (Exception ex)
             {
@@ -91,6 +45,69 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     Error = ex
                 });
             }
+        }
+
+        private async Task SaveUserToDb(CreateUserCommand command, dynamic usermanager, WebsocketConnection websocketConnection)
+        {
+            dynamic newUser = CreateUserObject(command);
+            IdentityResult result = await usermanager.CreateAsync(newUser, command.Password);
+
+            if (result.Succeeded)
+            {
+                await SetUserRoles(command, usermanager, newUser);
+
+                await websocketConnection.Send(new CreateUserResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    NewUser = await ModelHelper.GenerateUserData(newUser, contextTypeContainer, usermanager)
+                });
+
+                IRealtimeAuthContext context = GetContext();
+
+                await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                await MessageHelper.SendRolesUpdate(context, connectionManager);
+            }
+            else
+            {
+                await websocketConnection.Send(new CreateUserResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    IdentityErrors = result.Errors
+                });
+            }
+        }
+
+        private async Task SetUserRoles(CreateUserCommand command, dynamic usermanager, dynamic newUser)
+        {
+            foreach (string roleStr in command.Roles)
+            {
+                if (!await roleManager.RoleExistsAsync(roleStr))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(roleStr));
+                }
+            }
+
+            await usermanager.AddToRolesAsync(newUser, command.Roles);
+        }
+
+        private dynamic CreateUserObject(CreateUserCommand command)
+        {
+            dynamic newUser = Activator.CreateInstance(contextTypeContainer.UserType);
+            newUser.Email = command.Email;
+            newUser.UserName = command.UserName;
+
+            foreach (KeyValuePair<string, JValue> keyValue in command.AdditionalData)
+            {
+                PropertyInfo pi = contextTypeContainer.UserType.GetProperty(keyValue.Key,
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                if (pi != null && pi.DeclaringType == contextTypeContainer.UserType)
+                {
+                    pi.SetValue(newUser, keyValue.Value.ToObject(pi.PropertyType));
+                }
+            }
+
+            return newUser;
         }
     }
 }

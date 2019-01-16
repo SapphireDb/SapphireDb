@@ -25,43 +25,35 @@ namespace RealtimeDatabase.Internal
             };
 
             GetAttributeData<QueryAuthAttribute>(t, infoResponse, true);
-            infoResponse.QueryAuth.Properties = t.GetProperties()
-                .Where(pi => pi.GetCustomAttribute<QueryAuthAttribute>() != null)
-                .ToDictionary(
-                    pi => pi.Name.ToCamelCase(),
-                    pi => {
-                        QueryAuthAttribute queryAuthAttribute = pi.GetCustomAttribute<QueryAuthAttribute>();
-
-                        return new AuthInfo()
-                        {
-                            Authentication = true,
-                            Roles = queryAuthAttribute.Roles,
-                            FunctionName = queryAuthAttribute.FunctionName
-                        };
-                    }
-                );
+            infoResponse.QueryAuth.Properties = GeneratePropertyInfo<QueryAuthAttribute>(t);
 
             GetAttributeData<CreateAuthAttribute>(t, infoResponse);
             GetAttributeData<RemoveAuthAttribute>(t, infoResponse);
 
             GetAttributeData<UpdateAuthAttribute>(t, infoResponse, true);
-            infoResponse.UpdateAuth.Properties = t.GetProperties()
-                .Where(pi => pi.GetCustomAttribute<UpdatableAttribute>() != null && pi.GetCustomAttribute<UpdateAuthAttribute>() != null)
+            infoResponse.UpdateAuth.Properties = GeneratePropertyInfo<UpdateAuthAttribute>(t, pi => pi.GetCustomAttribute<UpdatableAttribute>() != null);
+
+            return infoResponse;
+        }
+
+        private static Dictionary<string, AuthInfo> GeneratePropertyInfo<T>(Type t, Func<PropertyInfo, bool> condition = null)
+            where T : AuthAttributeBase
+        {
+            return t.GetProperties()
+                .Where(pi => pi.GetCustomAttribute<T>() != null && (condition != null ? condition(pi) : true))
                 .ToDictionary(
                     pi => pi.Name.ToCamelCase(),
                     pi => {
-                        UpdateAuthAttribute updateAuthAttribute = pi.GetCustomAttribute<UpdateAuthAttribute>();
+                        AuthAttributeBase authAttribute = pi.GetCustomAttribute<T>();
 
                         return new AuthInfo()
                         {
                             Authentication = true,
-                            Roles = updateAuthAttribute.Roles,
-                            FunctionName = updateAuthAttribute.FunctionName
+                            Roles = authAttribute.Roles,
+                            FunctionName = authAttribute.FunctionName
                         };
                     }
                 );
-
-            return infoResponse;
         }
 
         private static void GetAttributeData<T>(Type t, InfoResponse infoResponse, bool userPropertyAuth = false) where T : AuthAttributeBase

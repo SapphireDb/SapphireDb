@@ -88,6 +88,48 @@ namespace RealtimeDatabase.Extensions
             where ContextType : RealtimeAuthContext<UserType>
             where UserType : IdentityUser
         {
+            services.AddDbContext<ContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
+            services.AddTransient<AuthDbContextAccesor>();
+
+            services.AddSingleton(new AuthDbContextTypeContainer() {
+                DbContextType = typeof(ContextType),
+                UserManagerType = typeof(UserManager<UserType>),
+                UserType = typeof(UserType)
+            });
+
+            AddHandlers(services);
+            AddIdentityProviders<UserType, ContextType>(services, identityOptionsAction);
+            AddAuthenticationProviders(services, jwtOptions);
+
+            return services;
+        }
+
+        private static void AddHandlers(IServiceCollection services)
+        {
+            RealtimeDatabaseOptions realtimeDatabaseOptions =
+                (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
+
+            if (realtimeDatabaseOptions.EnableAuthCommands)
+            {
+                CommandHandlerMapper commandHandlerMapper =
+                    (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;
+
+                foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.authCommandHandlerTypes)
+                {
+                    services.AddTransient(handler.Value);
+                }
+            }
+            else
+            {
+                services.AddTransient<LoginCommandHandler>();
+                services.AddTransient<RenewCommandHandler>();
+            }
+        }
+
+        private static void AddIdentityProviders<UserType, ContextType>(IServiceCollection services, Action<IdentityOptions> identityOptionsAction)
+            where ContextType : RealtimeAuthContext<UserType>
+            where UserType : IdentityUser
+        {
             if (identityOptionsAction == null)
             {
                 identityOptionsAction = options =>
@@ -99,39 +141,6 @@ namespace RealtimeDatabase.Extensions
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                 };
-            }
-
-            services.AddDbContext<ContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
-
-            services.AddSingleton(jwtOptions);
-
-            services.AddSingleton(new AuthDbContextTypeContainer() {
-                DbContextType = typeof(ContextType),
-                UserManagerType = typeof(UserManager<UserType>),
-                UserType = typeof(UserType)
-            });
-
-            services.AddTransient<AuthDbContextAccesor>();
-
-            services.AddTransient<JwtIssuer>();
-
-            RealtimeDatabaseOptions realtimeDatabaseOptions =
-                (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
-
-            if (realtimeDatabaseOptions.EnableAuthCommands)
-            {
-                CommandHandlerMapper commandHandlerMapper =
-                (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;
-
-                foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.authCommandHandlerTypes)
-                {
-                    services.AddTransient(handler.Value);
-                }
-            }
-            else
-            {
-                services.AddTransient<LoginCommandHandler>();
-                services.AddTransient<RenewCommandHandler>();
             }
 
             services.AddIdentity<UserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<ContextType>();
@@ -147,6 +156,12 @@ namespace RealtimeDatabase.Extensions
 
             services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(UserManager<UserType>)));
             services.AddTransient<UserManager<UserType>>();
+        }
+
+        private static void AddAuthenticationProviders(IServiceCollection services, JwtOptions jwtOptions)
+        {
+            services.AddSingleton(jwtOptions);
+            services.AddTransient<JwtIssuer>();
 
             services.AddAuthentication(cfg => {
                 cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -178,8 +193,6 @@ namespace RealtimeDatabase.Extensions
             {
 
             });
-
-            return services;
         }
     }
 }

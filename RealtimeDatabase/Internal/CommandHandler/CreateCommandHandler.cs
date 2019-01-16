@@ -24,56 +24,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
         public async Task Handle(WebsocketConnection websocketConnection, CreateCommand command)
         {
             RealtimeDbContext db = GetContext();
-
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
             if (property.Key != null)
             {
                 try
                 {
-                    object newValue = command.Value.ToObject(property.Key);
-
-                    if (!property.Key.CanCreate(websocketConnection, newValue))
-                    {
-                        await websocketConnection.Send(new CreateResponse()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            Error = new Exception("The user is not authorized for this action.")
-                        });
-
-                        return;
-                    }
-
-                    MethodInfo mi = property.Key.GetMethod("OnCreate");
-
-                    if (mi != null && 
-                        mi.ReturnType == typeof(void) && 
-                        mi.GetParameters().Count() == 1 && 
-                        mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
-                    {
-                        mi.Invoke(newValue, new object[] { websocketConnection });
-                    }
-
-                    if (!ValidationHelper.ValidateModel(newValue, out Dictionary<string, List<string>> validationResults))
-                    {
-                        await websocketConnection.Send(new CreateResponse()
-                        {
-                            NewObject = newValue,
-                            ReferenceId = command.ReferenceId,
-                            ValidationResults = validationResults
-                        });
-
-                        return;
-                    }
-
-                    db.Add(newValue);
-                    db.SaveChanges();
-
-                    await websocketConnection.Send(new CreateResponse()
-                    {
-                        NewObject = newValue,
-                        ReferenceId = command.ReferenceId
-                    });
+                    await CreateObject(command, property, websocketConnection, db);
                 }
                 catch (Exception ex)
                 {
@@ -84,6 +41,62 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     });
                 }
             }
+        }
+
+        private async Task CreateObject(CreateCommand command, KeyValuePair<Type, string> property, WebsocketConnection websocketConnection, RealtimeDbContext db)
+        {
+            object newValue = command.Value.ToObject(property.Key);
+
+            if (!property.Key.CanCreate(websocketConnection, newValue))
+            {
+                await websocketConnection.Send(new CreateResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = new Exception("The user is not authorized for this action.")
+                });
+
+                return;
+            }
+
+            if (await SetPropertiesAndValidate(property, newValue, websocketConnection, command))
+            {
+                db.Add(newValue);
+                db.SaveChanges();
+
+                await websocketConnection.Send(new CreateResponse()
+                {
+                    NewObject = newValue,
+                    ReferenceId = command.ReferenceId
+                });
+            }
+        }
+
+        private async Task<bool> SetPropertiesAndValidate(KeyValuePair<Type, string> property, object newValue, WebsocketConnection websocketConnection,
+            CreateCommand command)
+        {
+            MethodInfo mi = property.Key.GetMethod("OnCreate");
+
+            if (mi != null &&
+                mi.ReturnType == typeof(void) &&
+                mi.GetParameters().Count() == 1 &&
+                mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+            {
+                mi.Invoke(newValue, new object[] { websocketConnection });
+            }
+
+            if (!ValidationHelper.ValidateModel(newValue, out Dictionary<string, List<string>> validationResults))
+            {
+                await websocketConnection.Send(new CreateResponse()
+                {
+                    NewObject = newValue,
+                    ReferenceId = command.ReferenceId,
+                    ValidationResults = validationResults
+                });
+
+                return false;
+            }
+
+            return true;
         }
     }
 }
