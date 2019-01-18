@@ -41,10 +41,22 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             IRealtimeAuthContext context = GetContext();
 
-            context.RefreshTokens.RemoveRange(context.RefreshTokens.Where(rt => rt.CreatedOn.Add(jwtOptions.ValidFor) < DateTime.UtcNow));
-            context.SaveChanges();
+            if (!await QueryToken(context, command, websocketConnection))
+                return;
 
-            RefreshToken rT = context.RefreshTokens.FirstOrDefault(r => r.UserId == command.UserId && r.RefreshKey == command.RefreshToken);
+            if (!await RenewToken(command, context, websocketConnection))
+            {
+                await websocketConnection.Send(new RenewResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = new Exception("Renew failed")
+                });
+            }
+        }
+
+        private async Task<bool> QueryToken(IRealtimeAuthContext context, RenewCommand command, WebsocketConnection websocketConnection)
+        {
+            RefreshToken rT = GetRefreshToken(context, command);
 
             if (rT == null)
             {
@@ -53,11 +65,16 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     ReferenceId = command.ReferenceId,
                     Error = new Exception("Wrong refresh token")
                 });
-                return;
+                return false;
             }
 
             context.RefreshTokens.Remove(rT);
 
+            return true;
+        }
+
+        private async Task<bool> RenewToken(RenewCommand command, IRealtimeAuthContext context, WebsocketConnection websocketConnection)
+        {
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
             IdentityUser user = await usermanager.FindByIdAsync(command.UserId);
@@ -83,14 +100,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 };
 
                 await websocketConnection.Send(renewResponse);
-                return;
+                return true;
             }
 
-            await websocketConnection.Send(new RenewResponse()
-            {
-                ReferenceId = command.ReferenceId,
-                Error = new Exception("Renew failed")
-            });
+            return false;
+        }
+
+        private RefreshToken GetRefreshToken(IRealtimeAuthContext context, RenewCommand command)
+        {
+            context.RefreshTokens.RemoveRange(context.RefreshTokens.Where(rt => rt.CreatedOn.Add(jwtOptions.ValidFor) < DateTime.UtcNow));
+            context.SaveChanges();
+
+            return context.RefreshTokens.FirstOrDefault(r => r.UserId == command.UserId && r.RefreshKey == command.RefreshToken);
         }
     }
 }
