@@ -1,10 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using RealtimeDatabase.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace RealtimeDatabase.Models.Responses
 {

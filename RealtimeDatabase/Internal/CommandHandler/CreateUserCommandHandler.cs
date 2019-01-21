@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
@@ -7,9 +6,7 @@ using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal.CommandHandler

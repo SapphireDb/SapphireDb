@@ -8,14 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Websocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Extensions

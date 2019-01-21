@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Auth;
 using System;
@@ -8,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal
