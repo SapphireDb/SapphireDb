@@ -59,11 +59,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await websocketConnection.Send(new DeleteRoleResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Role not found")
-                });
+                await websocketConnection.SendException<DeleteRoleResponse>(command, "Role not found");
             }            
         }
     }

@@ -5,18 +5,20 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Websocket.Models
 {
     public class WebsocketConnection
     {
-        public WebsocketConnection(WebSocket _webSocket, HttpContext _context)
+        public WebsocketConnection(WebSocket webSocket, HttpContext context)
         {
             Id = Guid.NewGuid();
             Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
-            Websocket = _webSocket;
-            HttpContext = _context;
+            Websocket = webSocket;
+            HttpContext = context;
             Lock = new SemaphoreSlim(1, 1);
         }
 
@@ -48,6 +50,23 @@ namespace RealtimeDatabase.Websocket.Models
             {
                 Lock.Release();
             }
+        }
+
+        public async Task SendException<T>(CommandBase command, Exception exception)
+            where T : ResponseBase
+        {
+            T response = Activator.CreateInstance<T>();
+
+            response.ReferenceId = command.ReferenceId;
+            response.Error = exception;
+
+            await Send(response);
+        }
+
+        public async Task SendException<T>(CommandBase command, string message)
+            where T : ResponseBase
+        {
+            await SendException<T>(command, new Exception(message));
         }
     }
 }

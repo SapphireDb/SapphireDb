@@ -19,9 +19,9 @@ namespace RealtimeDatabase.Internal
         public readonly Dictionary<string, Type> commandHandlerTypes;
         public readonly Dictionary<string, Type> authCommandHandlerTypes;
 
-        public CommandHandlerMapper(RealtimeDatabaseOptions _options)
+        public CommandHandlerMapper(RealtimeDatabaseOptions options)
         {
-            options = _options;
+            this.options = options;
 
             commandHandlerTypes = GetHandlerTypes(typeof(CommandHandlerBase));
             authCommandHandlerTypes = GetHandlerTypes(typeof(AuthCommandHandlerBase));
@@ -77,12 +77,7 @@ namespace RealtimeDatabase.Internal
                     }
                     catch (Exception ex)
                     {
-                        await websocketConnection.Send(new ResponseBase()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            Error = ex
-                        });
-
+                        await websocketConnection.SendException<ResponseBase>(command, ex);
                         logger.LogError("Error handling " + command.GetType().Name);
                         logger.LogError(ex.Message);
                     }
@@ -97,11 +92,8 @@ namespace RealtimeDatabase.Internal
             {
                 if (handlerType != typeof(LoginCommandHandler) && !websocketConnection.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    await websocketConnection.Send(new ResponseBase()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("Authentication required to perform this action")
-                    });
+                    await websocketConnection.SendException<ResponseBase>(command,
+                        "Authentication required to perform this action");
                     return false;
                 }
             }
@@ -115,30 +107,21 @@ namespace RealtimeDatabase.Internal
             {
                 if (!websocketConnection.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    await websocketConnection.Send(new ResponseBase()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("User needs authentication to execute auth commands.")
-                    });
+                    await websocketConnection.SendException<ResponseBase>(command,
+                        "User needs authentication to execute auth commands.");
                     return false;
                 } 
                 else if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler)) 
                     && !options.AuthInfoAllowFunction(websocketConnection))
                 {
-                    await websocketConnection.Send(new ResponseBase()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("User is not allowed to execute auth info commands.")
-                    });
+                    await websocketConnection.SendException<ResponseBase>(command,
+                        "User is not allowed to execute auth info commands.");
                     return false;
                 }
                 else if (!options.AuthAllowFunction(websocketConnection))
                 {
-                    await websocketConnection.Send(new ResponseBase()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("User is not allowed to execute auth commands.")
-                    });
+                    await websocketConnection.SendException<ResponseBase>(command,
+                        "User is not allowed to execute auth commands.");
                     return false;
                 }
             }

@@ -27,11 +27,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             if (string.IsNullOrEmpty(command.Username) || string.IsNullOrEmpty(command.Password))
             {
-                await websocketConnection.Send(new LoginResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Username and password cannot be empty")
-                });
+                await websocketConnection.SendException<LoginResponse>(command, "Username and password cannot be empty");
                 return;
             }
 
@@ -44,16 +40,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if ((bool)await (dynamic)contextTypeContainer.UserManagerType.GetMethod("CheckPasswordAsync").Invoke(usermanager, new object[] { userToVerify, command.Password }))
                 {
-                    await websocketConnection.Send(CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify, usermanager));
+                    await websocketConnection.Send(await CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify, usermanager));
                     return;
                 }
             }
 
-            await websocketConnection.Send(new LoginResponse()
-            {
-                ReferenceId = command.ReferenceId,
-                Error = new Exception("Login failed")
-            });
+            await websocketConnection.SendException<LoginResponse>(command, "Login failed");
         }
 
         private RefreshToken CreateRefreshToken(IdentityUser userToVerify)

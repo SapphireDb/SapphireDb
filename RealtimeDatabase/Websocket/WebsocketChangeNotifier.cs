@@ -64,7 +64,6 @@ namespace RealtimeDatabase.Websocket
                     List<object> currentCollectionSetLoaded = currentCollectionSet.ToList();
                     List<object[]> currentCollectionPrimaryValues = new List<object[]>();
 
-
                     SendDataToClient(currentCollectionSetLoaded, currentCollectionPrimaryValues, property, db, cs, relevantChanges, connection);
                 }
             }
@@ -105,7 +104,7 @@ namespace RealtimeDatabase.Websocket
 
             foreach (object[] transmittedObject in cs.TransmittedData)
             {
-                if (!currentCollectionPrimaryValues.Any(pks => !pks.Except(transmittedObject).Any()))
+                if (currentCollectionPrimaryValues.All(pks => pks.Except(transmittedObject).Any()))
                 {
                     _ = connection.Send(new UnloadResponse()
                     {

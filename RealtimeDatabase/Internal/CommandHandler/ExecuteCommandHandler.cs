@@ -64,11 +64,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 else
                 {
-                    await websocketConnection.Send(new ExecuteResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = new Exception("No action to execute was found.")
-                    });
+                    await websocketConnection.SendException<ExecuteResponse>(command,
+                        "No action to execute was found.");
                 }
             }
         }
@@ -103,23 +100,15 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
             {
-                await websocketConnection.Send(new ExecuteResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("User is not allowed to execute actions of this handler.")
-                });
-
+                await websocketConnection.SendException<ExecuteResponse>(command,
+                    "User is not allowed to execute actions of this handler.");
                 return false;
             }
 
             if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
             {
-                await websocketConnection.Send(new ExecuteResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("User is not allowed to execute action.")
-                });
-
+                await websocketConnection.SendException<ExecuteResponse>(command,
+                    "User is not allowed to execute action.");
                 return false;
             }
 

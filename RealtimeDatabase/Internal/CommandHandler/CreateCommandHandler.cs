@@ -30,11 +30,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.Send(new CreateResponse() {
-                        NewObject = command.Value,
-                        ReferenceId = command.ReferenceId,
-                        Error = ex
-                    });
+                    await websocketConnection.SendException<CreateResponse>(command, ex);
                 }
             }
         }
@@ -45,12 +41,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (!property.Key.CanCreate(websocketConnection, newValue))
             {
-                await websocketConnection.Send(new CreateResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("The user is not authorized for this action.")
-                });
-
+                await websocketConnection.SendException<CreateResponse>(command,
+                    "The user is not authorized for this action.");
                 return;
             }
 

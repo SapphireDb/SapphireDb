@@ -9,12 +9,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class SubscribeRolesCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeRolesCommand>
     {
-        private readonly AuthDbContextTypeContainer contextTypeContainer;
-
-        public SubscribeRolesCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
+        public SubscribeRolesCommandHandler(AuthDbContextAccesor authDbContextAccesor, IServiceProvider serviceProvider)
             : base(authDbContextAccesor, serviceProvider)
         {
-            this.contextTypeContainer = contextTypeContainer;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, SubscribeRolesCommand command)

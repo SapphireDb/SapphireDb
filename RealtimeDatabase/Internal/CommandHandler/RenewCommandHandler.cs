@@ -27,11 +27,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             if (string.IsNullOrEmpty(command.UserId) || string.IsNullOrEmpty(command.RefreshToken))
             {
-                await websocketConnection.Send(new RenewResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Userid and refresh token cannot be empty")
-                });
+                await websocketConnection.SendException<RenewResponse>(command,
+                    "Userid and refresh token cannot be empty");
                 return;
             }
 
@@ -42,11 +39,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (!await RenewToken(command, context, websocketConnection))
             {
-                await websocketConnection.Send(new RenewResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Renew failed")
-                });
+                await websocketConnection.SendException<RenewResponse>(command, "Renew failed");
             }
         }
 
@@ -56,11 +49,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (rT == null)
             {
-                await websocketConnection.Send(new RenewResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Wrong refresh token")
-                });
+                await websocketConnection.SendException<RenewResponse>(command, "Wrong refresh token");
                 return false;
             }
 

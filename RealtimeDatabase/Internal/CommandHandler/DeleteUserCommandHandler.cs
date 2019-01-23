@@ -53,12 +53,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
             }
 
-
-            await websocketConnection.Send(new DeleteUserResponse()
-            {
-                ReferenceId = command.ReferenceId,
-                Error = new Exception("Deleting user failed")
-            });
+            await websocketConnection.SendException<DeleteUserResponse>(command, "Deleting user failed");
         }
     }
 }

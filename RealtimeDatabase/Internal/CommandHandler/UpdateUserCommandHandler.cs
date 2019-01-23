@@ -36,11 +36,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             catch (Exception ex)
             {
-                await websocketConnection.Send(new CreateUserResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = ex
-                });
+                await websocketConnection.SendException<UpdateUserResponse>(command, ex);
             }
         }
 
@@ -56,10 +52,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await websocketConnection.Send(new UpdateUserResponse()
-                {
-                    Error = new Exception("No user with this id was found.")
-                });
+                await websocketConnection.SendException<UpdateUserResponse>(command, "No user with this id was found.");
             }
         }
 

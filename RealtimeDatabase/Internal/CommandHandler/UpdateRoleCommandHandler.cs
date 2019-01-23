@@ -47,7 +47,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     await MessageHelper.SendRolesUpdate(db, connectionManager);
 
-                    if (db.UserRoles.Where(ur => ur.RoleId == role.Id).Any())
+                    if (db.UserRoles.Any(ur => ur.RoleId == role.Id))
                     {
                         dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
                         await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
@@ -64,11 +64,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
             else
             {
-                await websocketConnection.Send(new UpdateRoleResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("Role not found")
-                });
+                await websocketConnection.SendException<UpdateRoleResponse>(command, "Role not found");
             }            
         }
     }

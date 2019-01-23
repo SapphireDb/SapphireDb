@@ -31,11 +31,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.Send(new UpdateResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        Error = ex
-                    });
+                    await websocketConnection.SendException<UpdateResponse>(command, ex);
                 }
             }
         }
@@ -47,12 +43,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (!property.Key.CanUpdate(websocketConnection, updateValue))
             {
-                await websocketConnection.Send(new UpdateResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = new Exception("The user is not authorized for this action.")
-                });
-
+                await websocketConnection.SendException<UpdateResponse>(command,
+                    "The user is not authorized for this action.");
                 return;
             }
 
