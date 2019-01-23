@@ -25,7 +25,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public async Task Handle(WebsocketConnection websocketConnection, LoginCommand command)
         {
-            if (String.IsNullOrEmpty(command.Username) || String.IsNullOrEmpty(command.Password))
+            if (string.IsNullOrEmpty(command.Username) || string.IsNullOrEmpty(command.Password))
             {
                 await websocketConnection.Send(new LoginResponse()
                 {

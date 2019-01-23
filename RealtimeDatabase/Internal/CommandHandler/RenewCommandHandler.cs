@@ -25,7 +25,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public async Task Handle(WebsocketConnection websocketConnection, RenewCommand command)
         {
-            if (String.IsNullOrEmpty(command.UserId) || String.IsNullOrEmpty(command.RefreshToken))
+            if (string.IsNullOrEmpty(command.UserId) || string.IsNullOrEmpty(command.RefreshToken))
             {
                 await websocketConnection.Send(new RenewResponse()
                 {

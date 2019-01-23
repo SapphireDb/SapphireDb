@@ -27,14 +27,102 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.roleManager = roleManager;
         }
 
+        public async Task Handle(WebsocketConnection websocketConnection, UpdateUserCommand command)
+        {
+            try
+            {
+                dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+                await UpdateUser(usermanager, command, websocketConnection);
+            }
+            catch (Exception ex)
+            {
+                await websocketConnection.Send(new CreateUserResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = ex
+                });
+            }
+        }
+
+        private async Task UpdateUser(dynamic usermanager, UpdateUserCommand command, WebsocketConnection websocketConnection)
+        {
+            IRealtimeAuthContext context = GetContext();
+
+            dynamic user = await usermanager.FindByIdAsync(command.Id);
+
+            if (user != null)
+            {
+                await HandleUserUpdate(user, command, usermanager, websocketConnection, context);
+            }
+            else
+            {
+                await websocketConnection.Send(new UpdateUserResponse()
+                {
+                    Error = new Exception("No user with this id was found.")
+                });
+            }
+        }
+
+        private async Task HandleUserUpdate(dynamic user, UpdateUserCommand command, dynamic usermanager, WebsocketConnection websocketConnection,
+            IRealtimeAuthContext context)
+        {
+            SetUserProperties(user, command, usermanager);
+
+            IdentityResult result = await usermanager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                HandleRolesUpdate(command, usermanager, user);
+
+                await websocketConnection.Send(new UpdateUserResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    NewUser = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
+                });
+
+                await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                await MessageHelper.SendRolesUpdate(context, connectionManager);
+            }
+            else
+            {
+                await websocketConnection.Send(new UpdateUserResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    IdentityErrors = result.Errors
+                });
+            }
+        }
+
+        private async Task HandleRolesUpdate(UpdateUserCommand command, dynamic usermanager, dynamic user)
+        {
+            if (command.Roles != null)
+            {
+                List<string> originalRoles =
+                    await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
+                List<string> newRoles = command.Roles.Where(r => originalRoles.All(or => or != r)).ToList();
+                IEnumerable<string> deletedRoles = originalRoles.Where(or => command.Roles.All(r => r != or));
+
+                foreach (string roleStr in newRoles)
+                {
+                    if (!await roleManager.RoleExistsAsync(roleStr))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(roleStr));
+                    }
+                }
+
+                await usermanager.RemoveFromRolesAsync(user, deletedRoles);
+                await usermanager.AddToRolesAsync(user, newRoles);
+            }
+        }
+
         private void SetUserProperties(dynamic user, UpdateUserCommand command, dynamic usermanager)
         {
-            if (!String.IsNullOrEmpty(command.Email))
+            if (!string.IsNullOrEmpty(command.Email))
             {
                 user.Email = command.Email;
             }
 
-            if (!String.IsNullOrEmpty(command.UserName))
+            if (!string.IsNullOrEmpty(command.UserName))
             {
                 user.UserName = command.UserName;
             }
@@ -53,86 +141,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
             }
 
-            if (!String.IsNullOrEmpty(command.Password))
+            if (!string.IsNullOrEmpty(command.Password))
             {
                 user.PasswordHash = usermanager.PasswordHasher.HashPassword(user, command.Password);
-            }
-        }
-
-        private async Task HandleRolesUpdate(UpdateUserCommand command, dynamic usermanager, dynamic user)
-        {
-            if (command.Roles != null)
-            {
-                List<string> originalRoles =
-                    await(dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
-                IEnumerable<string> newRoles = command.Roles.Where(r => !originalRoles.Any(or => or == r));
-                IEnumerable<string> deletedRoles = originalRoles.Where(or => !command.Roles.Any(r => r == or));
-
-                foreach (string roleStr in newRoles)
-                {
-                    if (!await roleManager.RoleExistsAsync(roleStr))
-                    {
-                        await roleManager.CreateAsync(new IdentityRole(roleStr));
-                    }
-                }
-
-                await usermanager.RemoveFromRolesAsync(user, deletedRoles);
-                await usermanager.AddToRolesAsync(user, newRoles);
-            }
-        }
-
-        public async Task Handle(WebsocketConnection websocketConnection, UpdateUserCommand command)
-        {
-            IRealtimeAuthContext context = GetContext();
-            dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-
-            try
-            {
-                dynamic user = await usermanager.FindByIdAsync(command.Id);
-
-                if (user != null)
-                {
-                    SetUserProperties(user, command, usermanager);
-
-                    IdentityResult result = await usermanager.UpdateAsync(user);
-
-                    if (result.Succeeded)
-                    {
-                        HandleRolesUpdate(command, usermanager, user);
-
-                        await websocketConnection.Send(new UpdateUserResponse()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            NewUser = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
-                        });
-
-                        await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
-                        await MessageHelper.SendRolesUpdate(context, connectionManager);
-                    }
-                    else
-                    {
-                        await websocketConnection.Send(new UpdateUserResponse()
-                        {
-                            ReferenceId = command.ReferenceId,
-                            IdentityErrors = result.Errors
-                        });
-                    }
-                }
-                else
-                {
-                    await websocketConnection.Send(new UpdateUserResponse()
-                    {
-                        Error = new Exception("No user with this id was found.")
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                await websocketConnection.Send(new CreateUserResponse()
-                {
-                    ReferenceId = command.ReferenceId,
-                    Error = ex
-                });
             }
         }
     }

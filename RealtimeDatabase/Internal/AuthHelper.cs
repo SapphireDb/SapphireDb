@@ -45,7 +45,7 @@ namespace RealtimeDatabase.Internal
         {
             PropertyInfo[] propertyInfos = model.GetType().GetProperties();
 
-            if (!propertyInfos.Where(pi => pi.GetCustomAttribute<QueryAuthAttribute>() != null).Any())
+            if (propertyInfos.All(pi => pi.GetCustomAttribute<QueryAuthAttribute>() == null))
             {
                 return model;
             }
@@ -89,7 +89,7 @@ namespace RealtimeDatabase.Internal
                 {
                     return authAttribute.Roles.Any(r => user.IsInRole(r));
                 }
-                else if (!String.IsNullOrEmpty(authAttribute.FunctionName))
+                else if (!string.IsNullOrEmpty(authAttribute.FunctionName))
                 {
                     MethodInfo mi = t.GetMethod(authAttribute.FunctionName);
                     if (mi != null && mi.ReturnType == typeof(bool)

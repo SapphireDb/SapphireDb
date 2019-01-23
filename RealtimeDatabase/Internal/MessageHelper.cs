@@ -81,7 +81,7 @@ namespace RealtimeDatabase.Internal
         {
             List<Dictionary<string, object>> users = ModelHelper.GetUsers(db, typeContainer, usermanager).ToList();
 
-            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !String.IsNullOrEmpty(wsc.UsersSubscription)))
+            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.UsersSubscription)))
             {
                 await ws.Send(new SubscribeUsersResponse()
                 {
@@ -95,7 +95,7 @@ namespace RealtimeDatabase.Internal
         {
             List<Dictionary<string, object>> roles = ModelHelper.GetRoles(db).ToList();
 
-            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !String.IsNullOrEmpty(wsc.RolesSubscription)))
+            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.RolesSubscription)))
             {
                 await ws.Send(new SubscribeRolesResponse()
                 {

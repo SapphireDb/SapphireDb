@@ -176,7 +176,7 @@ namespace RealtimeDatabase.Extensions
                     OnMessageReceived = ctx =>
                     {
                         string bearer = ctx.Request.Query["bearer"];
-                        if (!String.IsNullOrEmpty(bearer))
+                        if (!string.IsNullOrEmpty(bearer))
                         {
                             ctx.Token = bearer;
                         }

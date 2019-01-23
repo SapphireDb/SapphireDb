@@ -14,18 +14,18 @@ namespace RealtimeDatabase.Websocket
         private readonly WebsocketConnectionManager connectionManager;
         private readonly RealtimeDatabaseOptions options;
 
-        public RealtimeDatabaseWebsocketMiddleware(RequestDelegate _next, WebsocketConnectionManager _connectionManager, RealtimeDatabaseOptions _options)
+        public RealtimeDatabaseWebsocketMiddleware(RequestDelegate next, WebsocketConnectionManager connectionManager, RealtimeDatabaseOptions options)
         {
-            next = _next;
-            connectionManager = _connectionManager;
-            options = _options;
+            this.next = next;
+            this.connectionManager = connectionManager;
+            this.options = options;
         }
 
         public async Task Invoke(HttpContext context, WebsocketCommandHandler commandHandler, ILogger<WebsocketConnection> logger)
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                if (!String.IsNullOrEmpty(options.Secret))
+                if (!string.IsNullOrEmpty(options.Secret))
                 {
                     if (context.Request.Query["secret"] != options.Secret)
                     {

@@ -10,7 +10,7 @@ namespace RealtimeDatabase.Internal
     {
         public static string ToCamelCase(this string input)
         {
-            return Char.ToLowerInvariant(input[0]) + input.Substring(1);
+            return char.ToLowerInvariant(input[0]) + input.Substring(1);
         }
 
         public static string ComputeHash(this string input)

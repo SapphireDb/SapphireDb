@@ -13,18 +13,18 @@ namespace RealtimeDatabase.Websocket
         private readonly ILogger<WebsocketConnection> logger;
         private readonly IServiceProvider serviceProvider;
 
-        public WebsocketCommandHandler(IServiceProvider _serviceProvider, CommandHandlerMapper _commandHandlerMapper, ILogger<WebsocketConnection> _logger)
+        public WebsocketCommandHandler(IServiceProvider serviceProvider, CommandHandlerMapper commandHandlerMapper, ILogger<WebsocketConnection> logger)
         {
-            commandHandlerMapper = _commandHandlerMapper;
-            logger = _logger;
-            serviceProvider = _serviceProvider;
+            this.commandHandlerMapper = commandHandlerMapper;
+            this.logger = logger;
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task HandleCommand(WebsocketConnection connection)
         {
             string message = await connection.Websocket.Receive();
 
-            if (!String.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
             {
                 CommandBase command = JsonHelper.DeserialzeCommand(message);
 

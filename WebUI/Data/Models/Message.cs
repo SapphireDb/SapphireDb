@@ -20,7 +20,7 @@ namespace WebUI.Data.Models
             string userId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
 
 
-            return !String.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
+            return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
         public void OnCreate(WebsocketConnection websocketConnection)
