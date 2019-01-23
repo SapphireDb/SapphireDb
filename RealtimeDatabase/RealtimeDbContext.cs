@@ -25,23 +25,25 @@ namespace RealtimeDatabase
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            HandleChanges();
-            return base.SaveChanges(acceptAllChangesOnSuccess);
+            List<ChangeResponse> changes = GetChanges();
+            int result = base.SaveChanges(acceptAllChangesOnSuccess);
+            notifier.HandleChanges(changes);
+            return result;
         }
 
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
         {
-            HandleChanges();
-            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            List<ChangeResponse> changes = GetChanges();
+            int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            notifier.HandleChanges(changes);
+            return result;
         }
 
-        private void HandleChanges()
+        private List<ChangeResponse> GetChanges()
         {
-            List<ChangeResponse> changes = ChangeTracker.Entries()
+            return ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted || e.State == EntityState.Modified)
                 .Select(e => new ChangeResponse(e, this)).ToList();
-
-            _ = notifier.HandleChanges(changes);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace RealtimeDatabase.Websocket
             this.dbContextAccessor = dbContextAccessor;
         }
 
-        public Task HandleChanges(List<ChangeResponse> changes)
+        public void HandleChanges(List<ChangeResponse> changes)
         {
             RealtimeDbContext db = dbContextAccessor.GetContext();
 
@@ -33,8 +33,6 @@ namespace RealtimeDatabase.Websocket
                     HandleSubscription(subscriptionGrouping, changes, connection, db);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         private void HandleSubscription(IGrouping<string, CollectionSubscription> subscriptionGrouping, List<ChangeResponse> changes,

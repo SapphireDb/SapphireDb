@@ -14,9 +14,9 @@ namespace RealtimeDatabase
             this.notifier = notifier;
         }
 
-        public async Task HandleChanges(List<ChangeResponse> changes)
+        public void HandleChanges(List<ChangeResponse> changes)
         {
-            await notifier.HandleChanges(changes);
+            notifier.HandleChanges(changes);
         }
     }
 }
