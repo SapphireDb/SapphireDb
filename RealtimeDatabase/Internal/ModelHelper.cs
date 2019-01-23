@@ -38,33 +38,15 @@ namespace RealtimeDatabase.Internal
         public static void UpdateFields(this Type entityType, object entityObject, object newValues, RealtimeDbContext db, WebsocketConnection websocketConnection)
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
+            bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
 
-            if (entityType.GetCustomAttribute<UpdatableAttribute>() != null)
+            foreach (PropertyInfo pi in entityType.GetProperties())
             {
-                foreach (PropertyInfo pi in entityType.GetProperties())
+                if ((isClassUpdatable || pi.GetCustomAttribute<UpdatableAttribute>() != null) && !primaryKeys.Contains(pi.Name.ToCamelCase()))
                 {
-                    if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
+                    if (pi.CanUpdate(websocketConnection, entityObject))
                     {
-                        if (pi.CanUpdate(websocketConnection, entityObject))
-                        {
-                            pi.SetValue(entityObject, pi.GetValue(newValues));
-                        }
-                    }
-                }
-            }
-            else
-            {
-                foreach (PropertyInfo pi in entityType.GetProperties())
-                {
-                    if (pi.GetCustomAttribute<UpdatableAttribute>() != null)
-                    {
-                        if (!primaryKeys.Contains(pi.Name.ToCamelCase()))
-                        {
-                            if (pi.CanUpdate(websocketConnection, entityObject))
-                            {
-                                pi.SetValue(entityObject, pi.GetValue(newValues));
-                            }
-                        }
+                        pi.SetValue(entityObject, pi.GetValue(newValues));
                     }
                 }
             }

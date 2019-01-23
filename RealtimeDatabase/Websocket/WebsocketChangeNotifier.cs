@@ -13,17 +13,17 @@ namespace RealtimeDatabase.Websocket
     public class WebsocketChangeNotifier
     {
         private readonly WebsocketConnectionManager connectionManager;
-        private readonly DbContextAccesor dbContextAccesor;
+        private readonly DbContextAccesor dbContextAccessor;
 
-        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccesor)
+        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor)
         {
             this.connectionManager = connectionManager;
-            this.dbContextAccesor = dbContextAccesor;
+            this.dbContextAccessor = dbContextAccessor;
         }
 
         public Task HandleChanges(List<ChangeResponse> changes)
         {
-            RealtimeDbContext db = dbContextAccesor.GetContext();
+            RealtimeDbContext db = dbContextAccessor.GetContext();
 
             foreach (WebsocketConnection connection in connectionManager.connections)
             {
@@ -77,39 +77,15 @@ namespace RealtimeDatabase.Websocket
         {
             foreach (object obj in currentCollectionSetLoaded)
             {
-                object[] primaryValues = property.Key.GetPrimaryKeyValues(db, obj);
-                currentCollectionPrimaryValues.Add(primaryValues);
-
-                bool clientHasObject = cs.TransmittedData.Any(pks => !pks.Except(primaryValues).Any());
-
-                if (clientHasObject)
-                {
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    ChangeResponse change = relevantChanges
-                        .FirstOrDefault(c => !c.PrimaryValues.Except(primaryValues).Any());
-
-                    if (change != null)
-                    {
-                        change.ReferenceId = cs.ReferenceId;
-                        change.Value = change.Value.GetAuthenticatedQueryModel(connection);
-                        _ = connection.Send(change);
-                    }
-                }
-                else
-                {
-                    _ = connection.Send(new LoadResponse()
-                    {
-                        NewObject = obj.GetAuthenticatedQueryModel(connection),
-                        ReferenceId = cs.ReferenceId
-                    });
-                }
+                // ReSharper disable once PossibleMultipleEnumeration
+                SendRelevantFilesToClient(property, db, obj, currentCollectionPrimaryValues, cs, relevantChanges, connection);
             }
 
             foreach (object[] transmittedObject in cs.TransmittedData)
             {
                 if (currentCollectionPrimaryValues.All(pks => pks.Except(transmittedObject).Any()))
                 {
-                    _ = connection.Send(new UnloadResponse()
+                    _ = connection.Send(new UnloadResponse
                     {
                         PrimaryValues = transmittedObject,
                         ReferenceId = cs.ReferenceId
@@ -118,6 +94,37 @@ namespace RealtimeDatabase.Websocket
             }
 
             cs.TransmittedData = currentCollectionPrimaryValues;
+        }
+
+        private void SendRelevantFilesToClient(KeyValuePair<Type, string> property, RealtimeDbContext db, object obj,
+            List<object[]> currentCollectionPrimaryValues, CollectionSubscription cs, IEnumerable<ChangeResponse> relevantChanges,
+            WebsocketConnection connection)
+        {
+            object[] primaryValues = property.Key.GetPrimaryKeyValues(db, obj);
+            currentCollectionPrimaryValues.Add(primaryValues);
+
+            bool clientHasObject = cs.TransmittedData.Any(pks => !pks.Except(primaryValues).Any());
+
+            if (clientHasObject)
+            {
+                ChangeResponse change = relevantChanges
+                    .FirstOrDefault(c => !c.PrimaryValues.Except(primaryValues).Any());
+
+                if (change != null)
+                {
+                    change.ReferenceId = cs.ReferenceId;
+                    change.Value = change.Value.GetAuthenticatedQueryModel(connection);
+                    _ = connection.Send(change);
+                }
+            }
+            else
+            {
+                _ = connection.Send(new LoadResponse
+                {
+                    NewObject = obj.GetAuthenticatedQueryModel(connection),
+                    ReferenceId = cs.ReferenceId
+                });
+            }
         }
     }
 }

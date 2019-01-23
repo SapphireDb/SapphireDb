@@ -189,10 +189,7 @@ namespace RealtimeDatabase.Extensions
                 };
             });
 
-            services.AddAuthorization(cfg =>
-            {
-
-            });
+            services.AddAuthorization();
         }
     }
 }

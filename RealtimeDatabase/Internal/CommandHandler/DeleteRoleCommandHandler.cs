@@ -34,23 +34,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (result.Succeeded)
                 {
-                    IRealtimeAuthContext db = GetContext();
-                    db.UserRoles.RemoveRange(db.UserRoles.Where(ur => ur.RoleId == role.Id));
-                    db.SaveChanges();
-
-                    await websocketConnection.Send(new DeleteRoleResponse()
-                    {
-                        ReferenceId = command.ReferenceId
-                    });
-
-                    await MessageHelper.SendRolesUpdate(db, connectionManager);
-                    
-                    dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-                    await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+                    await SendDataToClients(role, websocketConnection, command);
                 }
                 else
                 {
-                    await websocketConnection.Send(new DeleteRoleResponse()
+                    await websocketConnection.Send(new DeleteRoleResponse
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
@@ -61,6 +49,23 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 await websocketConnection.SendException<DeleteRoleResponse>(command, "Role not found");
             }            
+        }
+
+        private async Task SendDataToClients(IdentityRole role, WebsocketConnection websocketConnection, DeleteRoleCommand command)
+        {
+            IRealtimeAuthContext db = GetContext();
+            db.UserRoles.RemoveRange(db.UserRoles.Where(ur => ur.RoleId == role.Id));
+            db.SaveChanges();
+
+            await websocketConnection.Send(new DeleteRoleResponse()
+            {
+                ReferenceId = command.ReferenceId
+            });
+
+            await MessageHelper.SendRolesUpdate(db, connectionManager);
+
+            dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+            await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
         }
     }
 }

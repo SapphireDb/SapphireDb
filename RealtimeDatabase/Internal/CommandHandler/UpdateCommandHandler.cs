@@ -20,7 +20,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
         public async Task Handle(WebsocketConnection websocketConnection, UpdateCommand command)
         {
             RealtimeDbContext db = GetContext();
-
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
             if (property.Key != null)
@@ -80,7 +79,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
                 });
-
                 return;
             }
 

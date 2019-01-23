@@ -19,7 +19,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
         public async Task Handle(WebsocketConnection websocketConnection, DeleteCommand command)
         {
             RealtimeDbContext db = GetContext();
-
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
             if (property.Key != null)

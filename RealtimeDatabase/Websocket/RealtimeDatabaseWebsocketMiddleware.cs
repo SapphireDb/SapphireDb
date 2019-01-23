@@ -22,28 +22,8 @@ namespace RealtimeDatabase.Websocket
 
         public async Task Invoke(HttpContext context, WebsocketCommandHandler commandHandler, ILogger<WebsocketConnection> logger)
         {
-            if (context.WebSockets.IsWebSocketRequest)
+            if (context.WebSockets.IsWebSocketRequest && await CheckAuthentication(context))
             {
-                if (!string.IsNullOrEmpty(options.Secret))
-                {
-                    if (context.Request.Query["secret"] != options.Secret)
-                    {
-                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        await context.Response.WriteAsync("The secret does not match");
-                        return;
-                    }
-                }
-
-                if (options.Authentication == RealtimeDatabaseOptions.AuthenticationMode.Always)
-                {
-                    if (!context.User.Identity.IsAuthenticated)
-                    {
-                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        await context.Response.WriteAsync("The user is not authenticated");
-                        return;
-                    }
-                }
-
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 WebsocketConnection connection = new WebsocketConnection(webSocket, context);
 
@@ -63,6 +43,31 @@ namespace RealtimeDatabase.Websocket
 
                 connectionManager.RemoveConnection(connection);
             }
+        }
+
+        private async Task<bool> CheckAuthentication(HttpContext context)
+        {
+            if (!string.IsNullOrEmpty(options.Secret))
+            {
+                if (context.Request.Query["secret"] != options.Secret)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("The secret does not match");
+                    return false;
+                }
+            }
+
+            if (options.Authentication == RealtimeDatabaseOptions.AuthenticationMode.Always)
+            {
+                if (!context.User.Identity.IsAuthenticated)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("The user is not authenticated");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

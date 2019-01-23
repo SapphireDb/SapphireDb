@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity.UI.V3.Pages.Internal.Account;
 
 namespace RealtimeDatabase
 {
@@ -24,29 +25,23 @@ namespace RealtimeDatabase
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            List<ChangeResponse> changes = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted || e.State == EntityState.Modified)
-                .Select(e => new ChangeResponse(e, this)).ToList();
-
-            int result = base.SaveChanges(acceptAllChangesOnSuccess);
-            HandleChanges(changes).Wait();
-            return result;
+            HandleChanges();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
         {
+            HandleChanges();
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void HandleChanges()
+        {
             List<ChangeResponse> changes = ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted || e.State == EntityState.Modified)
                 .Select(e => new ChangeResponse(e, this)).ToList();
 
-            int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            await HandleChanges(changes);
-            return result;
-        }
-
-        private async Task HandleChanges(List<ChangeResponse> changes)
-        {
-            await notifier.HandleChanges(changes);
+            _ = notifier.HandleChanges(changes);
         }
     }
 }

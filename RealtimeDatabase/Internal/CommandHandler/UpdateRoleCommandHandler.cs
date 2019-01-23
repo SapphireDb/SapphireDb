@@ -37,21 +37,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (result.Succeeded)
                 {
-                    await websocketConnection.Send(new UpdateRoleResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        NewRole = ModelHelper.GenerateRoleData(role)
-                    });
-
-                    IRealtimeAuthContext db = GetContext();
-
-                    await MessageHelper.SendRolesUpdate(db, connectionManager);
-
-                    if (db.UserRoles.Any(ur => ur.RoleId == role.Id))
-                    {
-                        dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-                        await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
-                    }
+                    await SendDataToClient(websocketConnection, command, role);
                 }
                 else
                 {
@@ -66,6 +52,25 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 await websocketConnection.SendException<UpdateRoleResponse>(command, "Role not found");
             }            
+        }
+
+        private async Task SendDataToClient(WebsocketConnection websocketConnection, UpdateRoleCommand command, IdentityRole role)
+        {
+            await websocketConnection.Send(new UpdateRoleResponse()
+            {
+                ReferenceId = command.ReferenceId,
+                NewRole = ModelHelper.GenerateRoleData(role)
+            });
+
+            IRealtimeAuthContext db = GetContext();
+
+            await MessageHelper.SendRolesUpdate(db, connectionManager);
+
+            if (db.UserRoles.Any(ur => ur.RoleId == role.Id))
+            {
+                dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
+                await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+            }
         }
     }
 }

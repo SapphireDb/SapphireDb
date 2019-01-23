@@ -27,16 +27,7 @@ namespace RealtimeDatabase.Internal
 
         public async Task<string> GenerateEncodedToken(IdentityUser identityUser)
         {
-            List<Claim> claims = new List<Claim>()
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, identityUser.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, await jwtOptions.JtiGenerator()),
-                new Claim(JwtRegisteredClaimNames.Iat, jwtOptions.IssuedAt.ToUniversalTime().ToString(CultureInfo.InvariantCulture),
-                    ClaimValueTypes.Integer64),
-                new Claim("Id", identityUser.Id),
-                new Claim(ClaimTypes.Name, identityUser.UserName),
-                new Claim(ClaimTypes.Email, identityUser.Email)
-            };
+            List<Claim> claims = await CreateClaims(identityUser);
 
             object userManager = serviceProvider.GetService(authDbContextTypeContainer.UserManagerType);
             IList<string> roles = 
@@ -45,13 +36,6 @@ namespace RealtimeDatabase.Internal
             foreach (string role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            Type type = identityUser.GetType();
-
-            foreach (PropertyInfo property in type.GetProperties().Where(p => p.GetCustomAttribute<AuthClaimInformationAttribute>() != null))
-            {
-                claims.Add(new Claim("RealtimeAuth." + property.Name, property.GetValue(identityUser).ToString()));
             }
 
             JwtSecurityToken jwt = new JwtSecurityToken(
@@ -63,6 +47,29 @@ namespace RealtimeDatabase.Internal
                 signingCredentials: jwtOptions.SigningCredentials);
 
             return new JwtSecurityTokenHandler().WriteToken(jwt);
+        }
+
+        private async Task<List<Claim>> CreateClaims(IdentityUser identityUser)
+        {
+            List<Claim> claims = new List<Claim>()
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, identityUser.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, await jwtOptions.JtiGenerator()),
+                new Claim(JwtRegisteredClaimNames.Iat, jwtOptions.IssuedAt.ToUniversalTime().ToString(CultureInfo.InvariantCulture),
+                    ClaimValueTypes.Integer64),
+                new Claim("Id", identityUser.Id),
+                new Claim(ClaimTypes.Name, identityUser.UserName),
+                new Claim(ClaimTypes.Email, identityUser.Email)
+            };
+
+            Type type = identityUser.GetType();
+
+            foreach (PropertyInfo property in type.GetProperties().Where(p => p.GetCustomAttribute<AuthClaimInformationAttribute>() != null))
+            {
+                claims.Add(new Claim("RealtimeAuth." + property.Name, property.GetValue(identityUser).ToString()));
+            }
+
+            return claims;
         }
     }
 }
