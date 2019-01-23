@@ -44,27 +44,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if ((bool)await (dynamic)contextTypeContainer.UserManagerType.GetMethod("CheckPasswordAsync").Invoke(usermanager, new object[] { userToVerify, command.Password }))
                 {
-                    RefreshToken rT = new RefreshToken()
-                    {
-                        UserId = userToVerify.Id
-                    };
-
-                    IRealtimeAuthContext context = GetContext();
-                    context.RefreshTokens.RemoveRange(context.RefreshTokens.Where(rt => rt.CreatedOn.Add(jwtOptions.ValidFor) < DateTime.UtcNow));
-                    context.RefreshTokens.Add(rT);
-                    context.SaveChanges();
-
-                    LoginResponse loginResponse = new LoginResponse()
-                    {
-                        ReferenceId = command.ReferenceId,
-                        AuthToken = await jwtIssuer.GenerateEncodedToken(userToVerify),
-                        ExpiresAt = jwtOptions.Expiration,
-                        ValidFor = jwtOptions.ValidFor.TotalSeconds,
-                        RefreshToken = rT.RefreshKey,
-                        UserData = await ModelHelper.GenerateUserData(userToVerify, contextTypeContainer, usermanager)
-                    };
-
-                    await websocketConnection.Send(loginResponse);
+                    await websocketConnection.Send(CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify, usermanager));
                     return;
                 }
             }
@@ -74,6 +54,34 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 ReferenceId = command.ReferenceId,
                 Error = new Exception("Login failed")
             });
+        }
+
+        private RefreshToken CreateRefreshToken(IdentityUser userToVerify)
+        {
+            RefreshToken rT = new RefreshToken
+            {
+                UserId = userToVerify.Id
+            };
+
+            IRealtimeAuthContext context = GetContext();
+            context.RefreshTokens.RemoveRange(context.RefreshTokens.Where(rt => rt.CreatedOn.Add(jwtOptions.ValidFor) < DateTime.UtcNow));
+            context.RefreshTokens.Add(rT);
+            context.SaveChanges();
+
+            return rT;
+        }
+
+        private async Task<LoginResponse> CreateLoginResponse(LoginCommand command, RefreshToken rT, IdentityUser userToVerify, dynamic usermanager)
+        {
+            return new LoginResponse
+            {
+                ReferenceId = command.ReferenceId,
+                AuthToken = await jwtIssuer.GenerateEncodedToken(userToVerify),
+                ExpiresAt = jwtOptions.Expiration,
+                ValidFor = jwtOptions.ValidFor.TotalSeconds,
+                RefreshToken = rT.RefreshKey,
+                UserData = await ModelHelper.GenerateUserData(userToVerify, contextTypeContainer, usermanager)
+            };
         }
     }
 }
