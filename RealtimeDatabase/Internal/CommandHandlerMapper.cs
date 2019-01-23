@@ -56,7 +56,7 @@ namespace RealtimeDatabase.Internal
             return Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.Namespace == "RealtimeDatabase.Internal.CommandHandler" &&
                 t.Name.EndsWith("Handler") && t.IsSubclassOf(type))
-                .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler")), t => t);
+                .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)), t => t);
         }
 
         private void ExecuteAction(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<WebsocketConnection> logger,

@@ -7,10 +7,10 @@ namespace RealtimeDatabase.Internal
         private readonly DbContextTypeContainer contextTypeContainer;
         private readonly IServiceProvider serviceProvider;
 
-        public DbContextAccesor(DbContextTypeContainer _contextTypeContainer, IServiceProvider _serviceProvider)
+        public DbContextAccesor(DbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
         {
-            contextTypeContainer = _contextTypeContainer;
-            serviceProvider = _serviceProvider;
+            this.contextTypeContainer = contextTypeContainer;
+            this.serviceProvider = serviceProvider;
         }
 
         public RealtimeDbContext GetContext()

@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    interface ICommandHandler<T> where T : CommandBase
+    // ReSharper disable once TypeParameterCanBeVariant
+    internal interface ICommandHandler<T> where T : CommandBase
     {
         Task Handle(WebsocketConnection websocketConnection, T command);
     }

@@ -4,9 +4,9 @@
     {
         protected readonly DbContextAccesor contextAccesor;
 
-        public CommandHandlerBase(DbContextAccesor _contextAccesor)
+        public CommandHandlerBase(DbContextAccesor contextAccesor)
         {
-            contextAccesor = _contextAccesor;
+            this.contextAccesor = contextAccesor;
         }
 
         protected RealtimeDbContext GetContext()

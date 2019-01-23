@@ -10,13 +10,12 @@ namespace RealtimeDatabase.Websocket
 {
     class RealtimeDatabaseWebsocketMiddleware
     {
-        private readonly RequestDelegate next;
         private readonly WebsocketConnectionManager connectionManager;
         private readonly RealtimeDatabaseOptions options;
 
+        // ReSharper disable once UnusedParameter.Local
         public RealtimeDatabaseWebsocketMiddleware(RequestDelegate next, WebsocketConnectionManager connectionManager, RealtimeDatabaseOptions options)
         {
-            this.next = next;
             this.connectionManager = connectionManager;
             this.options = options;
         }

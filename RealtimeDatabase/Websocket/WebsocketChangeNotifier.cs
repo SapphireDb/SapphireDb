@@ -15,10 +15,10 @@ namespace RealtimeDatabase.Websocket
         private readonly WebsocketConnectionManager connectionManager;
         private readonly DbContextAccesor dbContextAccesor;
 
-        public WebsocketChangeNotifier(WebsocketConnectionManager _connectionManager, DbContextAccesor _dbContextAccesor)
+        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccesor)
         {
-            connectionManager = _connectionManager;
-            dbContextAccesor = _dbContextAccesor;
+            this.connectionManager = connectionManager;
+            this.dbContextAccesor = dbContextAccesor;
         }
 
         public Task HandleChanges(List<ChangeResponse> changes)
@@ -54,6 +54,7 @@ namespace RealtimeDatabase.Websocket
 
                 foreach (CollectionSubscription cs in subscriptionGrouping)
                 {
+                    // ReSharper disable once PossibleMultipleEnumeration
                     IEnumerable<object> currentCollectionSet = collectionSet;
 
                     foreach (IPrefilter prefilter in cs.Prefilters)
@@ -64,6 +65,7 @@ namespace RealtimeDatabase.Websocket
                     List<object> currentCollectionSetLoaded = currentCollectionSet.ToList();
                     List<object[]> currentCollectionPrimaryValues = new List<object[]>();
 
+                    // ReSharper disable once PossibleMultipleEnumeration
                     SendDataToClient(currentCollectionSetLoaded, currentCollectionPrimaryValues, property, db, cs, relevantChanges, connection);
                 }
             }
@@ -82,6 +84,7 @@ namespace RealtimeDatabase.Websocket
 
                 if (clientHasObject)
                 {
+                    // ReSharper disable once PossibleMultipleEnumeration
                     ChangeResponse change = relevantChanges
                         .FirstOrDefault(c => !c.PrimaryValues.Except(primaryValues).Any());
 

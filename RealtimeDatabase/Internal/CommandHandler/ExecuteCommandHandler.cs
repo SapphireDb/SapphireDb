@@ -18,11 +18,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<ExecuteCommandHandler> logger;
 
-        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper _actionMapper, IServiceProvider _serviceProvider, ILogger<ExecuteCommandHandler> logger)
+        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccesor)
         {
-            actionMapper = _actionMapper;
-            serviceProvider = _serviceProvider;
+            this.actionMapper = actionMapper;
+            this.serviceProvider = serviceProvider;
             this.logger = logger;
         }
 
@@ -73,8 +73,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private async Task ExecuteAction(ActionHandlerBase actionHandler, WebsocketConnection websocketConnection, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            actionHandler.WebsocketConnection = websocketConnection;
-            actionHandler.ExecuteCommand = command;
+            actionHandler.websocketConnection = websocketConnection;
+            actionHandler.executeCommand = command;
 
             logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
 

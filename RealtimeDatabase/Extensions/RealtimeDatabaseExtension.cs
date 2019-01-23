@@ -106,14 +106,17 @@ namespace RealtimeDatabase.Extensions
             RealtimeDatabaseOptions realtimeDatabaseOptions =
                 (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
 
-            if (realtimeDatabaseOptions.EnableAuthCommands)
+            if (realtimeDatabaseOptions != null && realtimeDatabaseOptions.EnableAuthCommands)
             {
                 CommandHandlerMapper commandHandlerMapper =
                     (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;
 
-                foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.authCommandHandlerTypes)
+                if (commandHandlerMapper != null)
                 {
-                    services.AddTransient(handler.Value);
+                    foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.authCommandHandlerTypes)
+                    {
+                        services.AddTransient(handler.Value);
+                    }
                 }
             }
             else

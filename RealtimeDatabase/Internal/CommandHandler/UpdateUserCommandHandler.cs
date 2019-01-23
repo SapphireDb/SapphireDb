@@ -91,7 +91,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             if (command.Roles != null)
             {
                 List<string> originalRoles =
-                    await (dynamic)contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
+                    await contextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { user });
                 List<string> newRoles = command.Roles.Where(r => originalRoles.All(or => or != r)).ToList();
                 IEnumerable<string> deletedRoles = originalRoles.Where(or => command.Roles.All(r => r != or));
 

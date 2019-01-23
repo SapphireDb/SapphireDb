@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WebUI.Data.Authentication;
 using WebUI.Data.ViewModels.Account;
 
@@ -16,13 +10,13 @@ namespace WebUI.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private UserManager<AppUser> userManager;
-        private RoleManager<IdentityRole> roleManager;
+        private readonly UserManager<AppUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
 
-        public AccountController(UserManager<AppUser> _userManager, RoleManager<IdentityRole> _roleManager)
+        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            userManager = _userManager;
-            roleManager = _roleManager;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
         }
 
         [HttpPost]

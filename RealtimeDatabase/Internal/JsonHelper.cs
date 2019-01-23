@@ -12,14 +12,14 @@ namespace RealtimeDatabase.Internal
 {
     static class JsonHelper
     {
-        public static readonly JsonSerializerSettings settings = new JsonSerializerSettings()
+        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings()
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
-        public static readonly JsonSerializerSettings deserializeCommandSettings = new JsonSerializerSettings()
+        public static readonly JsonSerializerSettings DeserializeCommandSettings = new JsonSerializerSettings()
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
@@ -29,17 +29,17 @@ namespace RealtimeDatabase.Internal
 
         public static string Serialize(object value)
         {
-            return JsonConvert.SerializeObject(value, settings);
+            return JsonConvert.SerializeObject(value, Settings);
         }
 
         public static object Deserialze(string value, Type t)
         {
-            return JsonConvert.DeserializeObject(value, t, settings);
+            return JsonConvert.DeserializeObject(value, t, Settings);
         }
 
         public static CommandBase DeserialzeCommand(string value)
         {
-            return JsonConvert.DeserializeObject<CommandBase>(value, deserializeCommandSettings);
+            return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
         }
     }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace RealtimeDatabase.Models.Prefilter
 {
@@ -19,7 +20,7 @@ namespace RealtimeDatabase.Models.Prefilter
             {
                 try
                 {
-                    Func<object, IComparable> function = SelectFunctionString.CreateFunction(array.FirstOrDefault().GetType(), ContextData)
+                    Func<object, IComparable> function = SelectFunctionString.CreateFunction(array.FirstOrDefault()?.GetType(), ContextData)
                         .MakeDelegate<Func<object, IComparable>>();
 
                     if (Descending)
@@ -33,7 +34,7 @@ namespace RealtimeDatabase.Models.Prefilter
                 }
                 catch
                 {
-
+                    // ignored
                 }
             }
 

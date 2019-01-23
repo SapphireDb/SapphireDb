@@ -9,9 +9,9 @@ namespace RealtimeDatabase
     {
         private readonly WebsocketChangeNotifier notifier;
 
-        public RealtimeDatabaseNotifier(WebsocketChangeNotifier _notifier)
+        public RealtimeDatabaseNotifier(WebsocketChangeNotifier notifier)
         {
-            notifier = _notifier;
+            this.notifier = notifier;
         }
 
         public async Task HandleChanges(List<ChangeResponse> changes)

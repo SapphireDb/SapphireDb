@@ -8,7 +8,7 @@ namespace RealtimeDatabase.Websocket
 {
     public class RealtimeMessageSender
     {
-        private WebsocketConnectionManager WebsocketConnectionManager;
+        private readonly WebsocketConnectionManager WebsocketConnectionManager;
 
         public RealtimeMessageSender(WebsocketConnectionManager websocketConnectionManager)
         {

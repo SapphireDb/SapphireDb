@@ -1,12 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WebUI.Data.Models;
 using RealtimeDatabase;
-using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace WebUI.Data
 {

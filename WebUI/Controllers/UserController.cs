@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebUI.Data;
 using WebUI.Data.Models;
@@ -13,11 +10,11 @@ namespace WebUI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private RealtimeContext db;
+        private readonly RealtimeContext db;
 
-        public UserController(RealtimeContext _db)
+        public UserController(RealtimeContext db)
         {
-            db = _db;
+            this.db = db;
         }
 
         [HttpGet]

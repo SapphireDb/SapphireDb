@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using RealtimeDatabase.Models.Actions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using WebUI.Data.Authentication;
 using WebUI.Data.ViewModels.Account;
@@ -11,13 +8,13 @@ namespace WebUI.Actions
 {
     public class UserActions : ActionHandlerBase
     {
-        private UserManager<AppUser> userManager;
-        private RoleManager<IdentityRole> roleManager;
+        private readonly UserManager<AppUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
 
-        public UserActions(UserManager<AppUser> _userManager, RoleManager<IdentityRole> _roleManager)
+        public UserActions(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            userManager = _userManager;
-            roleManager = _roleManager;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
         }
 
         public async Task CreateUser(NewAppUserViewModel model, string test)

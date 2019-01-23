@@ -1,23 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FileContextCore.Extensions;
+﻿using FileContextCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
-using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Auth;
-using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
-using WebUI.Helper;
 
 namespace WebUI
 {

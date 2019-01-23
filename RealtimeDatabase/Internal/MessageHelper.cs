@@ -39,7 +39,7 @@ namespace RealtimeDatabase.Internal
             where T : AuthAttributeBase
         {
             return t.GetProperties()
-                .Where(pi => pi.GetCustomAttribute<T>() != null && (condition != null ? condition(pi) : true))
+                .Where(pi => pi.GetCustomAttribute<T>() != null && (condition?.Invoke(pi) ?? true))
                 .ToDictionary(
                     pi => pi.Name.ToCamelCase(),
                     pi => {
@@ -72,7 +72,7 @@ namespace RealtimeDatabase.Internal
             }
 
             Type attributeType = typeof(T);
-            string keyName = attributeType.Name.Remove(attributeType.Name.LastIndexOf("Attribute"));
+            string keyName = attributeType.Name.Remove(attributeType.Name.LastIndexOf("Attribute", StringComparison.Ordinal));
             typeof(InfoResponse).GetProperty(keyName).SetValue(infoResponse, authInfo);
         }
 
@@ -112,7 +112,6 @@ namespace RealtimeDatabase.Internal
             if (property.Key != null)
             {
                 IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
-                collectionSet = collectionSet.ToList();
 
                 foreach (IPrefilter prefilter in command.Prefilters)
                 {
@@ -123,11 +122,13 @@ namespace RealtimeDatabase.Internal
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
+                    // ReSharper disable once PossibleMultipleEnumeration
                     Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs))
                                 .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)).ToList(),
                     ReferenceId = command.ReferenceId,
                 };
 
+                // ReSharper disable once PossibleMultipleEnumeration
                 List<object[]> result = collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
                 await websocketConnection.Send(queryResponse);
                 return result;

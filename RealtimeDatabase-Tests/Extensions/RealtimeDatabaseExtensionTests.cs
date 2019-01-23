@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder.Internal;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Auth;
-using RealtimeDatabase.Websocket;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace RealtimeDatabase_Tests.Extensions

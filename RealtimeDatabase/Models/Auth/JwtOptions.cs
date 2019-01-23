@@ -27,10 +27,7 @@ namespace RealtimeDatabase.Models.Auth
 
         private string _Issuer;
         public string Issuer {
-            get
-            {
-                return _Issuer;
-            }
+            get => _Issuer;
             set
             {
                 _Issuer = value;
@@ -42,10 +39,7 @@ namespace RealtimeDatabase.Models.Auth
 
         private string _SecretKey;
         public string SecretKey {
-            get
-            {
-                return _SecretKey;
-            }
+            get => _SecretKey;
             set
             {
                 _SecretKey = value;

@@ -93,7 +93,7 @@ namespace RealtimeDatabase.Internal
                 {
                     MethodInfo mi = t.GetMethod(authAttribute.FunctionName);
                     if (mi != null && mi.ReturnType == typeof(bool)
-                        && mi.GetParameters().Count() == 1
+                        && mi.GetParameters().Length == 1
                         && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
                     {
                         return (bool)mi.Invoke(entityObject, new object[] { connection });

@@ -1,8 +1,6 @@
 ﻿using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Actions;
-using RealtimeDatabase.Websocket.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,9 +12,9 @@ namespace WebUI.Actions
     {
         private readonly RealtimeContext db;
 
-        public ExampleActions(RealtimeContext _db)
+        public ExampleActions(RealtimeContext db)
         {
-            db = _db;
+            this.db = db;
         }
 
         [ActionAuth]

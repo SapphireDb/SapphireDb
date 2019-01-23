@@ -7,15 +7,8 @@ namespace RealtimeDatabase.Models
     {
         public RealtimeDatabaseOptions()
         {
-            AuthInfoAllowFunction = (connection) =>
-            {
-                return true;
-            };
-
-            AuthAllowFunction = (connection) =>
-            {
-                return connection.HttpContext.User.IsInRole("admin");
-            };
+            AuthInfoAllowFunction = (connection) => true;
+            AuthAllowFunction = (connection) => connection.HttpContext.User.IsInRole("admin");
         }
 
         public string Secret { get; set; }

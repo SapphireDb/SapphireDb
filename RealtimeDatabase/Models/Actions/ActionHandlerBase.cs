@@ -7,14 +7,14 @@ namespace RealtimeDatabase.Models.Actions
 {
     public class ActionHandlerBase
     {
-        public WebsocketConnection WebsocketConnection;
-        public ExecuteCommand ExecuteCommand;
+        public WebsocketConnection websocketConnection;
+        public ExecuteCommand executeCommand;
 
         public async Task Notify(object data)
         {
-            await WebsocketConnection.Send(new ExecuteResponse()
+            await websocketConnection.Send(new ExecuteResponse()
             {
-                ReferenceId = ExecuteCommand.ReferenceId,
+                ReferenceId = executeCommand.ReferenceId,
                 Result = data,
                 Type = ExecuteResponse.ExecuteResponseType.Notify
             });

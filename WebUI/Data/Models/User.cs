@@ -1,13 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using RealtimeDatabase;
-using RealtimeDatabase.Attributes;
-using RealtimeDatabase.Models;
+﻿using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Websocket.Models;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace WebUI.Data.Models
 {
@@ -20,17 +14,17 @@ namespace WebUI.Data.Models
 
         [Required]
         [MinLength(3)]
-        [QueryAuth("test2")]
-        [UpdateAuth("test")]
+        [QueryAuth("Test2")]
+        [UpdateAuth("Test")]
         [Updatable]
         public string FirstName { get; set; }
 
-        public bool test(WebsocketConnection connection)
+        public bool Test(WebsocketConnection connection)
         {
             return connection.HttpContext.User.IsInRole("admin");
         }
 
-        public bool test2(WebsocketConnection connection)
+        public bool Test2(WebsocketConnection connection)
         {
             return DateTime.UtcNow.Millisecond % 2 == 0;
         }

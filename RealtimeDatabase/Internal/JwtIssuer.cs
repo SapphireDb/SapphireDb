@@ -3,6 +3,7 @@ using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Models.Auth;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Reflection;
@@ -17,11 +18,11 @@ namespace RealtimeDatabase.Internal
         private readonly IServiceProvider serviceProvider;
         private readonly AuthDbContextTypeContainer authDbContextTypeContainer;
 
-        public JwtIssuer(JwtOptions _jwtOptions, IServiceProvider _serviceProvider, AuthDbContextTypeContainer _authDbContextTypeContainer)
+        public JwtIssuer(JwtOptions jwtOptions, IServiceProvider serviceProvider, AuthDbContextTypeContainer authDbContextTypeContainer)
         {
-            jwtOptions = _jwtOptions;
-            serviceProvider = _serviceProvider;
-            authDbContextTypeContainer = _authDbContextTypeContainer;
+            this.jwtOptions = jwtOptions;
+            this.serviceProvider = serviceProvider;
+            this.authDbContextTypeContainer = authDbContextTypeContainer;
         }
 
         public async Task<string> GenerateEncodedToken(IdentityUser identityUser)
@@ -30,7 +31,8 @@ namespace RealtimeDatabase.Internal
             {
                 new Claim(JwtRegisteredClaimNames.Sub, identityUser.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, await jwtOptions.JtiGenerator()),
-                new Claim(JwtRegisteredClaimNames.Iat, jwtOptions.IssuedAt.ToUniversalTime().ToString(), ClaimValueTypes.Integer64),
+                new Claim(JwtRegisteredClaimNames.Iat, jwtOptions.IssuedAt.ToUniversalTime().ToString(CultureInfo.InvariantCulture),
+                    ClaimValueTypes.Integer64),
                 new Claim("Id", identityUser.Id),
                 new Claim(ClaimTypes.Name, identityUser.UserName),
                 new Claim(ClaimTypes.Email, identityUser.Email)

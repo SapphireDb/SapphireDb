@@ -7,10 +7,10 @@ namespace RealtimeDatabase.Internal
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly IServiceProvider serviceProvider;
 
-        public AuthDbContextAccesor(AuthDbContextTypeContainer _contextTypeContainer, IServiceProvider _serviceProvider)
+        public AuthDbContextAccesor(AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
         {
-            contextTypeContainer = _contextTypeContainer;
-            serviceProvider = _serviceProvider;
+            this.contextTypeContainer = contextTypeContainer;
+            this.serviceProvider = serviceProvider;
         }
 
         public IRealtimeAuthContext GetContext()

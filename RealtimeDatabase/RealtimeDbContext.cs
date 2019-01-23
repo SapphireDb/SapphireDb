@@ -13,9 +13,9 @@ namespace RealtimeDatabase
         private readonly RealtimeDatabaseNotifier notifier;
         public readonly Dictionary<Type, string> sets;
 
-        public RealtimeDbContext(DbContextOptions options, RealtimeDatabaseNotifier _notifier) : base(options)
+        public RealtimeDbContext(DbContextOptions options, RealtimeDatabaseNotifier notifier) : base(options)
         {
-            notifier = _notifier;
+            this.notifier = notifier;
 
             sets = GetType().GetProperties()
                 .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))

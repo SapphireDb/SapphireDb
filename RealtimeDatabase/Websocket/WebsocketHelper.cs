@@ -39,7 +39,7 @@ namespace RealtimeDatabase.Websocket
             }
             catch
             {
-
+                // ignored
             }
         }
 

@@ -66,7 +66,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (mi != null &&
                 mi.ReturnType == typeof(void) &&
-                mi.GetParameters().Count() == 1 &&
+                mi.GetParameters().Length == 1 &&
                 mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
             {
                 mi.Invoke(newValue, new object[] { websocketConnection });

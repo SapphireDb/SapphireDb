@@ -1,15 +1,12 @@
 ﻿using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Websocket;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace WebUI.Actions
 {
     public class MessageActions : ActionHandlerBase
     {
-        private RealtimeMessageSender MessageSender;
+        private readonly RealtimeMessageSender MessageSender;
 
         public MessageActions(RealtimeMessageSender messageSender)
         {

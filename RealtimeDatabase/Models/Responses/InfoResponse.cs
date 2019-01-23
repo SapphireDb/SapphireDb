@@ -24,11 +24,7 @@ namespace RealtimeDatabase.Models.Responses
     {
         public bool Authentication { get; set; }
 
-        public bool Authorization {
-            get {
-                return Roles != null;
-            }
-        }
+        public bool Authorization => Roles != null;
 
         public string[] Roles { get; set; }
 
