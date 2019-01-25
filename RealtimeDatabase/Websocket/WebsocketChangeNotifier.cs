@@ -48,11 +48,12 @@ namespace RealtimeDatabase.Websocket
             {
                 relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value)).ToList();
 
-                IEnumerable<object> collectionSet = db.GetValues(property).ToList();
+                IEnumerable<object> collectionSet = db.GetValues(property);
 
                 foreach (CollectionSubscription cs in subscriptionGrouping)
                 {
-                    IEnumerable<object> currentCollectionSet = collectionSet.ToList();
+                    // ReSharper disable once PossibleMultipleEnumeration
+                    IEnumerable<object> currentCollectionSet = collectionSet;
 
                     foreach (IPrefilter prefilter in cs.Prefilters)
                     {

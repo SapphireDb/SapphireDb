@@ -27,7 +27,7 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
+            services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             //Register services
             services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/,

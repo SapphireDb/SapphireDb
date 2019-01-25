@@ -113,7 +113,7 @@ namespace RealtimeDatabase.Internal
 
         public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property)
         {
-            IEnumerable<object> values = (IEnumerable<object>) db.GetType().GetProperty(property.Value).GetValue(db);
+            IEnumerable<object> values = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
 
             IProperty[] primaryProperties = property.Key.GetPrimaryKeys(db);
 
@@ -121,14 +121,8 @@ namespace RealtimeDatabase.Internal
             {
                 PropertyInfo pi = primaryProperties[i].PropertyInfo;
 
-                if (i == 0)
-                {
-                    values = values.OrderBy(o => pi.GetValue(o));
-                }
-                else
-                {
-                    values = ((IOrderedEnumerable<object>) values).ThenBy(o => pi.GetValue(o));
-                }
+                values = i == 0 ? values.OrderBy(o => pi.GetValue(o))
+                    : ((IOrderedEnumerable<object>)values).ThenBy(o => pi.GetValue(o));
             }
 
             return values;
