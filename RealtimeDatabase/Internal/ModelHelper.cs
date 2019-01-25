@@ -35,7 +35,8 @@ namespace RealtimeDatabase.Internal
             return db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
         }
 
-        public static void UpdateFields(this Type entityType, object entityObject, object newValues, RealtimeDbContext db, WebsocketConnection websocketConnection)
+        public static void UpdateFields(this Type entityType, object entityObject, object newValues,
+            RealtimeDbContext db, WebsocketConnection websocketConnection, IServiceProvider serviceProvider)
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
             bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
@@ -44,7 +45,7 @@ namespace RealtimeDatabase.Internal
             {
                 if ((isClassUpdatable || pi.GetCustomAttribute<UpdatableAttribute>() != null) && !primaryKeys.Contains(pi.Name.ToCamelCase()))
                 {
-                    if (pi.CanUpdate(websocketConnection, entityObject))
+                    if (pi.CanUpdate(websocketConnection, entityObject, serviceProvider))
                     {
                         pi.SetValue(entityObject, pi.GetValue(newValues));
                     }

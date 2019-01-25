@@ -18,5 +18,7 @@ namespace WebUI.Data
         public DbSet<Test> Tests { get; set; }
 
         public DbSet<Message> Messages { get; set; }
+
+        public DbSet<Log> Logs { get; set; }
     }
 }

@@ -6,8 +6,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>
     {
-        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccesor)
-            : base(dbContextAccesor)
+        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor)
+            : base(dbContextAccessor)
         {
 
         }

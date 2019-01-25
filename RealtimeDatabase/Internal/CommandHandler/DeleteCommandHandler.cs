@@ -10,10 +10,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class DeleteCommandHandler : CommandHandlerBase, ICommandHandler<DeleteCommand>
     {
-        public DeleteCommandHandler(DbContextAccesor contextAccesor)
-            : base(contextAccesor)
-        {
+        private readonly IServiceProvider serviceProvider;
 
+        public DeleteCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
+            : base(contextAccessor)
+        {
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, DeleteCommand command)
@@ -28,7 +30,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.PrimaryKeys);
                     object value = db.Find(property.Key, primaryKeys);
 
-                    if (!property.Key.CanRemove(websocketConnection, value))
+                    if (!property.Key.CanRemove(websocketConnection, value, serviceProvider))
                     {
                         await websocketConnection.SendException<DeleteResponse>(command,
                             "The user is not authorized for this action.");

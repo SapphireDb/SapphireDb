@@ -11,8 +11,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
 
-        public SubscribeUsersCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
-            : base(authDbContextAccesor, serviceProvider)
+        public SubscribeUsersCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;
         }

@@ -4,18 +4,18 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class AuthCommandHandlerBase
     {
-        private readonly AuthDbContextAccesor authDbContextAccesor;
+        private readonly AuthDbContextAccesor authDbContextAccessor;
         public readonly IServiceProvider serviceProvider;
 
-        public AuthCommandHandlerBase(AuthDbContextAccesor authDbContextAccesor, IServiceProvider serviceProvider)
+        public AuthCommandHandlerBase(AuthDbContextAccesor authDbContextAccessor, IServiceProvider serviceProvider)
         {
-            this.authDbContextAccesor = authDbContextAccesor;
+            this.authDbContextAccessor = authDbContextAccessor;
             this.serviceProvider = serviceProvider;
         }
 
         public IRealtimeAuthContext GetContext()
         {
-            return authDbContextAccesor.GetContext();
+            return authDbContextAccessor.GetContext();
         }
     }
 }

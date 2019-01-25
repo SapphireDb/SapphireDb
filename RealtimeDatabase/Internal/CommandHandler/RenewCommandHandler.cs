@@ -15,8 +15,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly JwtIssuer jwtIssuer;
         private readonly AuthDbContextTypeContainer contextTypeContainer;
 
-        public RenewCommandHandler(AuthDbContextAccesor authDbContextAccesor, JwtOptions jwtOptions, JwtIssuer jwtIssuer, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
-            : base(authDbContextAccesor, serviceProvider)
+        public RenewCommandHandler(AuthDbContextAccesor authDbContextAccessor, JwtOptions jwtOptions, JwtIssuer jwtIssuer, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
             this.jwtOptions = jwtOptions;
             this.jwtIssuer = jwtIssuer;

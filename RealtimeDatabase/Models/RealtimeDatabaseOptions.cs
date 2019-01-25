@@ -7,6 +7,7 @@ namespace RealtimeDatabase.Models
     {
         public RealtimeDatabaseOptions()
         {
+            RequireAuthenticationForAttribute = true;
             AuthInfoAllowFunction = (connection) => true;
             AuthAllowFunction = (connection) => connection.HttpContext.User.IsInRole("admin");
         }
@@ -14,6 +15,8 @@ namespace RealtimeDatabase.Models
         public string Secret { get; set; }
 
         public AuthenticationMode Authentication { get; set; }
+
+        public bool RequireAuthenticationForAttribute { get; set; }
 
         public bool EnableAuthCommands { get; set; }
 

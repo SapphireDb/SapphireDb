@@ -14,9 +14,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly WebsocketConnectionManager connectionManager;
 
-        public DeleteUserCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, 
+        public DeleteUserCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer, 
             IServiceProvider serviceProvider, WebsocketConnectionManager connectionManager)
-            : base(authDbContextAccesor, serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;
             this.connectionManager = connectionManager;

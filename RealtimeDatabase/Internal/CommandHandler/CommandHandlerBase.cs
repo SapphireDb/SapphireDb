@@ -2,16 +2,16 @@
 {
     class CommandHandlerBase
     {
-        protected readonly DbContextAccesor contextAccesor;
+        protected readonly DbContextAccesor contextAccessor;
 
-        public CommandHandlerBase(DbContextAccesor contextAccesor)
+        public CommandHandlerBase(DbContextAccesor contextAccessor)
         {
-            this.contextAccesor = contextAccesor;
+            this.contextAccessor = contextAccessor;
         }
 
         protected RealtimeDbContext GetContext()
         {
-            return contextAccesor.GetContext();
+            return contextAccessor.GetContext();
         }
     }
 }

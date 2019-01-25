@@ -15,8 +15,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly JwtOptions jwtOptions;
         private readonly JwtIssuer jwtIssuer;
 
-        public LoginCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer, JwtOptions jwtOptions, JwtIssuer jwtIssuer, IServiceProvider serviceProvider)
-            : base(authDbContextAccesor, serviceProvider)
+        public LoginCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer, JwtOptions jwtOptions, JwtIssuer jwtIssuer, IServiceProvider serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;
             this.jwtOptions = jwtOptions;

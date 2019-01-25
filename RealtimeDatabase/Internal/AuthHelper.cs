@@ -6,42 +6,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal
 {
     static class AuthHelper
     {
-        public static bool CanQuery(this Type t, WebsocketConnection connection, object entityObject)
+        public static bool CanQuery(this Type t, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<QueryAuthAttribute>(connection, entityObject);
+            return t.HandleAuthAttribute<QueryAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static bool CanQuery(this PropertyInfo pi, WebsocketConnection connection, object entityObject)
+        public static bool CanQuery(this PropertyInfo pi, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return pi.HandleAuthAttribute<QueryAuthAttribute>(connection, entityObject);
+            return pi.HandleAuthAttribute<QueryAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static bool CanCreate(this Type t, WebsocketConnection connection, object entityObject)
+        public static bool CanCreate(this Type t, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<CreateAuthAttribute>(connection, entityObject);
+            return t.HandleAuthAttribute<CreateAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static bool CanRemove(this Type t, WebsocketConnection connection, object entityObject)
+        public static bool CanRemove(this Type t, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<RemoveAuthAttribute>(connection, entityObject);
+            return t.HandleAuthAttribute<RemoveAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static bool CanUpdate(this Type t, WebsocketConnection connection, object entityObject)
+        public static bool CanUpdate(this Type t, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<UpdateAuthAttribute>(connection, entityObject);
+            return t.HandleAuthAttribute<UpdateAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static bool CanUpdate(this PropertyInfo pi, WebsocketConnection connection, object entityObject)
+        public static bool CanUpdate(this PropertyInfo pi, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider)
         {
-            return pi.HandleAuthAttribute<UpdateAuthAttribute>(connection, entityObject);
+            return pi.HandleAuthAttribute<UpdateAuthAttribute>(connection, entityObject, serviceProvider);
         }
 
-        public static object GetAuthenticatedQueryModel(this object model, WebsocketConnection websocketConnection)
+        public static object GetAuthenticatedQueryModel(this object model, WebsocketConnection websocketConnection,
+            IServiceProvider serviceProvider)
         {
             PropertyInfo[] propertyInfos = model.GetType().GetProperties();
 
@@ -54,7 +62,7 @@ namespace RealtimeDatabase.Internal
 
             foreach (PropertyInfo pi in propertyInfos)
             {
-                if (pi.CanQuery(websocketConnection, model))
+                if (pi.CanQuery(websocketConnection, model, serviceProvider))
                 {
                     value.Add(pi.Name.ToCamelCase(), pi.GetValue(model));
                 }
@@ -63,18 +71,20 @@ namespace RealtimeDatabase.Internal
             return value;
         }
 
-        public static bool CanExecuteAction(this Type type, WebsocketConnection websocketConnection, ActionHandlerBase actionHandler)
+        public static bool CanExecuteAction(this Type type, WebsocketConnection websocketConnection,
+            ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
-            return type.HandleAuthAttribute<ActionAuthAttribute>(websocketConnection, actionHandler);
+            return type.HandleAuthAttribute<ActionAuthAttribute>(websocketConnection, actionHandler, serviceProvider);
         }
 
-        public static bool CanExecuteAction(this MethodInfo methodInfo, WebsocketConnection websocketConnection, ActionHandlerBase actionHandler)
+        public static bool CanExecuteAction(this MethodInfo methodInfo, WebsocketConnection websocketConnection,
+            ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
             ActionAuthAttribute authAttribute = methodInfo.GetCustomAttribute<ActionAuthAttribute>();
-            return HandleAuthAttribute(methodInfo.DeclaringType, authAttribute, websocketConnection, actionHandler);
+            return HandleAuthAttribute(methodInfo.DeclaringType, authAttribute, websocketConnection, actionHandler, serviceProvider);
         }
 
-        private static bool HandleAuthAttribute(Type t, AuthAttributeBase authAttribute, WebsocketConnection connection, object entityObject)
+        private static bool HandleAuthAttribute(Type t, AuthAttributeBase authAttribute, WebsocketConnection connection, object entityObject, IServiceProvider serviceProvider)
         {
             if (authAttribute == null)
             {
@@ -82,42 +92,42 @@ namespace RealtimeDatabase.Internal
             }
 
             ClaimsPrincipal user = connection.HttpContext.User;
+            RealtimeDatabaseOptions options = (RealtimeDatabaseOptions)serviceProvider.GetService(typeof(RealtimeDatabaseOptions));
 
-            if (user.Identity.IsAuthenticated)
+            if (options.RequireAuthenticationForAttribute && !user.Identity.IsAuthenticated)
             {
-                if (authAttribute.Roles != null)
+                return false;
+            }
+
+            if (authAttribute.Roles != null)
+            {
+                return authAttribute.Roles.Any(r => user.IsInRole(r));
+            }
+
+            if (!string.IsNullOrEmpty(authAttribute.FunctionName))
+            {
+                MethodInfo mi = t.GetMethod(authAttribute.FunctionName);
+                if (mi != null && mi.ReturnType == typeof(bool))
                 {
-                    return authAttribute.Roles.Any(r => user.IsInRole(r));
-                }
-                else if (!string.IsNullOrEmpty(authAttribute.FunctionName))
-                {
-                    MethodInfo mi = t.GetMethod(authAttribute.FunctionName);
-                    if (mi != null && mi.ReturnType == typeof(bool)
-                        && mi.GetParameters().Length == 1
-                        && mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
-                    {
-                        return (bool)mi.Invoke(entityObject, new object[] { connection });
-                    }
-                }
-                else
-                {
-                    return true;
+                    return (bool) mi.Invoke(entityObject, mi.CreateParameters(connection, serviceProvider));
                 }
             }
 
-            return false;
+            return true;
         }
 
-        private static bool HandleAuthAttribute<T>(this Type t, WebsocketConnection connection, object entityObject) where T : AuthAttributeBase
+        private static bool HandleAuthAttribute<T>(this Type t, WebsocketConnection connection, object entityObject,
+            IServiceProvider serviceProvider) where T : AuthAttributeBase
         {
             AuthAttributeBase authAttribute = t.GetCustomAttribute<T>();
-            return HandleAuthAttribute(t, authAttribute, connection, entityObject);
+            return HandleAuthAttribute(t, authAttribute, connection, entityObject, serviceProvider);
         }
 
-        private static bool HandleAuthAttribute<T>(this PropertyInfo pi, WebsocketConnection connection, object entityObject) where T : AuthAttributeBase
+        private static bool HandleAuthAttribute<T>(this PropertyInfo pi, WebsocketConnection connection,
+            object entityObject, IServiceProvider serviceProvider) where T : AuthAttributeBase
         {
             AuthAttributeBase authAttribute = pi.GetCustomAttribute<T>();
-            return HandleAuthAttribute(pi.DeclaringType, authAttribute, connection, entityObject);
+            return HandleAuthAttribute(pi.DeclaringType, authAttribute, connection, entityObject, serviceProvider);
         }
     }
 }

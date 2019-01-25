@@ -14,11 +14,13 @@ namespace RealtimeDatabase.Websocket
     {
         private readonly WebsocketConnectionManager connectionManager;
         private readonly DbContextAccesor dbContextAccessor;
+        private readonly IServiceProvider serviceProvider;
 
-        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor)
+        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider)
         {
             this.connectionManager = connectionManager;
             this.dbContextAccessor = dbContextAccessor;
+            this.serviceProvider = serviceProvider;
         }
 
         public void HandleChanges(List<ChangeResponse> changes)
@@ -46,7 +48,7 @@ namespace RealtimeDatabase.Websocket
 
             if (property.Key != null)
             {
-                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value)).ToList();
+                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value, serviceProvider)).ToList();
 
                 IEnumerable<object> collectionSet = db.GetValues(property);
 
@@ -108,7 +110,7 @@ namespace RealtimeDatabase.Websocket
                 if (change != null)
                 {
                     change.ReferenceId = cs.ReferenceId;
-                    change.Value = change.Value.GetAuthenticatedQueryModel(connection);
+                    change.Value = change.Value.GetAuthenticatedQueryModel(connection, serviceProvider);
                     _ = connection.Send(change);
                 }
             }
@@ -116,7 +118,7 @@ namespace RealtimeDatabase.Websocket
             {
                 _ = connection.Send(new LoadResponse
                 {
-                    NewObject = obj.GetAuthenticatedQueryModel(connection),
+                    NewObject = obj.GetAuthenticatedQueryModel(connection, serviceProvider),
                     ReferenceId = cs.ReferenceId
                 });
             }

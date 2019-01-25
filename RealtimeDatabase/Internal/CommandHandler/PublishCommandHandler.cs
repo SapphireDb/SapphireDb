@@ -9,8 +9,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
     {
         private readonly RealtimeMessageSender messageSender;
 
-        public PublishCommandHandler(DbContextAccesor dbContextAccesor, RealtimeMessageSender messageSender)
-            : base(dbContextAccesor)
+        public PublishCommandHandler(DbContextAccesor dbContextAccessor, RealtimeMessageSender messageSender)
+            : base(dbContextAccessor)
         {
             this.messageSender = messageSender;
         }

@@ -9,8 +9,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class SubscribeRolesCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeRolesCommand>
     {
-        public SubscribeRolesCommandHandler(AuthDbContextAccesor authDbContextAccesor, IServiceProvider serviceProvider)
-            : base(authDbContextAccesor, serviceProvider)
+        public SubscribeRolesCommandHandler(AuthDbContextAccesor authDbContextAccessor, IServiceProvider serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
         }
 

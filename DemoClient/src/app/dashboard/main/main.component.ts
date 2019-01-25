@@ -5,6 +5,8 @@ import {BehaviorSubject, combineLatest, Observable, of, pipe, Subscription} from
 import {User} from '../../model/user';
 import {concatMap, filter, map, switchMap, take, takeUntil, takeWhile} from 'rxjs/operators';
 import {AccountService} from '../../shared/services/account.service';
+import {Log} from '../../model/log';
+import {OrderByPrefilter} from '../../../../projects/ng-realtime-database/src/lib/models/prefilter/order-by-prefilter';
 
 @Component({
   selector: 'app-main',
@@ -66,6 +68,11 @@ export class MainComponent implements OnInit {
       return this.db.collection<User>('users')
         .values(new SkipPrefilter(i), new TakePrefilter(10));
     }));
+
+    this.db.collection<Log>('logs')
+      .values(new OrderByPrefilter(x => x.id, true), new TakePrefilter(1))
+      .pipe(map(v => v[0]))
+      .subscribe(console.warn);
 
     this.db.collection<User>('users')
       .snapshot(new SkipPrefilter(3), new TakePrefilter(5)).subscribe(console.table);

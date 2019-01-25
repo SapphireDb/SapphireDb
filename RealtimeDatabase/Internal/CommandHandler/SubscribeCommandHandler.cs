@@ -1,4 +1,5 @@
-﻿using RealtimeDatabase.Models;
+﻿using System;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
@@ -7,9 +8,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class SubscribeCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeCommand>
     {
-        public SubscribeCommandHandler(DbContextAccesor dbContextAccesor)
-            : base(dbContextAccesor)
+        private readonly IServiceProvider serviceProvider;
+
+        public SubscribeCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider)
+            : base(dbContextAccessor)
         {
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, SubscribeCommand command)
@@ -33,7 +37,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
 
             collectionSubscription.TransmittedData =
-                await MessageHelper.SendCollection(GetContext(), command, websocketConnection);
+                await MessageHelper.SendCollection(GetContext(), command, websocketConnection, serviceProvider);
         }
     }
 }

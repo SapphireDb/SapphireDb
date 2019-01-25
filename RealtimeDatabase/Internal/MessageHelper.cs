@@ -105,7 +105,8 @@ namespace RealtimeDatabase.Internal
             }
         }
 
-        public static async Task<List<object[]>> SendCollection(RealtimeDbContext db, QueryCommand command, WebsocketConnection websocketConnection)
+        public static async Task<List<object[]>> SendCollection(RealtimeDbContext db, QueryCommand command,
+            WebsocketConnection websocketConnection, IServiceProvider serviceProvider)
         {
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
@@ -122,8 +123,8 @@ namespace RealtimeDatabase.Internal
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(websocketConnection, cs))
-                                .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)).ToList(),
+                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(websocketConnection, cs, serviceProvider))
+                                .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection, serviceProvider)).ToList(),
                     ReferenceId = command.ReferenceId,
                 };
 

@@ -11,10 +11,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>
     {
-        public UpdateCommandHandler(DbContextAccesor contextAccesor)
-            : base(contextAccesor)
-        {
+        private readonly IServiceProvider serviceProvider;
 
+        public UpdateCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
+            : base(contextAccessor)
+        {
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, UpdateCommand command)
@@ -35,12 +37,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
         }
 
-        private async Task InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property, WebsocketConnection websocketConnection,
+        private async Task InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
+            WebsocketConnection websocketConnection,
             RealtimeDbContext db)
         {
             object updateValue = command.UpdateValue.ToObject(property.Key);
 
-            if (!property.Key.CanUpdate(websocketConnection, updateValue))
+            if (!property.Key.CanUpdate(websocketConnection, updateValue, serviceProvider))
             {
                 await websocketConnection.SendException<UpdateResponse>(command,
                     "The user is not authorized for this action.");
@@ -56,19 +59,17 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
         }
 
-        private async Task SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue, RealtimeDbContext db,
+        private async Task SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
+            RealtimeDbContext db,
             WebsocketConnection websocketConnection, UpdateCommand command)
         {
-            property.Key.UpdateFields(value, updateValue, db, websocketConnection);
+            property.Key.UpdateFields(value, updateValue, db, websocketConnection, serviceProvider);
 
             MethodInfo mi = property.Key.GetMethod("OnUpdate");
 
-            if (mi != null &&
-                mi.ReturnType == typeof(void) &&
-                mi.GetParameters().Length == 1 &&
-                mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+            if (mi != null && mi.ReturnType == typeof(void))
             {
-                mi.Invoke(value, new object[] { websocketConnection });
+                mi.Invoke(value, mi.CreateParameters(websocketConnection, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))

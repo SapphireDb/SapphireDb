@@ -18,8 +18,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<ExecuteCommandHandler> logger;
 
-        public ExecuteCommandHandler(DbContextAccesor contextAccesor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
-            : base(contextAccesor)
+        public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
+            : base(contextAccessor)
         {
             this.actionMapper = actionMapper;
             this.serviceProvider = serviceProvider;
@@ -98,14 +98,14 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private async Task<bool> CheckAccessToHandler(Type actionHandlerType, MethodInfo actionMethod, ExecuteCommand command,
             ActionHandlerBase actionHandler, WebsocketConnection websocketConnection)
         {
-            if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler))
+            if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler, serviceProvider))
             {
                 await websocketConnection.SendException<ExecuteResponse>(command,
                     "User is not allowed to execute actions of this handler.");
                 return false;
             }
 
-            if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler))
+            if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler, serviceProvider))
             {
                 await websocketConnection.SendException<ExecuteResponse>(command,
                     "User is not allowed to execute action.");

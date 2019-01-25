@@ -16,8 +16,6 @@ namespace WebUI.Data.Models
         public bool Auth(WebsocketConnection websocketConnection)
         {
             string userId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
-
-
             return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 

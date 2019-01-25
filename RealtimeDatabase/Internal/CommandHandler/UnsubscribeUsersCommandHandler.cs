@@ -6,8 +6,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class UnsubscribeUsersCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeUsersCommand>
     {
-        public UnsubscribeUsersCommandHandler(DbContextAccesor dbContextAccesor)
-            : base(dbContextAccesor)
+        public UnsubscribeUsersCommandHandler(DbContextAccesor dbContextAccessor)
+            : base(dbContextAccessor)
         {
 
         }

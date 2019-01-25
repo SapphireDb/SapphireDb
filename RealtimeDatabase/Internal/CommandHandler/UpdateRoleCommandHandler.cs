@@ -15,9 +15,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly WebsocketConnectionManager connectionManager;
 
-        public UpdateRoleCommandHandler(AuthDbContextAccesor authDbContextAccesor, AuthDbContextTypeContainer contextTypeContainer,
+        public UpdateRoleCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer,
             IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager, WebsocketConnectionManager connectionManager)
-            : base(authDbContextAccesor, serviceProvider)
+            : base(authDbContextAccessor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;
             this.roleManager = roleManager;

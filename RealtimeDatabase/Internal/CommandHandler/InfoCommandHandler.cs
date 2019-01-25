@@ -10,8 +10,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class InfoCommandHandler : CommandHandlerBase, ICommandHandler<InfoCommand>
     {
-        public InfoCommandHandler(DbContextAccesor dbContextAccesor)
-            : base(dbContextAccesor)
+        public InfoCommandHandler(DbContextAccesor dbContextAccessor)
+            : base(dbContextAccessor)
         {
 
         }

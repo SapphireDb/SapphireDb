@@ -2,6 +2,7 @@
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace WebUI.Data.Models
 {
@@ -24,9 +25,10 @@ namespace WebUI.Data.Models
             return connection.HttpContext.User.IsInRole("admin");
         }
 
-        public bool Test2(WebsocketConnection connection)
+        public bool Test2(WebsocketConnection connection, RealtimeContext db)
         {
-            return DateTime.UtcNow.Millisecond % 2 == 0;
+            return db.Users.Count() > 3;
+            //return DateTime.UtcNow.Millisecond % 2 == 0;
         }
 
         [Required]
@@ -34,14 +36,24 @@ namespace WebUI.Data.Models
         [Updatable]
         public string LastName { get; set; }
 
-        public void OnCreate(WebsocketConnection websocketConnection)
+        public void OnCreate(WebsocketConnection websocketConnection, RealtimeContext db)
         {
-
+            db.Logs.Add(new Log()
+            {
+                Message = "Created user " + Id,
+                UserId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value
+            });
+            db.SaveChanges();
         }
 
-        public void OnUpdate(WebsocketConnection websocketConnection)
+        public void OnUpdate(WebsocketConnection websocketConnection, RealtimeContext db)
         {
-
+            db.Logs.Add(new Log()
+            {
+                Message = "Updated user " + Id,
+                UserId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value
+            });
+            db.SaveChanges();
         }
     }
 }

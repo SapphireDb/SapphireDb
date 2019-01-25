@@ -11,10 +11,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
 {
     class CreateCommandHandler : CommandHandlerBase, ICommandHandler<CreateCommand>
     {
-        public CreateCommandHandler(DbContextAccesor contextAccesor) 
-            : base(contextAccesor)
-        {
+        private readonly IServiceProvider serviceProvider;
 
+        public CreateCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider) 
+            : base(contextAccessor)
+        {
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task Handle(WebsocketConnection websocketConnection, CreateCommand command)
@@ -39,7 +41,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             object newValue = command.Value.ToObject(property.Key);
 
-            if (!property.Key.CanCreate(websocketConnection, newValue))
+            if (!property.Key.CanCreate(websocketConnection, newValue, serviceProvider))
             {
                 await websocketConnection.SendException<CreateResponse>(command,
                     "The user is not authorized for this action.");
@@ -64,12 +66,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             MethodInfo mi = property.Key.GetMethod("OnCreate");
 
-            if (mi != null &&
-                mi.ReturnType == typeof(void) &&
-                mi.GetParameters().Length == 1 &&
-                mi.GetParameters()[0].ParameterType == typeof(WebsocketConnection))
+            if (mi != null && mi.ReturnType == typeof(void))
             {
-                mi.Invoke(newValue, new object[] { websocketConnection });
+                mi.Invoke(newValue, mi.CreateParameters(websocketConnection, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(newValue, out Dictionary<string, List<string>> validationResults))
