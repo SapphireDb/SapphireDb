@@ -38,44 +38,40 @@ namespace RealtimeDatabase.Websocket
         private void HandleSubscription(IGrouping<string, CollectionSubscription> subscriptionGrouping, List<ChangeResponse> changes,
             WebsocketConnection connection, RealtimeDbContext db)
         {
-            IEnumerable<ChangeResponse> relevantChanges =
-                        changes.Where(c => c.CollectionName == subscriptionGrouping.Key);
+            List<ChangeResponse> relevantChanges =
+                        changes.Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
 
             KeyValuePair<Type, string> property = db.sets
                 .FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
 
             if (property.Key != null)
             {
-                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value));
+                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value)).ToList();
 
-                IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
+                IEnumerable<object> collectionSet = db.GetValues(property).ToList();
 
                 foreach (CollectionSubscription cs in subscriptionGrouping)
                 {
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    IEnumerable<object> currentCollectionSet = collectionSet;
+                    IEnumerable<object> currentCollectionSet = collectionSet.ToList();
 
                     foreach (IPrefilter prefilter in cs.Prefilters)
                     {
                         currentCollectionSet = prefilter.Execute(currentCollectionSet);
                     }
 
-                    List<object> currentCollectionSetLoaded = currentCollectionSet.ToList();
-                    List<object[]> currentCollectionPrimaryValues = new List<object[]>();
-
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    SendDataToClient(currentCollectionSetLoaded, currentCollectionPrimaryValues, property, db, cs, relevantChanges, connection);
+                    SendDataToClient(currentCollectionSet.ToList(), property, db, cs, relevantChanges, connection);
                 }
             }
         }
 
-        private void SendDataToClient(List<object> currentCollectionSetLoaded, List<object[]> currentCollectionPrimaryValues,
-            KeyValuePair<Type, string> property, RealtimeDbContext db, CollectionSubscription cs, IEnumerable<ChangeResponse> relevantChanges,
+        private void SendDataToClient(List<object> currentCollectionSetLoaded,
+            KeyValuePair<Type, string> property, RealtimeDbContext db, CollectionSubscription cs, List<ChangeResponse> relevantChanges,
             WebsocketConnection connection)
         {
+            List<object[]> currentCollectionPrimaryValues = new List<object[]>();
+
             foreach (object obj in currentCollectionSetLoaded)
             {
-                // ReSharper disable once PossibleMultipleEnumeration
                 SendRelevantFilesToClient(property, db, obj, currentCollectionPrimaryValues, cs, relevantChanges, connection);
             }
 
@@ -95,7 +91,7 @@ namespace RealtimeDatabase.Websocket
         }
 
         private void SendRelevantFilesToClient(KeyValuePair<Type, string> property, RealtimeDbContext db, object obj,
-            List<object[]> currentCollectionPrimaryValues, CollectionSubscription cs, IEnumerable<ChangeResponse> relevantChanges,
+            List<object[]> currentCollectionPrimaryValues, CollectionSubscription cs, List<ChangeResponse> relevantChanges,
             WebsocketConnection connection)
         {
             object[] primaryValues = property.Key.GetPrimaryKeyValues(db, obj);

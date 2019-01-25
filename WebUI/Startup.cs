@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase;
@@ -26,8 +27,10 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            //services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
+
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"),
+            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/,
                 new RealtimeDatabase.Models.RealtimeDatabaseOptions() {
                     Authentication = RealtimeDatabase.Models.RealtimeDatabaseOptions.AuthenticationMode.Custom,
                     EnableAuthCommands = true

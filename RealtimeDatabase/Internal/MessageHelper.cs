@@ -111,25 +111,23 @@ namespace RealtimeDatabase.Internal
 
             if (property.Key != null)
             {
-                IEnumerable<object> collectionSet = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
+                IEnumerable<object> collectionSet = db.GetValues(property);
 
                 foreach (IPrefilter prefilter in command.Prefilters)
                 {
                     collectionSet = prefilter.Execute(collectionSet);
                 }
 
-                collectionSet = collectionSet.ToList();
+                List<object> collectionSetList = collectionSet.ToList();
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    Collection = collectionSet.Where(cs => property.Key.CanQuery(websocketConnection, cs))
+                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(websocketConnection, cs))
                                 .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection)).ToList(),
                     ReferenceId = command.ReferenceId,
                 };
 
-                // ReSharper disable once PossibleMultipleEnumeration
-                List<object[]> result = collectionSet.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+                List<object[]> result = collectionSetList.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
                 await websocketConnection.Send(queryResponse);
                 return result;
             }

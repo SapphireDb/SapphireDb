@@ -110,5 +110,28 @@ namespace RealtimeDatabase.Internal
 
             return db.Roles.Select(r => GenerateRoleData(r, userRoles));
         }
+
+        public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property)
+        {
+            IEnumerable<object> values = (IEnumerable<object>) db.GetType().GetProperty(property.Value).GetValue(db);
+
+            IProperty[] primaryProperties = property.Key.GetPrimaryKeys(db);
+
+            for (int i = 0; i < primaryProperties.Length; i++)
+            {
+                PropertyInfo pi = primaryProperties[i].PropertyInfo;
+
+                if (i == 0)
+                {
+                    values = values.OrderBy(o => pi.GetValue(o));
+                }
+                else
+                {
+                    values = ((IOrderedEnumerable<object>) values).ThenBy(o => pi.GetValue(o));
+                }
+            }
+
+            return values;
+        }
     }
 }

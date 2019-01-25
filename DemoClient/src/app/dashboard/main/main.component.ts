@@ -140,4 +140,8 @@ export class MainComponent implements OnInit {
     this.db.messaging.send({data: this.message});
     this.db.messaging.publish('test', this.message);
   }
+
+  executeTest() {
+    this.db.execute('user', 'Test');
+  }
 }
