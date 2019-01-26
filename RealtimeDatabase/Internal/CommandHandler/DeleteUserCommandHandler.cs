@@ -6,6 +6,8 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -22,7 +24,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, DeleteUserCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, DeleteUserCommand command)
         {
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
@@ -41,19 +43,17 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(rt => rt.UserId == user.Id));
                     db.SaveChanges();
 
-                    await websocketConnection.Send(new DeleteUserResponse()
+                    MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+                    MessageHelper.SendRolesUpdate(db, connectionManager);
+
+                    return new DeleteUserResponse()
                     {
                         ReferenceId = command.ReferenceId
-                    });
-
-                    await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
-                    await MessageHelper.SendRolesUpdate(db, connectionManager);
-
-                    return;
+                    };
                 }
             }
 
-            await websocketConnection.SendException<DeleteUserResponse>(command, "Deleting user failed");
+            return command.CreateExceptionResponse<DeleteUserResponse>("Deleting user failed");
         }
     }
 }

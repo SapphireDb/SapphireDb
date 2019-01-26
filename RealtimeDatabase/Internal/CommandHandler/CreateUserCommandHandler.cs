@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -26,25 +28,25 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.roleManager = roleManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, CreateUserCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, CreateUserCommand command)
         {
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
             try
             {
-                await SaveUserToDb(command, usermanager, websocketConnection);
+                return await SaveUserToDb(command, usermanager);
             }
             catch (Exception ex)
             {
-                await websocketConnection.Send(new CreateUserResponse()
+                return new CreateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Error = ex
-                });
+                };
             }
         }
 
-        private async Task SaveUserToDb(CreateUserCommand command, dynamic usermanager, WebsocketConnection websocketConnection)
+        private async Task<ResponseBase> SaveUserToDb(CreateUserCommand command, dynamic usermanager)
         {
             dynamic newUser = CreateUserObject(command);
             IdentityResult result = await usermanager.CreateAsync(newUser, command.Password);
@@ -53,24 +55,24 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 await SetUserRoles(command, usermanager, newUser);
 
-                await websocketConnection.Send(new CreateUserResponse()
+                IRealtimeAuthContext context = GetContext();
+
+                MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                MessageHelper.SendRolesUpdate(context, connectionManager);
+
+                return new CreateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     NewUser = await ModelHelper.GenerateUserData(newUser, contextTypeContainer, usermanager)
-                });
-
-                IRealtimeAuthContext context = GetContext();
-
-                await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
-                await MessageHelper.SendRolesUpdate(context, connectionManager);
+                };
             }
             else
             {
-                await websocketConnection.Send(new CreateUserResponse()
+                return new CreateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     IdentityErrors = result.Errors
-                });
+                };
             }
         }
 

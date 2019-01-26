@@ -1,10 +1,10 @@
-﻿using NiL.JS.BaseLibrary;
+﻿using System;
+using System.Collections.Generic;
+using NiL.JS.BaseLibrary;
 using NiL.JS.Core;
 using NiL.JS.Extensions;
-using System;
-using System.Collections.Generic;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Helper
 {
     static class JavascriptFunctionHelper
     {

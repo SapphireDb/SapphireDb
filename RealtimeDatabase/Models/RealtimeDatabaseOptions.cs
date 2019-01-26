@@ -1,5 +1,8 @@
 ﻿using RealtimeDatabase.Websocket.Models;
 using System;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RealtimeDatabase.Models.Auth;
 
 namespace RealtimeDatabase.Models
 {
@@ -7,6 +10,7 @@ namespace RealtimeDatabase.Models
     {
         public RealtimeDatabaseOptions()
         {
+            EnableAuthCommands = true;
             RequireAuthenticationForAttribute = true;
             AuthInfoAllowFunction = (connection) => true;
             AuthAllowFunction = (connection) => connection.HttpContext.User.IsInRole("admin");
@@ -14,9 +18,11 @@ namespace RealtimeDatabase.Models
 
         public string Secret { get; set; }
 
-        public AuthenticationMode Authentication { get; set; }
+        public bool AlwaysRequireAuthentication { get; set; }
 
         public bool RequireAuthenticationForAttribute { get; set; }
+
+        internal bool EnableBuiltinAuth { get; set; }
 
         public bool EnableAuthCommands { get; set; }
 
@@ -24,9 +30,6 @@ namespace RealtimeDatabase.Models
 
         public Func<WebsocketConnection, bool> AuthAllowFunction { get; set; }
 
-        public enum AuthenticationMode
-        {
-            Custom, AlwaysExceptLogin, Always
-        }
+        public bool RestFallback { get; set; }
     }
 }

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -18,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, DeleteCommand command)
+        public Task<ResponseBase> Handle(HttpContext context, DeleteCommand command)
         {
             RealtimeDbContext db = GetContext();
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
@@ -30,11 +32,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.PrimaryKeys);
                     object value = db.Find(property.Key, primaryKeys);
 
-                    if (!property.Key.CanRemove(websocketConnection, value, serviceProvider))
+                    if (!property.Key.CanRemove(context, value, serviceProvider))
                     {
-                        await websocketConnection.SendException<DeleteResponse>(command,
-                            "The user is not authorized for this action.");
-                        return;
+                        return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(
+                            "The user is not authorized for this action."));
                     }
 
                     if (value != null)
@@ -42,7 +43,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                         db.Remove(value);
                         db.SaveChanges();
 
-                        await websocketConnection.Send(new DeleteResponse()
+                        return Task.FromResult<ResponseBase>(new DeleteResponse()
                         {
                             ReferenceId = command.ReferenceId
                         });
@@ -50,9 +51,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.SendException<DeleteResponse>(command, ex);
+                    return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(ex));
                 }
             }
+
+            return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>("No set for collection was found."));
         }
     }
 }

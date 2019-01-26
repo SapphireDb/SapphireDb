@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Websocket
 {
@@ -48,7 +49,7 @@ namespace RealtimeDatabase.Websocket
 
             if (property.Key != null)
             {
-                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection, rc.Value, serviceProvider)).ToList();
+                relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection.HttpContext, rc.Value, serviceProvider)).ToList();
 
                 IEnumerable<object> collectionSet = db.GetValues(property);
 
@@ -110,7 +111,7 @@ namespace RealtimeDatabase.Websocket
                 if (change != null)
                 {
                     change.ReferenceId = cs.ReferenceId;
-                    change.Value = change.Value.GetAuthenticatedQueryModel(connection, serviceProvider);
+                    change.Value = change.Value.GetAuthenticatedQueryModel(connection.HttpContext, serviceProvider);
                     _ = connection.Send(change);
                 }
             }
@@ -118,7 +119,7 @@ namespace RealtimeDatabase.Websocket
             {
                 _ = connection.Send(new LoadResponse
                 {
-                    NewObject = obj.GetAuthenticatedQueryModel(connection, serviceProvider),
+                    NewObject = obj.GetAuthenticatedQueryModel(connection.HttpContext, serviceProvider),
                     ReferenceId = cs.ReferenceId
                 });
             }

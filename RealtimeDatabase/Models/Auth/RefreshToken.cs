@@ -1,5 +1,6 @@
 ﻿using RealtimeDatabase.Internal;
 using System;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Models.Auth
 {

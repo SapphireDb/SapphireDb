@@ -8,44 +8,44 @@ namespace RealtimeDatabase.Websocket
 {
     public class RealtimeMessageSender
     {
-        private readonly WebsocketConnectionManager WebsocketConnectionManager;
+        private readonly WebsocketConnectionManager websocketConnectionManager;
 
         public RealtimeMessageSender(WebsocketConnectionManager websocketConnectionManager)
         {
-            WebsocketConnectionManager = websocketConnectionManager;
+            this.websocketConnectionManager = websocketConnectionManager;
         }
 
-        public async Task Send(object message)
+        public void Send(object message)
         {
-            foreach (WebsocketConnection connection in WebsocketConnectionManager.connections)
+            foreach (WebsocketConnection connection in websocketConnectionManager.connections)
             {
-                await connection.Send(new MessageResponse()
+                _ = connection.Send(new MessageResponse()
                 {
                     Data = message
                 });
             }
         }
 
-        public async Task Send(Func<WebsocketConnection, bool> filter, object message)
+        public void Send(Func<WebsocketConnection, bool> filter, object message)
         {
-            foreach (WebsocketConnection connection in WebsocketConnectionManager.connections.Where(filter))
+            foreach (WebsocketConnection connection in websocketConnectionManager.connections.Where(filter))
             {
-                await connection.Send(new MessageResponse()
+                _ = connection.Send(new MessageResponse()
                 {
                     Data = message
                 });
             }
         }
 
-        public async Task Publish(string topic, object message)
+        public void Publish(string topic, object message)
         {
             foreach (WebsocketConnection connection in 
-                WebsocketConnectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
+                websocketConnectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
             {
                 foreach (string subscriptionId in 
                     connection.MessageSubscriptions.Where(s => s.Value.ToLowerInvariant() == topic).Select(s => s.Key))
                 {
-                    await connection.Send(new TopicResponse()
+                    _ = connection.Send(new TopicResponse()
                     {
                         ReferenceId = subscriptionId,
                         Message = message

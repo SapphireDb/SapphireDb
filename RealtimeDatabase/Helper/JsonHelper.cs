@@ -1,14 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Prefilter;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Helper
 {
     static class JsonHelper
     {

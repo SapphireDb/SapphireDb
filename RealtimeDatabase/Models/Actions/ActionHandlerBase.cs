@@ -10,9 +10,9 @@ namespace RealtimeDatabase.Models.Actions
         public WebsocketConnection websocketConnection;
         public ExecuteCommand executeCommand;
 
-        public async Task Notify(object data)
+        public void Notify(object data)
         {
-            await websocketConnection.Send(new ExecuteResponse()
+            _ = websocketConnection.Send(new ExecuteResponse()
             {
                 ReferenceId = executeCommand.ReferenceId,
                 Result = data,

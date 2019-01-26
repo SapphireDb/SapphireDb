@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -19,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, CreateCommand command)
+        public Task<ResponseBase> Handle(HttpContext context, CreateCommand command)
         {
             RealtimeDbContext db = GetContext();
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
@@ -28,62 +30,58 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 try
                 {
-                    await CreateObject(command, property, websocketConnection, db);
+                    return Task.FromResult(CreateObject(command, property, context, db));
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.SendException<CreateResponse>(command, ex);
+                    return Task.FromResult(command.CreateExceptionResponse<CreateResponse>(ex));
                 }
             }
+
+            return Task.FromResult(command.CreateExceptionResponse<CreateResponse>("No set for collection was found."));
         }
 
-        private async Task CreateObject(CreateCommand command, KeyValuePair<Type, string> property, WebsocketConnection websocketConnection, RealtimeDbContext db)
+        private ResponseBase CreateObject(CreateCommand command, KeyValuePair<Type, string> property, HttpContext context, RealtimeDbContext db)
         {
             object newValue = command.Value.ToObject(property.Key);
 
-            if (!property.Key.CanCreate(websocketConnection, newValue, serviceProvider))
+            if (!property.Key.CanCreate(context, newValue, serviceProvider))
             {
-                await websocketConnection.SendException<CreateResponse>(command,
-                    "The user is not authorized for this action.");
-                return;
+                    return command.CreateExceptionResponse<CreateResponse>(
+                        "The user is not authorized for this action.");
             }
 
-            if (await SetPropertiesAndValidate(property, newValue, websocketConnection, command))
-            {
-                db.Add(newValue);
-                db.SaveChanges();
-
-                await websocketConnection.Send(new CreateResponse()
-                {
-                    NewObject = newValue,
-                    ReferenceId = command.ReferenceId
-                });
-            }
+            return SetPropertiesAndValidate(db, property, newValue, context, command);
         }
 
-        private async Task<bool> SetPropertiesAndValidate(KeyValuePair<Type, string> property, object newValue, WebsocketConnection websocketConnection,
+        private ResponseBase SetPropertiesAndValidate(RealtimeDbContext db, KeyValuePair<Type, string> property, object newValue, HttpContext context,
             CreateCommand command)
         {
             MethodInfo mi = property.Key.GetMethod("OnCreate");
 
             if (mi != null && mi.ReturnType == typeof(void))
             {
-                mi.Invoke(newValue, mi.CreateParameters(websocketConnection, serviceProvider));
+                mi.Invoke(newValue, mi.CreateParameters(context, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(newValue, out Dictionary<string, List<string>> validationResults))
             {
-                await websocketConnection.Send(new CreateResponse()
+                return new CreateResponse()
                 {
                     NewObject = newValue,
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
-                });
-
-                return false;
+                };
             }
 
-            return true;
+            db.Add(newValue);
+            db.SaveChanges();
+
+            return new CreateResponse()
+            {
+                NewObject = newValue,
+                ReferenceId = command.ReferenceId
+            };
         }
     }
 }

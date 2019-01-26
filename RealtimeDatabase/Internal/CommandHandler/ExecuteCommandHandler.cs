@@ -9,14 +9,17 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>
+    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsWebsocket
     {
         private readonly ActionMapper actionMapper;
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<ExecuteCommandHandler> logger;
+        private WebsocketConnection websocketConnection;
 
         public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccessor)
@@ -26,23 +29,23 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.logger = logger;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, ExecuteCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, ExecuteCommand command)
         {
             try
             {
-                await GetActionDetails(command, websocketConnection);
+                return await GetActionDetails(command, context);
             }
             catch (RuntimeBinderException)
             {
-                await websocketConnection.Send(new ExecuteResponse()
+                return new ExecuteResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     Result = null
-                });
+                };
             }
         }
 
-        private async Task GetActionDetails(ExecuteCommand command, WebsocketConnection websocketConnection)
+        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpContext context)
         {
             Type actionHandlerType = actionMapper.GetHandler(command);
 
@@ -56,21 +59,32 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     if (actionHandler != null)
                     {
-                        if (!await CheckAccessToHandler(actionHandlerType, actionMethod, command, actionHandler, websocketConnection))
-                            return;
+                        if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
+                        {
+                            return command.CreateExceptionResponse<ExecuteResponse>(
+                                "User is not allowed to execute actions of this handler.");
+                        }
 
-                        await ExecuteAction(actionHandler, websocketConnection, command, actionMethod);
+                        if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
+                        {
+                            return command.CreateExceptionResponse<ExecuteResponse>("User is not allowed to execute action.");
+                        }
+
+                        return await ExecuteAction(actionHandler, command, actionMethod);
                     }
+
+                    return command.CreateExceptionResponse<ExecuteResponse>("No handler was found.");
                 }
                 else
                 {
-                    await websocketConnection.SendException<ExecuteResponse>(command,
-                        "No action to execute was found.");
+                    return command.CreateExceptionResponse<ExecuteResponse>("No action to execute was found.");
                 }
             }
+
+            return command.CreateExceptionResponse<ExecuteResponse>("No action handler type was matching");
         }
 
-        private async Task ExecuteAction(ActionHandlerBase actionHandler, WebsocketConnection websocketConnection, ExecuteCommand command,
+        private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
             actionHandler.websocketConnection = websocketConnection;
@@ -86,33 +100,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 catch { /* Do nothing because result is not an awaitable and already contains the expected result */ }
             }
 
-            await websocketConnection.Send(new ExecuteResponse()
+            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
+
+            return new ExecuteResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Result = result
-            });
-
-            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
-        }
-
-        private async Task<bool> CheckAccessToHandler(Type actionHandlerType, MethodInfo actionMethod, ExecuteCommand command,
-            ActionHandlerBase actionHandler, WebsocketConnection websocketConnection)
-        {
-            if (!actionHandlerType.CanExecuteAction(websocketConnection, actionHandler, serviceProvider))
-            {
-                await websocketConnection.SendException<ExecuteResponse>(command,
-                    "User is not allowed to execute actions of this handler.");
-                return false;
-            }
-
-            if (!actionMethod.CanExecuteAction(websocketConnection, actionHandler, serviceProvider))
-            {
-                await websocketConnection.SendException<ExecuteResponse>(command,
-                    "User is not allowed to execute action.");
-                return false;
-            }
-
-            return true;
+            };
         }
 
         private object[] GetParameters(MethodInfo actionMethod, ExecuteCommand command)
@@ -127,6 +121,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 return parameterValue;
             }).ToArray();
+        }
+
+        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
+        {
+            websocketConnection = currentWebsocketConnection;
         }
     }
 }

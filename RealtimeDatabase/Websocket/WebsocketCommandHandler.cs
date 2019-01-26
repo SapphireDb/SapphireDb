@@ -4,6 +4,7 @@ using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Threading.Tasks;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Websocket
 {
@@ -30,7 +31,7 @@ namespace RealtimeDatabase.Websocket
 
                 if (command != null)
                 {
-                    await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
+                    commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
                 }  
             }
         }

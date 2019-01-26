@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Newtonsoft.Json.Linq;
-using RealtimeDatabase.Attributes;
-using RealtimeDatabase.Websocket.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Newtonsoft.Json.Linq;
+using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Internal;
+using RealtimeDatabase.Websocket.Models;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Helper
 {
     static class ModelHelper
     {
@@ -36,7 +38,7 @@ namespace RealtimeDatabase.Internal
         }
 
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
-            RealtimeDbContext db, WebsocketConnection websocketConnection, IServiceProvider serviceProvider)
+            RealtimeDbContext db, HttpContext context, IServiceProvider serviceProvider)
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
             bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
@@ -45,7 +47,7 @@ namespace RealtimeDatabase.Internal
             {
                 if ((isClassUpdatable || pi.GetCustomAttribute<UpdatableAttribute>() != null) && !primaryKeys.Contains(pi.Name.ToCamelCase()))
                 {
-                    if (pi.CanUpdate(websocketConnection, entityObject, serviceProvider))
+                    if (pi.CanUpdate(context, entityObject, serviceProvider))
                     {
                         pi.SetValue(entityObject, pi.GetValue(newValues));
                     }

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -19,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, UpdateCommand command)
+        public Task<ResponseBase> Handle(HttpContext context, UpdateCommand command)
         {
             RealtimeDbContext db = GetContext();
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
@@ -28,26 +30,25 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 try
                 {
-                    await InitializeUpdate(command, property, websocketConnection, db);
+                    return Task.FromResult(InitializeUpdate(command, property, context, db));
                 }
                 catch (Exception ex)
                 {
-                    await websocketConnection.SendException<UpdateResponse>(command, ex);
+                    return Task.FromResult(command.CreateExceptionResponse<UpdateResponse>(ex));
                 }
             }
+
+            return Task.FromResult(command.CreateExceptionResponse<UpdateResponse>("No set for collection was found."));
         }
 
-        private async Task InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
-            WebsocketConnection websocketConnection,
-            RealtimeDbContext db)
+        private ResponseBase InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
+            HttpContext context, RealtimeDbContext db)
         {
             object updateValue = command.UpdateValue.ToObject(property.Key);
 
-            if (!property.Key.CanUpdate(websocketConnection, updateValue, serviceProvider))
+            if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
             {
-                await websocketConnection.SendException<UpdateResponse>(command,
-                    "The user is not authorized for this action.");
-                return;
+                return command.CreateExceptionResponse<UpdateResponse>("The user is not authorized for this action.");
             }
 
             object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);
@@ -55,41 +56,41 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (value != null)
             {
-                await SaveChangesToDb(property, value, updateValue, db, websocketConnection, command);
+                return SaveChangesToDb(property, value, updateValue, db, context, command);
             }
+
+            return command.CreateExceptionResponse<UpdateResponse>("No value to update was found");
         }
 
-        private async Task SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
-            RealtimeDbContext db,
-            WebsocketConnection websocketConnection, UpdateCommand command)
+        private ResponseBase SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
+            RealtimeDbContext db, HttpContext context, UpdateCommand command)
         {
-            property.Key.UpdateFields(value, updateValue, db, websocketConnection, serviceProvider);
+            property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
             MethodInfo mi = property.Key.GetMethod("OnUpdate");
 
             if (mi != null && mi.ReturnType == typeof(void))
             {
-                mi.Invoke(value, mi.CreateParameters(websocketConnection, serviceProvider));
+                mi.Invoke(value, mi.CreateParameters(context, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
             {
-                await websocketConnection.Send(new UpdateResponse()
+                return new UpdateResponse()
                 {
                     UpdatedObject = value,
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
-                });
-                return;
+                };
             }
 
             db.SaveChanges();
 
-            await websocketConnection.Send(new UpdateResponse()
+            return new UpdateResponse()
             {
                 UpdatedObject = value,
                 ReferenceId = command.ReferenceId
-            });
+            };
         }
     }
 }

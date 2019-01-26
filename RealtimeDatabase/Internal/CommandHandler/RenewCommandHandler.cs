@@ -6,6 +6,8 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -23,42 +25,28 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.contextTypeContainer = contextTypeContainer;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, RenewCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, RenewCommand command)
         {
             if (string.IsNullOrEmpty(command.UserId) || string.IsNullOrEmpty(command.RefreshToken))
             {
-                await websocketConnection.SendException<RenewResponse>(command,
-                    "Userid and refresh token cannot be empty");
-                return;
+                return command.CreateExceptionResponse<RenewResponse>("Userid and refresh token cannot be empty");
             }
 
-            IRealtimeAuthContext context = GetContext();
+            IRealtimeAuthContext db = GetContext();
 
-            if (!await QueryToken(context, command, websocketConnection))
-                return;
-
-            if (!await RenewToken(command, context, websocketConnection))
-            {
-                await websocketConnection.SendException<RenewResponse>(command, "Renew failed");
-            }
-        }
-
-        private async Task<bool> QueryToken(IRealtimeAuthContext context, RenewCommand command, WebsocketConnection websocketConnection)
-        {
-            RefreshToken rT = GetRefreshToken(context, command);
+            RefreshToken rT = GetRefreshToken(db, command);
 
             if (rT == null)
             {
-                await websocketConnection.SendException<RenewResponse>(command, "Wrong refresh token");
-                return false;
+                return command.CreateExceptionResponse<RenewResponse>("Wrong refresh token");
             }
 
-            context.RefreshTokens.Remove(rT);
+            db.RefreshTokens.Remove(rT);
 
-            return true;
+            return await RenewToken(command, db);
         }
 
-        private async Task<bool> RenewToken(RenewCommand command, IRealtimeAuthContext context, WebsocketConnection websocketConnection)
+        private async Task<ResponseBase> RenewToken(RenewCommand command, IRealtimeAuthContext context)
         {
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
@@ -84,11 +72,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     UserData = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
                 };
 
-                await websocketConnection.Send(renewResponse);
-                return true;
+                return renewResponse;
             }
 
-            return false;
+            return command.CreateExceptionResponse<RenewResponse>("Renew failed");
         }
 
         private RefreshToken GetRefreshToken(IRealtimeAuthContext context, RenewCommand command)

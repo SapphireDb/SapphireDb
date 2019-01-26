@@ -1,16 +1,18 @@
-﻿using RealtimeDatabase.Attributes;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Helper
 {
     static class MessageHelper
     {
@@ -76,14 +78,14 @@ namespace RealtimeDatabase.Internal
             typeof(InfoResponse).GetProperty(keyName).SetValue(infoResponse, authInfo);
         }
 
-        public static async Task SendUsersUpdate(IRealtimeAuthContext db, AuthDbContextTypeContainer typeContainer, object usermanager,
+        public static void SendUsersUpdate(IRealtimeAuthContext db, AuthDbContextTypeContainer typeContainer, object usermanager,
             WebsocketConnectionManager connectionManager)
         {
             List<Dictionary<string, object>> users = ModelHelper.GetUsers(db, typeContainer, usermanager).ToList();
 
             foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.UsersSubscription)))
             {
-                await ws.Send(new SubscribeUsersResponse()
+                _ = ws.Send(new SubscribeUsersResponse()
                 {
                     ReferenceId = ws.UsersSubscription,
                     Users = users
@@ -91,13 +93,13 @@ namespace RealtimeDatabase.Internal
             }
         }
 
-        public static async Task SendRolesUpdate(IRealtimeAuthContext db, WebsocketConnectionManager connectionManager)
+        public static void SendRolesUpdate(IRealtimeAuthContext db, WebsocketConnectionManager connectionManager)
         {
             List<Dictionary<string, object>> roles = ModelHelper.GetRoles(db).ToList();
 
             foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.RolesSubscription)))
             {
-                await ws.Send(new SubscribeRolesResponse()
+                _ = ws.Send(new SubscribeRolesResponse()
                 {
                     ReferenceId = ws.RolesSubscription,
                     Roles = roles
@@ -105,8 +107,8 @@ namespace RealtimeDatabase.Internal
             }
         }
 
-        public static async Task<List<object[]>> SendCollection(RealtimeDbContext db, QueryCommand command,
-            WebsocketConnection websocketConnection, IServiceProvider serviceProvider)
+        public static ResponseBase GetCollection(RealtimeDbContext db, QueryCommand command,
+            HttpContext context, IServiceProvider serviceProvider, out List<object[]> transmittedData)
         {
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
@@ -123,17 +125,17 @@ namespace RealtimeDatabase.Internal
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(websocketConnection, cs, serviceProvider))
-                                .Select(cs => cs.GetAuthenticatedQueryModel(websocketConnection, serviceProvider)).ToList(),
+                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(context, cs, serviceProvider))
+                                .Select(cs => cs.GetAuthenticatedQueryModel(context, serviceProvider)).ToList(),
                     ReferenceId = command.ReferenceId,
                 };
 
-                List<object[]> result = collectionSetList.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
-                await websocketConnection.Send(queryResponse);
-                return result;
+                transmittedData = collectionSetList.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+                return queryResponse;
             }
 
-            return new List<object[]>();
+            transmittedData = new List<object[]>();
+            return command.CreateExceptionResponse<QueryResponse>("No set for collection was found.");
         }
     }
 }

@@ -51,22 +51,5 @@ namespace RealtimeDatabase.Websocket.Models
                 Lock.Release();
             }
         }
-
-        public async Task SendException<T>(CommandBase command, Exception exception)
-            where T : ResponseBase
-        {
-            T response = Activator.CreateInstance<T>();
-
-            response.ReferenceId = command.ReferenceId;
-            response.Error = exception;
-
-            await Send(response);
-        }
-
-        public async Task SendException<T>(CommandBase command, string message)
-            where T : ResponseBase
-        {
-            await SendException<T>(command, new Exception(message));
-        }
     }
 }

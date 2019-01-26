@@ -6,6 +6,8 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -23,12 +25,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.jwtIssuer = jwtIssuer;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, LoginCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, LoginCommand command)
         {
             if (string.IsNullOrEmpty(command.Username) || string.IsNullOrEmpty(command.Password))
             {
-                await websocketConnection.SendException<LoginResponse>(command, "Username and password cannot be empty");
-                return;
+                return command.CreateExceptionResponse<LoginResponse>("Username and password cannot be empty");
             }
 
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
@@ -40,12 +41,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if ((bool)await contextTypeContainer.UserManagerType.GetMethod("CheckPasswordAsync").Invoke(usermanager, new object[] { userToVerify, command.Password }))
                 {
-                    await websocketConnection.Send(await CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify, usermanager));
-                    return;
+                    return await CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify,
+                        usermanager);
                 }
             }
 
-            await websocketConnection.SendException<LoginResponse>(command, "Login failed");
+            return command.CreateExceptionResponse<LoginResponse>("Login failed");
         }
 
         private RefreshToken CreateRefreshToken(IdentityUser userToVerify)

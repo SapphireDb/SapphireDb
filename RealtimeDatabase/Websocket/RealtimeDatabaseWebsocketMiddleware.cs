@@ -57,16 +57,6 @@ namespace RealtimeDatabase.Websocket
                 }
             }
 
-            if (options.Authentication == RealtimeDatabaseOptions.AuthenticationMode.Always)
-            {
-                if (!context.User.Identity.IsAuthenticated)
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("The user is not authenticated");
-                    return false;
-                }
-            }
-
             return true;
         }
     }

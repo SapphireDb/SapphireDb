@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -27,20 +29,20 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.roleManager = roleManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, UpdateUserCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, UpdateUserCommand command)
         {
             try
             {
                 dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-                await UpdateUser(usermanager, command, websocketConnection);
+                return await UpdateUser(usermanager, command);
             }
             catch (Exception ex)
             {
-                await websocketConnection.SendException<UpdateUserResponse>(command, ex);
+                return command.CreateExceptionResponse<UpdateUserResponse>(ex);
             }
         }
 
-        private async Task UpdateUser(dynamic usermanager, UpdateUserCommand command, WebsocketConnection websocketConnection)
+        private async Task<ResponseBase> UpdateUser(dynamic usermanager, UpdateUserCommand command)
         {
             IRealtimeAuthContext context = GetContext();
 
@@ -48,16 +50,15 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             if (user != null)
             {
-                await HandleUserUpdate(user, command, usermanager, websocketConnection, context);
+                return await HandleUserUpdate(user, command, usermanager, context);
             }
             else
             {
-                await websocketConnection.SendException<UpdateUserResponse>(command, "No user with this id was found.");
+                return command.CreateExceptionResponse<UpdateUserResponse>("No user with this id was found.");
             }
         }
 
-        private async Task HandleUserUpdate(dynamic user, UpdateUserCommand command, dynamic usermanager, WebsocketConnection websocketConnection,
-            IRealtimeAuthContext context)
+        private async Task<ResponseBase> HandleUserUpdate(dynamic user, UpdateUserCommand command, dynamic usermanager, IRealtimeAuthContext context)
         {
             SetUserProperties(user, command, usermanager);
 
@@ -67,22 +68,22 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 HandleRolesUpdate(command, usermanager, user);
 
-                await websocketConnection.Send(new UpdateUserResponse()
+                MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
+                MessageHelper.SendRolesUpdate(context, connectionManager);
+
+                return new UpdateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     NewUser = await ModelHelper.GenerateUserData(user, contextTypeContainer, usermanager)
-                });
-
-                await MessageHelper.SendUsersUpdate(context, contextTypeContainer, usermanager, connectionManager);
-                await MessageHelper.SendRolesUpdate(context, connectionManager);
+                };
             }
             else
             {
-                await websocketConnection.Send(new UpdateUserResponse()
+                return new UpdateUserResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     IdentityErrors = result.Errors
-                });
+                };
             }
         }
 

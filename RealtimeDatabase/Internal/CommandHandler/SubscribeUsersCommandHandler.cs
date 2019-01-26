@@ -4,11 +4,14 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class SubscribeUsersCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeUsersCommand>
+    class SubscribeUsersCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeUsersCommand>, INeedsWebsocket
     {
+        private WebsocketConnection websocketConnection;
         private readonly AuthDbContextTypeContainer contextTypeContainer;
 
         public SubscribeUsersCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer, IServiceProvider serviceProvider)
@@ -17,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.contextTypeContainer = contextTypeContainer;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, SubscribeUsersCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, SubscribeUsersCommand command)
         {
             object usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 
@@ -32,11 +35,16 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 websocketConnection.Lock.Release();
             }
 
-            await websocketConnection.Send(new SubscribeUsersResponse()
+            return new SubscribeUsersResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Users = ModelHelper.GetUsers(GetContext(), contextTypeContainer, usermanager).ToList()
-            });
+            };
+        }
+
+        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
+        {
+            websocketConnection = currentWebsocketConnection;
         }
     }
 }

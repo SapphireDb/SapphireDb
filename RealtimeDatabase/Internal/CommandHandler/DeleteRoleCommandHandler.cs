@@ -6,6 +6,8 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -24,7 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, DeleteRoleCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, DeleteRoleCommand command)
         {
             IdentityRole role = await roleManager.FindByIdAsync(command.Id);
 
@@ -34,38 +36,38 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (result.Succeeded)
                 {
-                    await SendDataToClients(role, websocketConnection, command);
+                    return SendDataToClients(role, command);
                 }
                 else
                 {
-                    await websocketConnection.Send(new DeleteRoleResponse
+                    return new DeleteRoleResponse
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
-                    });
+                    };
                 }
             }
             else
             {
-                await websocketConnection.SendException<DeleteRoleResponse>(command, "Role not found");
+                return command.CreateExceptionResponse<DeleteRoleResponse>("Role not found");
             }            
         }
 
-        private async Task SendDataToClients(IdentityRole role, WebsocketConnection websocketConnection, DeleteRoleCommand command)
+        private ResponseBase SendDataToClients(IdentityRole role, DeleteRoleCommand command)
         {
             IRealtimeAuthContext db = GetContext();
             db.UserRoles.RemoveRange(db.UserRoles.Where(ur => ur.RoleId == role.Id));
             db.SaveChanges();
 
-            await websocketConnection.Send(new DeleteRoleResponse()
-            {
-                ReferenceId = command.ReferenceId
-            });
-
-            await MessageHelper.SendRolesUpdate(db, connectionManager);
+            MessageHelper.SendRolesUpdate(db, connectionManager);
 
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-            await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+            MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+
+            return new DeleteRoleResponse()
+            {
+                ReferenceId = command.ReferenceId
+            };
         }
     }
 }

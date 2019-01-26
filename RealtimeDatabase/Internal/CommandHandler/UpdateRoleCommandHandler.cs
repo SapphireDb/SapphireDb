@@ -6,6 +6,8 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -24,7 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, UpdateRoleCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, UpdateRoleCommand command)
         {
             IdentityRole role = await roleManager.FindByIdAsync(command.Id);
 
@@ -37,40 +39,40 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (result.Succeeded)
                 {
-                    await SendDataToClient(websocketConnection, command, role);
+                    return SendDataToClient(command, role);
                 }
                 else
                 {
-                    await websocketConnection.Send(new UpdateRoleResponse()
+                    return new UpdateRoleResponse()
                     {
                         ReferenceId = command.ReferenceId,
                         IdentityErrors = result.Errors
-                    });
+                    };
                 }
             }
             else
             {
-                await websocketConnection.SendException<UpdateRoleResponse>(command, "Role not found");
+                return command.CreateExceptionResponse<UpdateRoleResponse>("Role not found");
             }            
         }
 
-        private async Task SendDataToClient(WebsocketConnection websocketConnection, UpdateRoleCommand command, IdentityRole role)
+        private ResponseBase SendDataToClient(UpdateRoleCommand command, IdentityRole role)
         {
-            await websocketConnection.Send(new UpdateRoleResponse()
-            {
-                ReferenceId = command.ReferenceId,
-                NewRole = ModelHelper.GenerateRoleData(role)
-            });
-
             IRealtimeAuthContext db = GetContext();
 
-            await MessageHelper.SendRolesUpdate(db, connectionManager);
+            MessageHelper.SendRolesUpdate(db, connectionManager);
 
             if (db.UserRoles.Any(ur => ur.RoleId == role.Id))
             {
                 dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
-                await MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
+                MessageHelper.SendUsersUpdate(db, contextTypeContainer, usermanager, connectionManager);
             }
+
+            return new UpdateRoleResponse()
+            {
+                ReferenceId = command.ReferenceId,
+                NewRole = ModelHelper.GenerateRoleData(role)
+            };
         }
     }
 }

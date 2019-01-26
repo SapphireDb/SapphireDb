@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Helper
 {
     static class StringHelper
     {

@@ -14,14 +14,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RealtimeDatabase.Extensions
 {
     public static class RealtimeDatabaseExtension
     {
-        public static IApplicationBuilder UseRealtimeDatabase(this IApplicationBuilder builder, bool useAuth = false)
+        public static IApplicationBuilder UseRealtimeDatabase(this IApplicationBuilder builder)
         {
-            if (useAuth)
+            RealtimeDatabaseOptions options = (RealtimeDatabaseOptions)builder.ApplicationServices.GetService(typeof(RealtimeDatabaseOptions));
+
+            if (options.EnableBuiltinAuth)
             {
                 builder.UseAuthentication();
             }
@@ -34,6 +37,10 @@ namespace RealtimeDatabase.Extensions
                     socket.UseMiddleware<RealtimeDatabaseWebsocketMiddleware>();
                 });
 
+                if (options.RestFallback)
+                {
+                    realtimeApp.UseMvcWithDefaultRoute();
+                }
             });
 
             return builder;
@@ -42,12 +49,12 @@ namespace RealtimeDatabase.Extensions
         public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services, Action<DbContextOptionsBuilder> dbContextOptions = null, RealtimeDatabaseOptions options = null)
             where ContextType : RealtimeDbContext
         {
-            services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
-
             if (options == null)
             {
                 options = new RealtimeDatabaseOptions();
             }
+
+            services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
 
             services.AddSingleton(options);
 
@@ -78,13 +85,32 @@ namespace RealtimeDatabase.Extensions
                 services.AddTransient(handler.Value);
             }
 
+            services.AddRestFallback(options);
+
             return services;
+        }
+
+        private static void AddRestFallback(this IServiceCollection services, RealtimeDatabaseOptions options)
+        {
+            if (options.RestFallback)
+            {
+                services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(cfg => {
+                    cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
+                });
+            }
         }
 
         public static IServiceCollection AddRealtimeAuth<ContextType, UserType>(this IServiceCollection services, JwtOptions jwtOptions, Action<DbContextOptionsBuilder> dbContextOptionsAction = null, Action<IdentityOptions> identityOptionsAction = null) 
             where ContextType : RealtimeAuthContext<UserType>
             where UserType : IdentityUser
         {
+            RealtimeDatabaseOptions realtimeDatabaseOptions =
+                (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
+
+            // ReSharper disable once PossibleNullReferenceException
+            realtimeDatabaseOptions.EnableBuiltinAuth = true;
+
             services.AddDbContext<ContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
             services.AddTransient<AuthDbContextAccesor>();
 
@@ -94,19 +120,16 @@ namespace RealtimeDatabase.Extensions
                 UserType = typeof(UserType)
             });
 
-            AddHandlers(services);
+            AddHandlers(services, realtimeDatabaseOptions);
             AddIdentityProviders<UserType, ContextType>(services, identityOptionsAction);
             AddAuthenticationProviders(services, jwtOptions);
 
             return services;
         }
 
-        private static void AddHandlers(IServiceCollection services)
+        private static void AddHandlers(IServiceCollection services, RealtimeDatabaseOptions realtimeDatabaseOptions)
         {
-            RealtimeDatabaseOptions realtimeDatabaseOptions =
-                (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
-
-            if (realtimeDatabaseOptions != null && realtimeDatabaseOptions.EnableAuthCommands)
+            if (realtimeDatabaseOptions.EnableAuthCommands)
             {
                 CommandHandlerMapper commandHandlerMapper =
                     (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;

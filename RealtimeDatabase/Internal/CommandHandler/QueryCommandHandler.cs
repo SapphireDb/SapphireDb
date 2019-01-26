@@ -2,6 +2,9 @@
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -15,9 +18,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, QueryCommand command)
+        public Task<ResponseBase> Handle(HttpContext context, QueryCommand command)
         {
-            await MessageHelper.SendCollection(GetContext(), command, websocketConnection, serviceProvider);
+            return Task.FromResult(MessageHelper.GetCollection(GetContext(), command, context, serviceProvider, out _));
         }
     }
 }

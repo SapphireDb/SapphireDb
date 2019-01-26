@@ -5,6 +5,8 @@ using RealtimeDatabase.Websocket;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -21,28 +23,28 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, CreateRoleCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, CreateRoleCommand command)
         {
             IdentityRole newRole = new IdentityRole(command.Name);
             IdentityResult result = await roleManager.CreateAsync(newRole);
 
             if (result.Succeeded)
             {
-                await websocketConnection.Send(new CreateRoleResponse()
+                MessageHelper.SendRolesUpdate(GetContext(), connectionManager);
+
+                return new CreateRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     NewRole = ModelHelper.GenerateRoleData(newRole)
-                });
-
-                await MessageHelper.SendRolesUpdate(GetContext(), connectionManager);
+                };
             }
             else
             {
-                await websocketConnection.Send(new CreateRoleResponse()
+                return new CreateRoleResponse()
                 {
                     ReferenceId = command.ReferenceId,
                     IdentityErrors = result.Errors
-                });
+                };
             }
         }
     }

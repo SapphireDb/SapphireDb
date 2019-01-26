@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -16,7 +18,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, InfoCommand command)
+        public Task<ResponseBase> Handle(HttpContext context, InfoCommand command)
         {
             RealtimeDbContext db = GetContext();
 
@@ -26,8 +28,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 InfoResponse infoResponse = property.Key.GetInfoResponse(db);
                 infoResponse.ReferenceId = command.ReferenceId;
-                await websocketConnection.Send(infoResponse);
+                return Task.FromResult<ResponseBase>(infoResponse);
             }
+
+            return Task.FromResult(command.CreateExceptionResponse<InfoResponse>("No set for collection was found."));
         }
     }
 }

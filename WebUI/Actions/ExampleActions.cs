@@ -23,7 +23,7 @@ namespace WebUI.Actions
             for (int i = 0; i <= 100; i++)
             {
                 Thread.Sleep(10);
-                await Notify(i);
+                Notify(i);
             }
 
             await Task.Delay(1000);

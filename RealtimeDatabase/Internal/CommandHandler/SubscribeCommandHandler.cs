@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class SubscribeCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeCommand>
+    class SubscribeCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeCommand>, INeedsWebsocket
     {
+        private WebsocketConnection websocketConnection;
         private readonly IServiceProvider serviceProvider;
 
         public SubscribeCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider)
@@ -16,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task Handle(WebsocketConnection websocketConnection, SubscribeCommand command)
+        public async Task<ResponseBase> Handle(HttpContext context, SubscribeCommand command)
         {
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {
@@ -36,8 +41,16 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 websocketConnection.Lock.Release();
             }
 
-            collectionSubscription.TransmittedData =
-                await MessageHelper.SendCollection(GetContext(), command, websocketConnection, serviceProvider);
+            ResponseBase response = MessageHelper.GetCollection(GetContext(), command, context, serviceProvider, out List<object[]> transmittedData);
+            collectionSubscription.TransmittedData = transmittedData;
+
+            return response;
+        }
+
+
+        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
+        {
+            websocketConnection = currentWebsocketConnection;
         }
     }
 }

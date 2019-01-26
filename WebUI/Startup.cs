@@ -32,16 +32,15 @@ namespace WebUI
             //Register services
             services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/,
                 new RealtimeDatabase.Models.RealtimeDatabaseOptions() {
-                    Authentication = RealtimeDatabase.Models.RealtimeDatabaseOptions.AuthenticationMode.Custom,
-                    EnableAuthCommands = true
+                    RestFallback = true
                 });
 
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContext(databasename: "auth"));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(cfg => {
-                cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
-            });
+            //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(cfg => {
+            //    cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            //    cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
+            //});
 
             services.AddSpaStaticFiles(configuration =>
             {
@@ -62,7 +61,7 @@ namespace WebUI
             }
 
             //Add Middleware
-            app.UseRealtimeDatabase(true);
+            app.UseRealtimeDatabase();
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
