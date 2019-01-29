@@ -1,4 +1,5 @@
-# Realtime Database
+# Realtime Database [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
+
 Realtime Database is an extension for Asp.Net Core and Entity Framework.
 It enables realtime transport of data using websockets.
 By subscribing to specific collections the clients get notified on changes of the database.

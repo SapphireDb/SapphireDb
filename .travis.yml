@@ -1,0 +1,7 @@
+language: csharp
+mono: none
+dotnet: 2.2.0
+
+script:
+ - cd RealtimeDatabase
+ - dotnet build --configuration Release
