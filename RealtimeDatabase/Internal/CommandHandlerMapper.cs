@@ -68,22 +68,17 @@ namespace RealtimeDatabase.Internal
             if (handler != null)
             {
                 logger.LogInformation("Handling " + command.GetType().Name + " with " + handler.GetType().Name);
-
                 new Thread(async () =>
                 {
                     try
                     {
                         if (handler is INeedsWebsocket handlerWithWebsocket)
-                        {
                             handlerWithWebsocket.InsertWebsocket(websocketConnection);
-                        }
 
                         ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection.HttpContext, command });
 
                         if (response != null)
-                        {
                             _ = websocketConnection.Send(response);
-                        }
 
                         logger.LogInformation("Handled " + command.GetType().Name);
                     }
@@ -93,7 +88,6 @@ namespace RealtimeDatabase.Internal
                         logger.LogError("Error handling " + command.GetType().Name);
                         logger.LogError(ex.Message);
                     }
-
                 }).Start();
             }
             else

@@ -75,10 +75,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     return command.CreateExceptionResponse<ExecuteResponse>("No handler was found.");
                 }
-                else
-                {
-                    return command.CreateExceptionResponse<ExecuteResponse>("No action to execute was found.");
-                }
+
+                return command.CreateExceptionResponse<ExecuteResponse>("No action to execute was found.");
             }
 
             return command.CreateExceptionResponse<ExecuteResponse>("No action handler type was matching");
