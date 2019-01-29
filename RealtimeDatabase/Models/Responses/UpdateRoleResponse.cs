@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class UpdateRoleResponse : CreateRoleResponse
+    public class UpdateRoleResponse : CreateRoleResponse
     {
 
     }

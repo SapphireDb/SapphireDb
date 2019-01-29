@@ -124,12 +124,12 @@ namespace RealtimeDatabase.Internal
                     return false;
                 } 
                 else if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler)) 
-                    && !options.AuthInfoAllowFunction(websocketConnection))
+                    && !options.AuthInfoAllowFunction(websocketConnection.HttpContext))
                 {
                     _ = websocketConnection.Send(command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands."));
                     return false;
                 }
-                else if (!options.AuthAllowFunction(websocketConnection))
+                else if (!options.AuthAllowFunction(websocketConnection.HttpContext))
                 {
                     _ = websocketConnection.Send(command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth commands."));
                     return false;

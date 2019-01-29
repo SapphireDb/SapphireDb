@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class QueryCommand : CollectionCommandBase
+    public class QueryCommand : CollectionCommandBase
     {
         public List<IPrefilter> Prefilters { get; set; }
     }

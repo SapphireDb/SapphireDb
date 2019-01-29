@@ -8,7 +8,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Models.Prefilter
 {
-    class WherePrefilter : IPrefilter
+    public class WherePrefilter : IPrefilter
     {
         public string CompareFunctionString { get; set; }
 

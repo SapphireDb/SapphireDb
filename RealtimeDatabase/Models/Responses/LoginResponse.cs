@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RealtimeDatabase.Models.Responses
 {
-    class LoginResponse : ResponseBase
+    public class LoginResponse : ResponseBase
     {
         public LoginResponse()
         {

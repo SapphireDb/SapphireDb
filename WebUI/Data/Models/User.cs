@@ -37,7 +37,7 @@ namespace WebUI.Data.Models
         [Updatable]
         public string LastName { get; set; }
 
-        public void OnCreate(HttpContext context, RealtimeContext db)
+        public void afterCreate(HttpContext context, RealtimeContext db)
         {
             db.Logs.Add(new Log()
             {
@@ -47,11 +47,21 @@ namespace WebUI.Data.Models
             db.SaveChanges();
         }
 
-        public void OnUpdate(HttpContext context, RealtimeContext db)
+        private void AfterUpdate(HttpContext context, RealtimeContext db)
         {
             db.Logs.Add(new Log()
             {
                 Message = "Updated user " + Id,
+                UserId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value
+            });
+            db.SaveChanges();
+        }
+
+        public void AfterDelete(HttpContext context, RealtimeContext db)
+        {
+            db.Logs.Add(new Log()
+            {
+                Message = "Deleted user " + Id,
                 UserId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value
             });
             db.SaveChanges();

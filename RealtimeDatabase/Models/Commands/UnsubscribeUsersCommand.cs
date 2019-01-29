@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class UnsubscribeUsersCommand : CommandBase
+    public class UnsubscribeUsersCommand : CommandBase
     {
 
     }

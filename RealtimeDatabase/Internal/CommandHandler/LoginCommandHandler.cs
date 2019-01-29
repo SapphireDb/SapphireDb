@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class LoginCommandHandler : AuthCommandHandlerBase, ICommandHandler<LoginCommand>
+    class LoginCommandHandler : AuthCommandHandlerBase, ICommandHandler<LoginCommand>, IRestFallback
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly JwtOptions jwtOptions;

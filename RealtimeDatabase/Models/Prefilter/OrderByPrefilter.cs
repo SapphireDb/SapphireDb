@@ -8,7 +8,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Models.Prefilter
 {
-    class OrderByPrefilter : IPrefilter
+    public class OrderByPrefilter : IPrefilter
     {
         public string SelectFunctionString { get; set; }
 

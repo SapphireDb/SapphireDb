@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace RealtimeDatabase.Models.Prefilter
 {
-    class SkipPrefilter : IPrefilter
+    public class SkipPrefilter : IPrefilter
     {
         public int Number { get; set; }
 

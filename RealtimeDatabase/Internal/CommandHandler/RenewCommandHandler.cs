@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class RenewCommandHandler : AuthCommandHandlerBase, ICommandHandler<RenewCommand>
+    class RenewCommandHandler : AuthCommandHandlerBase, ICommandHandler<RenewCommand>, IRestFallback
     {
         private readonly JwtOptions jwtOptions;
         private readonly JwtIssuer jwtIssuer;

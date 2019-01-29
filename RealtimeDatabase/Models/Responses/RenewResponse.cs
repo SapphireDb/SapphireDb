@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class RenewResponse : LoginResponse
+    public class RenewResponse : LoginResponse
     {
     }
 }

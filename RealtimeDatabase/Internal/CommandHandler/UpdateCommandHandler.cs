@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>
+    class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>, IRestFallback
     {
         private readonly IServiceProvider serviceProvider;
 
@@ -67,11 +67,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
-            MethodInfo mi = property.Key.GetMethod("OnUpdate");
-
-            if (mi != null && mi.ReturnType == typeof(void))
+            MethodInfo beforeMethodInfo = property.Key.GetMethod("BeforeUpdate",
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (beforeMethodInfo != null && beforeMethodInfo.ReturnType == typeof(void))
             {
-                mi.Invoke(value, mi.CreateParameters(context, serviceProvider));
+                beforeMethodInfo.Invoke(value, beforeMethodInfo.CreateParameters(context, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
@@ -85,6 +85,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
 
             db.SaveChanges();
+
+            MethodInfo afterMethodInfo = property.Key.GetMethod("AfterUpdate",
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (afterMethodInfo != null && afterMethodInfo.ReturnType == typeof(void))
+            {
+                afterMethodInfo.Invoke(value, afterMethodInfo.CreateParameters(context, serviceProvider));
+            }
 
             return new UpdateResponse()
             {

@@ -2,7 +2,7 @@
 
 namespace RealtimeDatabase.Models.Responses
 {
-    class InfoResponse : ResponseBase
+    public class InfoResponse : ResponseBase
     {
         public InfoResponse()
         {
@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Models.Responses
         public PropertyAuthInfo UpdateAuth { get; set; }
     }
 
-    class AuthInfo
+    public class AuthInfo
     {
         public bool Authentication { get; set; }
 
@@ -31,7 +31,7 @@ namespace RealtimeDatabase.Models.Responses
         public string FunctionName { get; set; }
     }
 
-    class PropertyAuthInfo : AuthInfo
+    public class PropertyAuthInfo : AuthInfo
     {
         public Dictionary<string, AuthInfo> Properties { get; set; }
     }

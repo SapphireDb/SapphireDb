@@ -13,8 +13,10 @@ using RealtimeDatabase.Websocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
 namespace RealtimeDatabase.Extensions
 {
@@ -39,7 +41,7 @@ namespace RealtimeDatabase.Extensions
 
                 if (options.RestFallback)
                 {
-                    realtimeApp.UseMvcWithDefaultRoute();
+                    realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                 }
             });
 
@@ -85,20 +87,7 @@ namespace RealtimeDatabase.Extensions
                 services.AddTransient(handler.Value);
             }
 
-            services.AddRestFallback(options);
-
             return services;
-        }
-
-        private static void AddRestFallback(this IServiceCollection services, RealtimeDatabaseOptions options)
-        {
-            if (options.RestFallback)
-            {
-                services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(cfg => {
-                    cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                    cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
-                });
-            }
         }
 
         public static IServiceCollection AddRealtimeAuth<ContextType, UserType>(this IServiceCollection services, JwtOptions jwtOptions, Action<DbContextOptionsBuilder> dbContextOptionsAction = null, Action<IdentityOptions> identityOptionsAction = null) 

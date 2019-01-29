@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RealtimeDatabase.Models.Responses
 {
-    class CreateRoleResponse : ResponseBase
+    public class CreateRoleResponse : ResponseBase
     {
         public Dictionary<string, object> NewRole { get; set; }
 

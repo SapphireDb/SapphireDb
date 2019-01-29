@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class CreateCommandHandler : CommandHandlerBase, ICommandHandler<CreateCommand>
+    class CreateCommandHandler : CommandHandlerBase, ICommandHandler<CreateCommand>, IRestFallback
     {
         private readonly IServiceProvider serviceProvider;
 
@@ -57,11 +57,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private ResponseBase SetPropertiesAndValidate(RealtimeDbContext db, KeyValuePair<Type, string> property, object newValue, HttpContext context,
             CreateCommand command)
         {
-            MethodInfo mi = property.Key.GetMethod("OnCreate");
-
-            if (mi != null && mi.ReturnType == typeof(void))
+            MethodInfo beforeMethodInfo = property.Key.GetMethod("BeforeCreate",
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (beforeMethodInfo != null && beforeMethodInfo.ReturnType == typeof(void))
             {
-                mi.Invoke(newValue, mi.CreateParameters(context, serviceProvider));
+                beforeMethodInfo.Invoke(newValue, beforeMethodInfo.CreateParameters(context, serviceProvider));
             }
 
             if (!ValidationHelper.ValidateModel(newValue, out Dictionary<string, List<string>> validationResults))
@@ -76,6 +76,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
             db.Add(newValue);
             db.SaveChanges();
+
+            MethodInfo afterMethodInfo = property.Key.GetMethod("AfterCreate",
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (afterMethodInfo != null && afterMethodInfo.ReturnType == typeof(void))
+            {
+                afterMethodInfo.Invoke(newValue, afterMethodInfo.CreateParameters(context, serviceProvider));
+            }
 
             return new CreateResponse()
             {

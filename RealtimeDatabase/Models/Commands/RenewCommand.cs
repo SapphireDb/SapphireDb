@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class RenewCommand : CommandBase
+    public class RenewCommand : CommandBase
     {
         public string UserId { get; set; }
 

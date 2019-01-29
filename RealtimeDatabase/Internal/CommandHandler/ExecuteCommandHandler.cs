@@ -14,7 +14,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsWebsocket
+    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsWebsocket, IRestFallback
     {
         private readonly ActionMapper actionMapper;
         private readonly IServiceProvider serviceProvider;

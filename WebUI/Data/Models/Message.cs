@@ -2,6 +2,7 @@
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace WebUI.Data.Models
 {
@@ -13,18 +14,18 @@ namespace WebUI.Data.Models
             CreatedOn = DateTime.UtcNow;
         }
 
-        public bool Auth(WebsocketConnection websocketConnection)
+        public bool Auth(HttpContext context)
         {
-            string userId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
+            string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
             return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
-        public void OnCreate(WebsocketConnection websocketConnection)
+        public void OnCreate(HttpContext context)
         {
-            UserId = websocketConnection.HttpContext.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
+            UserId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
         }
 
-        public void OnUpdate(WebsocketConnection websocketConnection)
+        public void OnUpdate(HttpContext context)
         {
             UpdatedOn = DateTime.UtcNow;
         }

@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class DeleteResponse : ValidatedResponseBase
+    public class DeleteResponse : ValidatedResponseBase
     {
 
     }

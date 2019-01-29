@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class LoginCommand : CommandBase
+    public class LoginCommand : CommandBase
     {
         public string Username { get; set; }
 

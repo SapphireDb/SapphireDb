@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class UpdateUserResponse : CreateUserResponse
+    public class UpdateUserResponse : CreateUserResponse
     {
 
     }

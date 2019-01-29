@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class DeleteCommand : CollectionCommandBase
+    public class DeleteCommand : CollectionCommandBase
     {
         public Dictionary<string, JValue> PrimaryKeys { get; set; }
     }

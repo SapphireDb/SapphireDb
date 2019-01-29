@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class DeleteUserResponse : ResponseBase
+    public class DeleteUserResponse : ResponseBase
     {
 
     }

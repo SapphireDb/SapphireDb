@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class InfoCommand : CollectionCommandBase
+    public class InfoCommand : CollectionCommandBase
     {
     }
 }

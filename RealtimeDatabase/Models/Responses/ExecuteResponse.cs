@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Responses
 {
-    class ExecuteResponse : ResponseBase
+    public class ExecuteResponse : ResponseBase
     {
         public object Result { get; set; }
 

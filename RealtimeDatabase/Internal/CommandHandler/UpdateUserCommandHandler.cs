@@ -14,7 +14,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UpdateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateUserCommand>
+    class UpdateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateUserCommand>, IRestFallback
     {
         private readonly WebsocketConnectionManager connectionManager;
         private readonly AuthDbContextTypeContainer contextTypeContainer;

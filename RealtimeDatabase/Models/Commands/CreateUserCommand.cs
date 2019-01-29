@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RealtimeDatabase.Models.Commands
 {
-    class CreateUserCommand : CommandBase
+    public class CreateUserCommand : CommandBase
     {
         public string UserName { get; set; }
 

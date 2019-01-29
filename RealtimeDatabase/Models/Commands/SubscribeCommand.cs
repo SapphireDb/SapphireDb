@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class SubscribeCommand : QueryCommand
+    public class SubscribeCommand : QueryCommand
     {
 
     }

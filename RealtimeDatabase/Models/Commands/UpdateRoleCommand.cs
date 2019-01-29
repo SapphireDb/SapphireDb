@@ -1,6 +1,6 @@
 ﻿namespace RealtimeDatabase.Models.Commands
 {
-    class UpdateRoleCommand : CommandBase
+    public class UpdateRoleCommand : CommandBase
     {
         public string Id { get; set; }
 
