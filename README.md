@@ -21,7 +21,7 @@ This enables realtime applications and easy data synchronization.
 
 [Installation on Server](Server.md)
 
-[Installation on Client](DemoClient/projects/ng-realtime-database/Readme.md)
+[Installation on Client](https://github.com/morrisjdev/ng-realtime-database/blob/master/README.md)
 
 ## Author
 
