@@ -1,6 +1,8 @@
 language: csharp
 mono: none
-dotnet: 2.2.1
+sudo: required
+dist: xenial
+dotnet: 2.2
 
 script:
  - cd RealtimeDatabase
