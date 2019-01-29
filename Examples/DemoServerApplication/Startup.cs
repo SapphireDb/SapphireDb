@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Extensions;
+using RealtimeDatabase.Models;
 
 namespace DemoServerApplication
 {
@@ -27,10 +28,12 @@ namespace DemoServerApplication
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
-
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>();
+            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"),
+                new RealtimeDatabaseOptions()
+                {
+                    RestFallback = true
+                });
             //services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => cfg.UseFileContext(databasename: "auth"));
         }
 

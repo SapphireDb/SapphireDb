@@ -13,7 +13,7 @@ import {RealtimeDatabaseModule} from 'ng-realtime-database';
     BrowserModule,
     AppRoutingModule,
     RealtimeDatabaseModule.config({
-      serverBaseUrl: 'realtimedatabasedemoapp.azurewebsites.net',
+      serverBaseUrl: 'localhost:5001',
       useSecuredSocket: true
     })
   ],

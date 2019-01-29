@@ -31,4 +31,9 @@ export class AppComponent {
       }).subscribe(c => console.log(c));
     }
   }
+
+  updateUser(user: User) {
+    user.firstname = 'das ist ein test';
+    this.userCollection.update(user);
+  }
 }

@@ -1,7 +1,7 @@
 <h1>Welcome to Realtime Demo</h1>
 
-<ng-container *ngFor="let user of users$ | async">
+<div *ngFor="let user of users$ | async" (click)="updateUser(user)">
   {{user | json}} <br>
-</ng-container>
+</div>
 
 <button type="button" (click)="create()">Create</button>

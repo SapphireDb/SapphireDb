@@ -18,5 +18,10 @@ namespace DemoServerApplication.Data.Models
         public DateTime CreatedOn { get; set; }
 
         public DateTime UpdatedOn { get; set; }
+
+        public void BeforeUpdate()
+        {
+            UpdatedOn = DateTime.UtcNow;
+        }
     }
 }
