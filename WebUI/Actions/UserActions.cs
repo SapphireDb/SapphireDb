@@ -6,6 +6,7 @@ using WebUI.Data;
 using WebUI.Data.Authentication;
 using WebUI.Data.Models;
 using WebUI.Data.ViewModels.Account;
+using System.Collections.Generic;
 
 namespace WebUI.Actions
 {
@@ -53,6 +54,11 @@ namespace WebUI.Actions
 
                 await userManager.AddToRoleAsync(appUser, rolename);
             }
+        }
+
+        public List<AppUser> GetUsers()
+        {
+            return userManager.Users.ToList();
         }
 
         public void Test()

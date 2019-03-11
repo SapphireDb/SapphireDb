@@ -41,8 +41,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             {
                 if ((bool)await contextTypeContainer.UserManagerType.GetMethod("CheckPasswordAsync").Invoke(usermanager, new object[] { userToVerify, command.Password }))
                 {
-                    return await CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify,
-                        usermanager);
+                    return await CreateLoginResponse(command, CreateRefreshToken(userToVerify), userToVerify, usermanager);
                 }
             }
 

@@ -6,9 +6,9 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Authors>morrisjdev</Authors>
     <Description>A .NET Core Extension for Entity Framework Core to enable Realtime Capability.</Description>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/morrisjdev/RealtimeDatabase/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/morrisjdev/RealtimeDatabase</PackageProjectUrl>
-    <PackageIconUrl>https://morrisj.net/img/morrisjdev_logo.png</PackageIconUrl>
+    <PackageIconUrl>https://morrisj.net/storage/icons/realtimedatabase/icon.svg</PackageIconUrl>
     <RepositoryUrl>https://github.com/morrisjdev/RealtimeDatabase</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -16,9 +16,10 @@
     <PackageTags>realtime, authentication, core, .net, entityframework, database, websocket</PackageTags>
     <SignAssembly Condition="'$(OS)' == 'Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
-    <Version>1.0.3</Version>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
+    <Version>1.0.4</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,13 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="NiL.JS.NetCore" Version="2.5.1282" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

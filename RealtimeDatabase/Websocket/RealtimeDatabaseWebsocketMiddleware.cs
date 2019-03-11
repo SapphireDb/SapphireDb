@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using RealtimeDatabase.Models;
+using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Net.WebSockets;
@@ -28,6 +29,9 @@ namespace RealtimeDatabase.Websocket
                 WebsocketConnection connection = new WebsocketConnection(webSocket, context);
 
                 connectionManager.AddConnection(connection);
+                await connection.Websocket.Send(new ConnectionResponse() {
+                    ConnectionId = connection.Id
+                });
 
                 while (webSocket.State == WebSocketState.Open || webSocket.State == WebSocketState.Connecting)
                 {

@@ -7,9 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
+using System.Linq;
+using System.Runtime.Serialization;
+using Microsoft.Extensions.Primitives;
 
 namespace RealtimeDatabase.Websocket.Models
 {
+    [DataContract]
     public class WebsocketConnection
     {
         public WebsocketConnection(WebSocket webSocket, HttpContext context)
@@ -19,10 +23,27 @@ namespace RealtimeDatabase.Websocket.Models
             MessageSubscriptions = new Dictionary<string, string>();
             Websocket = webSocket;
             HttpContext = context;
+
+            if (HttpContext.Request.Headers.TryGetValue("User-Agent", out StringValues userAgent)) {
+                UserAgent = userAgent.ToString();   
+            }
+
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                UserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+            }
+
             Lock = new SemaphoreSlim(1, 1);
         }
 
+        [DataMember]
         public Guid Id { get; set; }
+
+        [DataMember]
+        public string UserId { get; set; }
+
+        [DataMember]
+        public string UserAgent { get; set; }
 
         public WebSocket Websocket { get; set; }
 

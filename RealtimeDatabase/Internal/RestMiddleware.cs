@@ -48,6 +48,21 @@ namespace RealtimeDatabase.Internal
                 return;
             }
 
+            if (!string.IsNullOrEmpty(options.Secret))
+            {
+                if (context.Request.Headers["secret"] != options.Secret)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("The secret does not match");
+                    return;
+                }
+            }
+
+            if (!requestPath.EndsWith("command"))
+            {
+                requestPath += "command";
+            }
+
             logger.LogInformation("Started executing " + requestPath);
             ResponseBase response = await LoadHandler(serviceProvider, requestPath, context);
 
@@ -121,24 +136,24 @@ namespace RealtimeDatabase.Internal
         {
             StreamReader sr = new StreamReader(context.Request.Body);
             string requestBody = await sr.ReadToEndAsync();
-
-            if (string.IsNullOrEmpty(requestBody))
-            {
-                return new ResponseBase()
-                {
-                    Error = new Exception("Request body is empty")
-                };
-            }
-
             return await Execute(requestBody, serviceProvider, handlerType, context);
-           
         }
 
         private async Task<ResponseBase> Execute(string requestBody, IServiceProvider serviceProvider, Type handlerType, HttpContext context)
         {
             try
             {
-                CommandBase command = JsonHelper.DeserialzeCommand(requestBody);
+                Type commandType = handlerType.GetInterfaces().FirstOrDefault(i => i.Name.StartsWith("ICommandHandler"))?.GetGenericArguments()?[0];
+
+                CommandBase command;
+                if (string.IsNullOrEmpty(requestBody))
+                {
+                    command = (CommandBase)Activator.CreateInstance(commandType);
+                }
+                else
+                {
+                    command = (CommandBase)JsonHelper.Deserialze(requestBody, commandType);
+                }
 
                 if (command != null)
                 {

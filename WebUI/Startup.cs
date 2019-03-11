@@ -31,9 +31,7 @@ namespace WebUI
 
             //Register services
             services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/,
-                new RealtimeDatabase.Models.RealtimeDatabaseOptions() {
-                    RestFallback = true
-                });
+                new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")));
 
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContext(databasename: "auth"));
 

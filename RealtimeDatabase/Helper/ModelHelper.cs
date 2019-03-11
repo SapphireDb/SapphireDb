@@ -66,13 +66,14 @@ namespace RealtimeDatabase.Helper
 
             foreach (PropertyInfo property in properties)
             {
-                if (property.Name != "Roles")
+                if (property.Name == "Roles")
                 {
-                    userData[property.Name] = property.GetValue(identityUser);
+                    userData["_Roles"] = property.GetValue(identityUser);
                 }
                 else
                 {
-                    userData["_Roles"] = property.GetValue(identityUser);
+                    userData[property.Name] = property.GetValue(identityUser);
+                    
                 }
             }
 

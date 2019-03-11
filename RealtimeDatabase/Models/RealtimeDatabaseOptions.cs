@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RealtimeDatabase.Models.Auth;
+using Microsoft.Extensions.Configuration;
 
 namespace RealtimeDatabase.Models
 {
@@ -15,6 +16,15 @@ namespace RealtimeDatabase.Models
             RequireAuthenticationForAttribute = true;
             AuthInfoAllowFunction = (context) => true;
             AuthAllowFunction = (context) => context.User.IsInRole("admin");
+        }
+
+        public RealtimeDatabaseOptions(IConfigurationSection configuration) : this()
+        {
+            Secret = configuration[nameof(Secret)];
+            AlwaysRequireAuthentication = configuration.GetValue<bool>(nameof(AlwaysRequireAuthentication));
+            RequireAuthenticationForAttribute = configuration.GetValue<bool>(nameof(RequireAuthenticationForAttribute));
+            EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
+            RestFallback = configuration.GetValue<bool>(nameof(RestFallback));
         }
 
         public string Secret { get; set; }

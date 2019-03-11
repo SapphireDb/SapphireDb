@@ -24,7 +24,6 @@ namespace RealtimeDatabase.Models.Auth
             ValidFor = TimeSpan.FromMinutes(configuration.GetValue<int>(nameof(ValidFor)));
         }
 
-
         private string _Issuer;
         public string Issuer {
             get => _Issuer;

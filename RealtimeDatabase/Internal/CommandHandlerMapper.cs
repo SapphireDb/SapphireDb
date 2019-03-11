@@ -117,7 +117,7 @@ namespace RealtimeDatabase.Internal
                     _ = websocketConnection.Send(command.CreateExceptionResponse<ResponseBase>("User needs authentication to execute auth commands."));
                     return false;
                 } 
-                else if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler)) 
+                else if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler) || handlerType == typeof(QueryConnectionsCommandHandler) || handlerType == typeof(CloseConnectionCommandHandler)) 
                     && !options.AuthInfoAllowFunction(websocketConnection.HttpContext))
                 {
                     _ = websocketConnection.Send(command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands."));
