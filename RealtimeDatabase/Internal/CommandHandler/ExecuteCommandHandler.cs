@@ -110,11 +110,26 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private object[] GetParameters(MethodInfo actionMethod, ExecuteCommand command)
         {
             return actionMethod.GetParameters().Select(parameter => {
+                if (parameter.Position >= command.Parameters.Length)
+                {
+                    return null;
+                }
+
                 object parameterValue = command.Parameters[parameter.Position];
+
+                if (parameterValue == null)
+                {
+                    return null;
+                }
 
                 if (parameterValue.GetType() == typeof(JObject))
                 {
                     return ((JObject)parameterValue).ToObject(parameter.ParameterType);
+                }
+
+                if (parameterValue.GetType() == typeof(JArray))
+                {
+                    return ((JArray) parameterValue).ToObject(parameter.ParameterType);
                 }
 
                 return parameterValue;
