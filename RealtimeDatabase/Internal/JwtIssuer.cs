@@ -66,7 +66,12 @@ namespace RealtimeDatabase.Internal
 
             foreach (PropertyInfo property in type.GetProperties().Where(p => p.GetCustomAttribute<AuthClaimInformationAttribute>() != null))
             {
-                claims.Add(new Claim("RealtimeAuth." + property.Name, property.GetValue(identityUser).ToString()));
+				object value = property.GetValue(identityUser);
+
+                if (value != null)
+                {
+                    claims.Add(new Claim("RealtimeAuth." + property.Name, value.ToString()));
+                }
             }
 
             return claims;
