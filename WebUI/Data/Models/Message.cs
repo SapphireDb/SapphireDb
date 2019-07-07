@@ -20,12 +20,12 @@ namespace WebUI.Data.Models
             return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
-        public void OnCreate(HttpContext context)
+        public void BeforeCreate(HttpContext context)
         {
             UserId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
         }
 
-        public void OnUpdate(HttpContext context)
+        public void BeforeUpdate(HttpContext context)
         {
             UpdatedOn = DateTime.UtcNow;
         }

@@ -74,7 +74,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 beforeMethodInfo.Invoke(value, beforeMethodInfo.CreateParameters(context, serviceProvider));
             }
 
-            if (!ValidationHelper.ValidateModel(value, out Dictionary<string, List<string>> validationResults))
+            if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
                 return new UpdateResponse()
                 {
