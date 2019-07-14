@@ -20,28 +20,5 @@ namespace RealtimeDatabase.Helper
             byte[] hash = sha512.ComputeHash(bytes);
             return BitConverter.ToString(hash).Replace("-", "");
         }
-
-        public static string FixCamelCaseAttributeNaming(this string functionString, Type objectType)
-        {
-            int firstOpenBracketIndex = functionString.IndexOf('(');
-            int firstClosingBracketIndex = functionString.IndexOf(')');
-
-            string variableName = functionString.Substring(firstOpenBracketIndex + 1, firstClosingBracketIndex - firstOpenBracketIndex - 1);
-
-            MatchCollection matches = new Regex(variableName + "\\.\\w*").Matches(functionString);
-
-            foreach (Match match in matches)
-            {
-                string propertyName = match.Value.Substring(match.Value.IndexOf('.') + 1);
-                PropertyInfo propertyInfo = objectType.GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-
-                if (propertyInfo != null)
-                {
-                    functionString = functionString.Remove(match.Index, match.Length).Insert(match.Index, variableName + "." + propertyInfo.Name);
-                }
-            }
-
-            return functionString;
-        }
     }
 }

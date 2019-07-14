@@ -12,9 +12,24 @@ namespace RealtimeDatabase.Models.Prefilter
     {
         public string SelectFunctionString { get; set; }
 
-        public Dictionary<string, string> ContextData { get; set; }
+        public object[] ContextData { get; set; }
 
         public bool Descending { get; set; }
+
+        private readonly Func<object, IComparable> keySelector;
+
+        public ThenOrderByPrefilter()
+        {
+            try
+            {
+                Func<string, bool> parsedFunc = SelectFunctionString.CreateFunction(ContextData).MakeDelegate<Func<string, bool>>();
+                keySelector = dataObject => parsedFunc(JsonHelper.Serialize(dataObject));
+            }
+            catch
+            {
+                // ignored
+            }
+        }
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
@@ -22,17 +37,8 @@ namespace RealtimeDatabase.Models.Prefilter
             {
                 try
                 {
-                    Func<object, IComparable> function = SelectFunctionString.CreateFunction(array.FirstOrDefault()?.GetType(), ContextData)
-                        .MakeDelegate<Func<object, IComparable>>();
-
                     IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
-
-                    if (Descending)
-                    {
-                        return orderedArray.ThenByDescending(function);
-                    }
-
-                    return orderedArray.ThenBy(function);
+                    return Descending ? orderedArray.ThenByDescending(keySelector) : orderedArray.ThenBy(keySelector);
                 }
                 catch
                 {
