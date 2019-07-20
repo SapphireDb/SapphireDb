@@ -16,34 +16,19 @@ namespace RealtimeDatabase.Models.Prefilter
 
         public bool Descending { get; set; }
 
-        private readonly Func<object, IComparable> keySelector;
-
-        public OrderByPrefilter()
-        {
-            try
-            {
-                Func<string, bool> parsedFunc = SelectFunctionString.CreateFunction(ContextData).MakeDelegate<Func<string, bool>>();
-                keySelector = dataObject => parsedFunc(JsonHelper.Serialize(dataObject));
-            }
-            catch
-            {
-                // ignored
-            }
-        }
+        private Func<object, IComparable> keySelector;
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
             if (array.Any())
             {
-                try
+                if (keySelector == null)
                 {
-                    IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
-                    return Descending ? orderedArray.OrderByDescending(keySelector) : orderedArray.OrderBy(keySelector);
+                    keySelector = SelectFunctionString.CreatePredicateFunction(ContextData);
                 }
-                catch
-                {
-                    // ignored
-                }
+
+                IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
+                return Descending ? orderedArray.OrderByDescending(keySelector) : orderedArray.OrderBy(keySelector);
             }
 
             return array;

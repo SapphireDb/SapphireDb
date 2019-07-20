@@ -15,33 +15,18 @@ namespace RealtimeDatabase.Models.Prefilter
 
         public object[] ContextData { get; set; }
 
-        private readonly Func<object, bool> predicate;
-
-        public WherePrefilter()
-        {
-            try
-            {
-                Func<string, bool> parsedFunc = CompareFunctionString.CreateFunction(ContextData).MakeDelegate<Func<string, bool>>();
-                predicate = dataObject => parsedFunc(JsonHelper.Serialize(dataObject));
-            }
-            catch
-            {
-                // ignored
-            }
-        }
+        private Func<object, bool> predicate;
 
         public IEnumerable<object> Execute(IEnumerable<object> array)
         {
             if (array.Any())
             {
-                try
+                if (predicate == null)
                 {
-                    return array.Where(predicate);
+                    predicate = CompareFunctionString.CreateBoolFunction(ContextData);
                 }
-                catch
-                {
-                    // ignored
-                }
+
+                return array.Where(predicate);
             }
 
             return array;

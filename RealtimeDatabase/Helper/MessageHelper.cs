@@ -116,17 +116,21 @@ namespace RealtimeDatabase.Helper
             {
                 IEnumerable<object> collectionSet = db.GetValues(property);
 
-                foreach (IPrefilter prefilter in command.Prefilters)
+                foreach (IPrefilter prefilter in command.Prefilters.OfType<IPrefilter>())
                 {
                     collectionSet = prefilter.Execute(collectionSet);
                 }
 
                 List<object> collectionSetList = collectionSet.ToList();
 
+                List<object> result = collectionSetList.Where(cs => property.Key.CanQuery(context, cs, serviceProvider))
+                    .Select(cs => cs.GetAuthenticatedQueryModel(context, serviceProvider)).ToList();
+
+                IAfterQueryPrefilter afterQueryPrefilter = command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Collection = collectionSetList.Where(cs => property.Key.CanQuery(context, cs, serviceProvider))
-                                .Select(cs => cs.GetAuthenticatedQueryModel(context, serviceProvider)).ToList(),
+                    Result = afterQueryPrefilter != null ? afterQueryPrefilter.Execute(result) : result,
                     ReferenceId = command.ReferenceId,
                 };
 

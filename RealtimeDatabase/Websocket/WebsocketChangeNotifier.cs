@@ -30,7 +30,7 @@ namespace RealtimeDatabase.Websocket
 
             foreach (WebsocketConnection connection in connectionManager.connections)
             {
-                foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in 
+                foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in
                     connection.Subscriptions.GroupBy(s => s.CollectionName))
                 {
                     HandleSubscription(subscriptionGrouping, changes, connection, db);
@@ -58,12 +58,28 @@ namespace RealtimeDatabase.Websocket
                     // ReSharper disable once PossibleMultipleEnumeration
                     IEnumerable<object> currentCollectionSet = collectionSet;
 
-                    foreach (IPrefilter prefilter in cs.Prefilters)
+                    foreach (IPrefilter prefilter in cs.Prefilters.OfType<IPrefilter>())
                     {
                         currentCollectionSet = prefilter.Execute(currentCollectionSet);
                     }
 
-                    SendDataToClient(currentCollectionSet.ToList(), property, db, cs, relevantChanges, connection);
+                    IAfterQueryPrefilter afterQueryPrefilter = cs.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
+                    if (afterQueryPrefilter != null)
+                    {
+                        List<object> result = currentCollectionSet.Where(v => property.Key.CanQuery(connection.HttpContext, v, serviceProvider))
+                            .Select(v => v.GetAuthenticatedQueryModel(connection.HttpContext, serviceProvider)).ToList();
+
+                        _ = connection.Send(new QueryResponse()
+                        {
+                            ReferenceId = cs.ReferenceId,
+                            Result = afterQueryPrefilter.Execute(result)
+                        });
+                    }
+                    else
+                    {
+                        SendDataToClient(currentCollectionSet.ToList(), property, db, cs, relevantChanges, connection);
+                    }
                 }
             }
         }

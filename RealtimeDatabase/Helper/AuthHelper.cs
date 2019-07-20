@@ -8,6 +8,7 @@ using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Actions;
+using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Helper

@@ -1,24 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using ChakraCore.NET;
 using Newtonsoft.Json;
-using NiL.JS.BaseLibrary;
-using NiL.JS.Core;
-using NiL.JS.Extensions;
 
 namespace RealtimeDatabase.Helper
 {
     static class JavascriptFunctionHelper
     {
-        public static Function CreateFunction(this string functionString, object[] contextData)
+        private static Func<object, T> CreateFunction<T>(string functionString, object[] contextData)
         {
-            Context context = new Context();
+            ChakraRuntime runtime = ChakraRuntime.Create();
+            ChakraContext context = runtime.CreateContext(false);
+            context.RunScript($"let __rawFunction__ = {functionString};");
+            context.RunScript($"let __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');");
+            string functionWrapper = $"function __functionWrapper__(dataObjectString) {{" +
+                                     $"let dataObject = JSON.parse(dataObjectString);" +
+                                     $"return __rawFunction__(dataObject, __contextData__);" +
+                                     $" }};";
+            context.RunScript(functionWrapper);
 
-            context.Eval("var __functionParsed__ = " + functionString + ";");
-            context.Eval("var __contextData__ = JSON.parse('" + JsonHelper.Serialize(contextData) + "');");
-            context.Eval("var __functionWrapper__ = function (dataObjectString) { var dataObject = JSON.parse(dataObjectString);" +
-                         "return __functionParsed__(dataObject, __contextData__); };");
+            return (dataObject) =>
+            {
+                string dataObjectString = JsonHelper.Serialize(dataObject);
+                return context.GlobalObject.CallFunction<string, T>("__functionWrapper__", dataObjectString);
+            };
+        }
 
-            return context.GetVariable("__functionWrapper__").As<Function>();
+        public static Func<object, bool> CreateBoolFunction(this string functionString, object[] contextData)
+        {
+            return CreateFunction<bool>(functionString, contextData);
+        }
+
+        public static Func<object, string> CreatePredicateFunction(this string functionString, object[] contextData)
+        {
+            return CreateFunction<string>(functionString, contextData);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace RealtimeDatabase.Models
 
         public string ReferenceId { get; set; }
 
-        public List<IPrefilter> Prefilters { get; set; }
+        public List<IPrefilterBase> Prefilters { get; set; }
 
         public List<object[]> TransmittedData { get; set; }
     }

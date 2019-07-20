@@ -24,7 +24,7 @@ namespace RealtimeDatabase.Helper
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            Converters = { new CustomJsonConverter<IPrefilter>(), new CustomJsonConverter<CommandBase>() }
+            Converters = { new CustomJsonConverter<IPrefilterBase>(), new CustomJsonConverter<CommandBase>() }
         };
 
         public static string Serialize(object value)
@@ -49,7 +49,7 @@ namespace RealtimeDatabase.Helper
 
         public CustomJsonConverter()
         {
-            if (typeof(T) == typeof(IPrefilter))
+            if (typeof(T) == typeof(IPrefilterBase))
             {
                 NameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
                     .Where(t => t.Namespace == "RealtimeDatabase.Models.Prefilter" && t.Name.EndsWith("Prefilter"))
@@ -72,7 +72,7 @@ namespace RealtimeDatabase.Helper
         {
             JObject jObject = JObject.Load(reader);
 
-            string key = typeof(T) == typeof(IPrefilter) ? "prefilterType" : "commandType";
+            string key = typeof(T) == typeof(IPrefilterBase) ? "prefilterType" : "commandType";
 
             string typeString = jObject[key].Value<string>();
 
