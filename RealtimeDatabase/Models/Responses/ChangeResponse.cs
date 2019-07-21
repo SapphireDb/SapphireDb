@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
@@ -26,6 +27,21 @@ namespace RealtimeDatabase.Models.Responses
                     State = ChangeState.Modified;
                     break;
             }
+        }
+
+        public ChangeResponse() {}
+
+        public ChangeResponse CreateResponse(string referenceId, object value)
+        {
+            return new ChangeResponse()
+            {
+                State = State,
+                Value = value,
+                ReferenceId = referenceId,
+                CollectionName = CollectionName,
+                PrimaryValues = PrimaryValues,
+                Error = Error
+            };
         }
 
         public ChangeState State { get; set; }
