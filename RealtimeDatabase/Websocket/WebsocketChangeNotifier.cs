@@ -6,6 +6,7 @@ using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using RealtimeDatabase.Helper;
 
@@ -26,15 +27,18 @@ namespace RealtimeDatabase.Websocket
 
         public void HandleChanges(List<ChangeResponse> changes)
         {
-            RealtimeDbContext db = dbContextAccessor.GetContext();
-
             foreach (WebsocketConnection connection in connectionManager.connections)
             {
-                foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in
-                    connection.Subscriptions.GroupBy(s => s.CollectionName))
+                Task.Run(() =>
                 {
-                    HandleSubscription(subscriptionGrouping, changes, connection, db);
-                }
+                    RealtimeDbContext db = dbContextAccessor.GetContext();
+
+                    foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in
+                        connection.Subscriptions.GroupBy(s => s.CollectionName))
+                    {
+                        HandleSubscription(subscriptionGrouping, changes, connection, db);
+                    }
+                });
             }
         }
 
@@ -51,35 +55,50 @@ namespace RealtimeDatabase.Websocket
             {
                 relevantChanges = relevantChanges.Where(rc => property.Key.CanQuery(connection.HttpContext, rc.Value, serviceProvider)).ToList();
 
-                IEnumerable<object> collectionSet = db.GetValues(property);
+                List<object> collectionSet = db.GetValues(property).ToList();
 
                 foreach (CollectionSubscription cs in subscriptionGrouping)
                 {
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    IEnumerable<object> currentCollectionSet = collectionSet;
-
-                    foreach (IPrefilter prefilter in cs.Prefilters.OfType<IPrefilter>())
+                    Task.Run(() =>
                     {
-                        currentCollectionSet = prefilter.Execute(currentCollectionSet);
-                    }
+                        cs.Lock.Wait();
 
-                    IAfterQueryPrefilter afterQueryPrefilter = cs.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
-
-                    if (afterQueryPrefilter != null)
-                    {
-                        List<object> result = currentCollectionSet.Where(v => property.Key.CanQuery(connection.HttpContext, v, serviceProvider))
-                            .Select(v => v.GetAuthenticatedQueryModel(connection.HttpContext, serviceProvider)).ToList();
-
-                        _ = connection.Send(new QueryResponse()
+                        try
                         {
-                            ReferenceId = cs.ReferenceId,
-                            Result = afterQueryPrefilter.Execute(result)
-                        });
-                    }
-                    else
-                    {
-                        SendDataToClient(currentCollectionSet.ToList(), property, db, cs, relevantChanges, connection);
-                    }
+                            IEnumerable<object> currentCollectionSet = collectionSet;
+
+                            foreach (IPrefilter prefilter in cs.Prefilters.OfType<IPrefilter>())
+                            {
+                                currentCollectionSet = prefilter.Execute(currentCollectionSet);
+                            }
+
+                            IAfterQueryPrefilter afterQueryPrefilter =
+                                cs.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
+                            if (afterQueryPrefilter != null)
+                            {
+                                List<object> result = currentCollectionSet.Where(v =>
+                                        property.Key.CanQuery(connection.HttpContext, v, serviceProvider))
+                                    .Select(v => v.GetAuthenticatedQueryModel(connection.HttpContext, serviceProvider))
+                                    .ToList();
+
+                                _ = connection.Send(new QueryResponse()
+                                {
+                                    ReferenceId = cs.ReferenceId,
+                                    Result = afterQueryPrefilter.Execute(result)
+                                });
+                            }
+                            else
+                            {
+                                SendDataToClient(currentCollectionSet.ToList(), property, db, cs, relevantChanges,
+                                    connection);
+                            }
+                        }
+                        finally
+                        {
+                            cs.Lock.Release();
+                        }
+                    });
                 }
             }
         }

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
+using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Helper
@@ -32,9 +33,42 @@ namespace RealtimeDatabase.Helper
             return type.GetPrimaryKeys(db).Select(p => p.Name.ToCamelCase()).ToArray();
         }
 
+        private static readonly object PrimaryKeyLock = new object();
+        private static readonly Dictionary<Type, IProperty[]> PrimaryKeyDictionary = new Dictionary<Type, IProperty[]>();
+
         public static IProperty[] GetPrimaryKeys(this Type type, RealtimeDbContext db)
         {
-            return db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
+            lock (PrimaryKeyLock)
+            {
+                if (PrimaryKeyDictionary.TryGetValue(type, out IProperty[] primaryKeys))
+                {
+                    return primaryKeys;
+                }
+
+                primaryKeys = db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
+                PrimaryKeyDictionary.Add(type, primaryKeys);
+
+                return primaryKeys;
+            }
+        }
+
+        private static readonly object PropertyInfosLock = new object();
+        private static readonly Dictionary<Type, AuthPropertyInfo[]> PropertyInfosDictionary = new Dictionary<Type, AuthPropertyInfo[]>();
+
+        public static AuthPropertyInfo[] GetAuthPropertyInfos(this Type entityType)
+        {
+            lock (PropertyInfosLock)
+            {
+                if (PropertyInfosDictionary.TryGetValue(entityType, out AuthPropertyInfo[] propertyInfos))
+                {
+                    return propertyInfos;
+                }
+
+                propertyInfos = entityType.GetProperties().Select(p => new AuthPropertyInfo(p)).ToArray();
+                PropertyInfosDictionary.Add(entityType, propertyInfos);
+
+                return propertyInfos;
+            }
         }
 
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
@@ -42,14 +76,14 @@ namespace RealtimeDatabase.Helper
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
             bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
-
-            foreach (PropertyInfo pi in entityType.GetProperties())
+            
+            foreach (AuthPropertyInfo pi in entityType.GetAuthPropertyInfos())
             {
-                if ((isClassUpdatable || pi.GetCustomAttribute<UpdatableAttribute>() != null) && !primaryKeys.Contains(pi.Name.ToCamelCase()))
+                if ((isClassUpdatable || pi.UpdatableAttribute != null) && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
                 {
                     if (pi.CanUpdate(context, entityObject, serviceProvider))
                     {
-                        pi.SetValue(entityObject, pi.GetValue(newValues));
+                        pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
                     }
                 }
             }

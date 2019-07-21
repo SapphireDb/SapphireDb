@@ -27,8 +27,7 @@ namespace RealtimeDatabase.Models.Prefilter
                     keySelector = SelectFunctionString.CreatePredicateFunction(ContextData);
                 }
 
-                IOrderedEnumerable<object> orderedArray = (IOrderedEnumerable<object>)array;
-                return Descending ? orderedArray.OrderByDescending(keySelector) : orderedArray.OrderBy(keySelector);
+                return Descending ? array.OrderByDescending(keySelector) : array.OrderBy(keySelector);
             }
 
             return array;

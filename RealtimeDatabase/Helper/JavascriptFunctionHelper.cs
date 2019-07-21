@@ -16,7 +16,7 @@ namespace RealtimeDatabase.Helper
             string functionWrapper = $"function __functionWrapper__(dataObjectString) {{" +
                                      $"let dataObject = JSON.parse(dataObjectString);" +
                                      $"return __rawFunction__(dataObject, __contextData__);" +
-                                     $" }};";
+                                     $"}};";
             context.RunScript(functionWrapper);
 
             return (dataObject) =>

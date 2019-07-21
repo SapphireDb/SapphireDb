@@ -42,7 +42,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
 
             ResponseBase response = MessageHelper.GetCollection(GetContext(), command, context, serviceProvider, out List<object[]> transmittedData);
+
+            await collectionSubscription.Lock.WaitAsync();
             collectionSubscription.TransmittedData = transmittedData;
+            collectionSubscription.Lock.Release();
 
             return response;
         }

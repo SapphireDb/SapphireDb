@@ -3,6 +3,7 @@ using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Websocket.Models;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using RealtimeDatabase.Helper;
 
@@ -27,12 +28,15 @@ namespace RealtimeDatabase.Websocket
 
             if (!string.IsNullOrEmpty(message))
             {
-                CommandBase command = JsonHelper.DeserialzeCommand(message);
-
-                if (command != null)
+                _ = Task.Run(() =>
                 {
-                    commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
-                }  
+                    CommandBase command = JsonHelper.DeserialzeCommand(message);
+
+                    if (command != null)
+                    {
+                        commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
+                    }
+                });
             }
         }
     }

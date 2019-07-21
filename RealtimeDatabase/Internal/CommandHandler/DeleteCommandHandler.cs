@@ -63,6 +63,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
                             ReferenceId = command.ReferenceId
                         });
                     }
+
+                    return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>("The value was not found."));
                 }
                 catch (Exception ex)
                 {

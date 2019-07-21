@@ -8,6 +8,7 @@ using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Actions;
+using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Websocket.Models;
 
@@ -21,10 +22,10 @@ namespace RealtimeDatabase.Helper
             return t.HandleAuthAttribute<QueryAuthAttribute>(context, entityObject, serviceProvider);
         }
 
-        public static bool CanQuery(this PropertyInfo pi, HttpContext context, object entityObject,
+        public static bool CanQuery(this AuthPropertyInfo pi, HttpContext context, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return pi.HandleAuthAttribute<QueryAuthAttribute>(context, entityObject, serviceProvider);
+            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.QueryAuthAttribute, context, entityObject, serviceProvider);
         }
 
         public static bool CanCreate(this Type t, HttpContext context, object entityObject,
@@ -45,29 +46,29 @@ namespace RealtimeDatabase.Helper
             return t.HandleAuthAttribute<UpdateAuthAttribute>(context, entityObject, serviceProvider);
         }
 
-        public static bool CanUpdate(this PropertyInfo pi, HttpContext context, object entityObject,
+        public static bool CanUpdate(this AuthPropertyInfo pi, HttpContext context, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return pi.HandleAuthAttribute<UpdateAuthAttribute>(context, entityObject, serviceProvider);
+            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.UpdateAuthAttribute, context, entityObject, serviceProvider);
         }
 
         public static object GetAuthenticatedQueryModel(this object model, HttpContext context,
             IServiceProvider serviceProvider)
         {
-            PropertyInfo[] propertyInfos = model.GetType().GetProperties();
+            AuthPropertyInfo[] propertyInfos = model.GetType().GetAuthPropertyInfos();
 
-            if (propertyInfos.All(pi => pi.GetCustomAttribute<QueryAuthAttribute>() == null))
+            if (propertyInfos.All(pi => pi.QueryAuthAttribute == null))
             {
                 return model;
             }
 
             Dictionary<string, object> value = new Dictionary<string, object>();
 
-            foreach (PropertyInfo pi in propertyInfos)
+            foreach (AuthPropertyInfo pi in propertyInfos)
             {
                 if (pi.CanQuery(context, model, serviceProvider))
                 {
-                    value.Add(pi.Name.ToCamelCase(), pi.GetValue(model));
+                    value.Add(pi.PropertyInfo.Name.ToCamelCase(), pi.PropertyInfo.GetValue(model));
                 }
             }
 
@@ -124,13 +125,6 @@ namespace RealtimeDatabase.Helper
         {
             AuthAttributeBase authAttribute = t.GetCustomAttribute<T>();
             return HandleAuthAttribute(t, authAttribute, context, entityObject, serviceProvider);
-        }
-
-        private static bool HandleAuthAttribute<T>(this PropertyInfo pi, HttpContext context,
-            object entityObject, IServiceProvider serviceProvider) where T : AuthAttributeBase
-        {
-            AuthAttributeBase authAttribute = pi.GetCustomAttribute<T>();
-            return HandleAuthAttribute(pi.DeclaringType, authAttribute, context, entityObject, serviceProvider);
         }
     }
 }
