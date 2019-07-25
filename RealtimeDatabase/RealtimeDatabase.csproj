@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="V8.Net" Version="1.1.6" />
   </ItemGroup>
 
   <ItemGroup>
