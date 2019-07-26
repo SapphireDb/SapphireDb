@@ -15,8 +15,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
+using JavaScriptEngineSwitcher.Jurassic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using React.AspNet;
 
 namespace RealtimeDatabase.Extensions
 {
@@ -25,6 +28,12 @@ namespace RealtimeDatabase.Extensions
         public static IApplicationBuilder UseRealtimeDatabase(this IApplicationBuilder builder)
         {
             RealtimeDatabaseOptions options = (RealtimeDatabaseOptions)builder.ApplicationServices.GetService(typeof(RealtimeDatabaseOptions));
+
+            builder.UseReact(config =>
+            {
+                //config.LoadReact = false;
+
+            });
 
             if (options.EnableBuiltinAuth)
             {
@@ -55,6 +64,10 @@ namespace RealtimeDatabase.Extensions
             {
                 options = new RealtimeDatabaseOptions();
             }
+
+            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = JurassicJsEngine.EngineName)
+                .AddJurassic();
+            services.AddReact();
 
             services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
 

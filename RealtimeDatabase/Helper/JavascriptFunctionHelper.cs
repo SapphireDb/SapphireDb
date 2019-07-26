@@ -1,79 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
-using ChakraCore.NET;
-using Jint;
-using Jint.Native;
-using Jint.Native.Object;
-using Newtonsoft.Json;
-using V8.Net;
+using JavaScriptEngineSwitcher.Core;
+using JavaScriptEngineSwitcher.Jurassic;
+using React;
+using React.TinyIoC;
 
 namespace RealtimeDatabase.Helper
 {
     static class JavascriptFunctionHelper
     {
-        private static dynamic CreateFunction(string functionString, object[] contextData)
+        private static string CompileJs(string jsInput)
         {
-            //ChakraRuntime runtime = ChakraRuntime.Create();
-            //ChakraContext context = runtime.CreateContext(false);
-            //context.RunScript($"let __rawFunction__ = {functionString};");
-            //context.RunScript($"let __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');");
-            //string functionWrapper = $"function __functionWrapper__(dataObjectString) {{" +
-            //                         $"let dataObject = JSON.parse(dataObjectString);" +
-            //                         $"return __rawFunction__(dataObject, __contextData__);" +
-            //                         $"}};";
-            //context.RunScript(functionWrapper);
+            IBabel babel = ReactEnvironment.Current.Babel;
+            return babel.Transform(jsInput);
+        }
 
-            //return (dataObject) =>
-            //{
-            //    string dataObjectString = JsonHelper.Serialize(dataObject);
-            //    return context.GlobalObject.CallFunction<string, T>("__functionWrapper__", dataObjectString);
-            //};
+        private static Func<object, T> CreateFunction<T>(string functionString, object[] contextData)
+        {
+            IJsEngine engine = JsEngineSwitcher.Current.CreateDefaultEngine();
 
-            //Engine engine = new Engine();
-            //engine.Execute($"var __rawFunction__ = {functionString};");
-            //engine.Execute($"var __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');");
-            //string functionWrapperString = $"function __functionWrapper__(dataObjectString) {{" +
-            //                         $"var dataObject = JSON.parse(dataObjectString);" +
-            //                         $"return __rawFunction__(dataObject, __contextData__);" +
-            //                         $"}};";
-            //engine.Execute(functionWrapperString);
-            //return engine.GetValue("__functionWrapper__");
-
-            V8Engine engine = new V8Engine();
-            engine.Execute($"var __rawFunction__ = {functionString};");
-            engine.Execute($"var __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');");
+            string rawFunctionString = $"var __rawFunction__ = {functionString};";
+            string contextDataString = $"var __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');";
             string functionWrapperString = $"function __functionWrapper__(dataObjectString) {{" +
                                      $"var dataObject = JSON.parse(dataObjectString);" +
                                      $"return __rawFunction__(dataObject, __contextData__);" +
                                      $"}};";
-            engine.Execute(functionWrapperString);
-            Handle
-            return engine.DynamicGlobalObject.__functionWrapper__;
-            engine.GlobalObject.GetProperty("__functionWrapper__");
-            //return engine.GetValue("__functionWrapper__");
+
+            string rawJs = $"{rawFunctionString}{contextDataString}{functionWrapperString}";
+            string compiledJs = CompileJs(rawJs);
+
+            engine.Evaluate(compiledJs);
+
+            return (dataObject) =>
+            {
+                string dataObjectString = JsonHelper.Serialize(dataObject);
+                return engine.CallFunction<T>("__functionWrapper__", dataObjectString);
+            };
         }
 
         public static Func<object, bool> CreateBoolFunction(this string functionString, object[] contextData)
         {
-            dynamic functionWrapper = CreateFunction(functionString, contextData);
-
-            return (dataObject) =>
-            {
-                string dataObjectString = JsonHelper.Serialize(dataObject);
-                return functionWrapper(dataObjectString).ToString() == "true";
-            };
+            return CreateFunction<bool>(functionString, contextData);
         }
 
         public static Func<object, string> CreatePredicateFunction(this string functionString, object[] contextData)
         {
-            dynamic functionWrapper = CreateFunction(functionString, contextData);
-
-            return (dataObject) =>
-            {
-                string dataObjectString = JsonHelper.Serialize(dataObject);
-                Handle result = functionWrapper(dataObjectString);
-                return result.ToString();
-            };
+            return CreateFunction<string>(functionString, contextData);
         }
     }
 }

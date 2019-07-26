@@ -23,12 +23,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ChakraCore.NET" Version="1.3.2" />
-    <PackageReference Include="Jint" Version="2.11.58" />
+    <PackageReference Include="JavaScriptEngineSwitcher.Core" Version="3.1.0" />
+    <PackageReference Include="JavaScriptEngineSwitcher.Extensions.MsDependencyInjection" Version="3.1.0" />
+    <PackageReference Include="JavaScriptEngineSwitcher.Jurassic" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="V8.Net" Version="1.1.6" />
+    <PackageReference Include="React.AspNet" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
