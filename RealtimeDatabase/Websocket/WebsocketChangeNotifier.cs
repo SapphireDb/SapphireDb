@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models.Commands;
 
 namespace RealtimeDatabase.Websocket
 {
@@ -24,12 +26,14 @@ namespace RealtimeDatabase.Websocket
         private readonly WebsocketConnectionManager connectionManager;
         private readonly DbContextAccesor dbContextAccessor;
         private readonly IServiceProvider serviceProvider;
+        private readonly ILogger<WebsocketConnection> logger;
 
-        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider)
+        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
         {
             this.connectionManager = connectionManager;
             this.dbContextAccessor = dbContextAccessor;
             this.serviceProvider = serviceProvider;
+            this.logger = logger;
         }
 
         public void HandleChanges(List<ChangeResponse> changes)
@@ -62,7 +66,23 @@ namespace RealtimeDatabase.Websocket
 
                         foreach (SubscriptionWebsocketMapping mapping in websocketGrouping)
                         {
-                            HandleSubscription(mapping, changesForConnection, db, property.Key, collectionSet);
+                            try
+                            {
+                                HandleSubscription(mapping, changesForConnection, db, property.Key, collectionSet);
+                            }
+                            catch (Exception ex)
+                            {
+                                SubscribeCommand tempErrorCommand = new SubscribeCommand()
+                                {
+                                    CollectionName = subscriptionGrouping.Key,
+                                    ReferenceId = mapping.Subscription.ReferenceId,
+                                    Prefilters = mapping.Subscription.Prefilters
+                                };
+
+                                _ = mapping.Websocket.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
+                                logger.LogError($"Error handling subscription '{mapping.Subscription.ReferenceId}' of {subscriptionGrouping.Key}");
+                                logger.LogError(ex.Message);
+                            }
                         }
                     }
                 });

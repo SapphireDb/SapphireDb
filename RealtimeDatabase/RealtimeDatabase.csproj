@@ -29,7 +29,7 @@
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="React.AspNet" Version="5.0.0" />
+    <PackageReference Include="React.Core" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

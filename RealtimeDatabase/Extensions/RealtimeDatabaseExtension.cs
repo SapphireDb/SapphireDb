@@ -19,7 +19,9 @@ using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
 using JavaScriptEngineSwitcher.Jurassic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using React.AspNet;
+using Microsoft.Extensions.Caching.Memory;
+using React;
+using React.TinyIoC;
 
 namespace RealtimeDatabase.Extensions
 {
@@ -29,11 +31,16 @@ namespace RealtimeDatabase.Extensions
         {
             RealtimeDatabaseOptions options = (RealtimeDatabaseOptions)builder.ApplicationServices.GetService(typeof(RealtimeDatabaseOptions));
 
-            builder.UseReact(config =>
-            {
-                //config.LoadReact = false;
+            React.AssemblyRegistration.Container.Register(builder.ApplicationServices
+                .GetRequiredService<IMemoryCache>());
 
-            });
+            Initializer.Initialize(registerOptions => registerOptions.AsSingleton());
+            TinyIoCContainer container = React.AssemblyRegistration.Container;
+            container.Register<ICache, NullCache>();
+            container.Register<IFileSystem, SimpleFileSystem>();
+
+            // config for Babel
+            //ReactSiteConfiguration.Configuration;
 
             if (options.EnableBuiltinAuth)
             {
@@ -64,11 +71,7 @@ namespace RealtimeDatabase.Extensions
             {
                 options = new RealtimeDatabaseOptions();
             }
-
-            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = JurassicJsEngine.EngineName)
-                .AddJurassic();
-            services.AddReact();
-
+            
             services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
 
             services.AddSingleton(options);
@@ -99,6 +102,9 @@ namespace RealtimeDatabase.Extensions
             {
                 services.AddTransient(handler.Value);
             }
+
+            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = JurassicJsEngine.EngineName)
+                .AddJurassic();
 
             return services;
         }

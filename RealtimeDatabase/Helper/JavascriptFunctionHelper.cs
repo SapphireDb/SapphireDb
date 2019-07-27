@@ -9,6 +9,11 @@ namespace RealtimeDatabase.Helper
 {
     static class JavascriptFunctionHelper
     {
+        static JavascriptFunctionHelper()
+        {
+
+        }
+
         private static string CompileJs(string jsInput)
         {
             IBabel babel = ReactEnvironment.Current.Babel;
