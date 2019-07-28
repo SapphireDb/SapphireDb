@@ -1,40 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using JavaScriptEngineSwitcher.Core;
-using JavaScriptEngineSwitcher.Jurassic;
-using React;
-using React.TinyIoC;
 
 namespace RealtimeDatabase.Helper
 {
     static class JavascriptFunctionHelper
     {
-        static JavascriptFunctionHelper()
+        private static Func<object, T> CreateFunction<T>(IJsEngine engine, string functionString, object[] contextData)
         {
-
-        }
-
-        private static string CompileJs(string jsInput)
-        {
-            IBabel babel = ReactEnvironment.Current.Babel;
-            return babel.Transform(jsInput);
-        }
-
-        private static Func<object, T> CreateFunction<T>(string functionString, object[] contextData)
-        {
-            IJsEngine engine = JsEngineSwitcher.Current.CreateDefaultEngine();
-
             string rawFunctionString = $"var __rawFunction__ = {functionString};";
             string contextDataString = $"var __contextData__ = JSON.parse('{JsonHelper.Serialize(contextData)}');";
-            string functionWrapperString = $"function __functionWrapper__(dataObjectString) {{" +
+            string functionWrapperString = $"var __functionWrapper__ = (dataObjectString) => {{" +
                                      $"var dataObject = JSON.parse(dataObjectString);" +
                                      $"return __rawFunction__(dataObject, __contextData__);" +
                                      $"}};";
 
             string rawJs = $"{rawFunctionString}{contextDataString}{functionWrapperString}";
-            string compiledJs = CompileJs(rawJs);
 
-            engine.Evaluate(compiledJs);
+            engine.Execute(rawJs);
 
             return (dataObject) =>
             {
@@ -43,14 +26,14 @@ namespace RealtimeDatabase.Helper
             };
         }
 
-        public static Func<object, bool> CreateBoolFunction(this string functionString, object[] contextData)
+        public static Func<object, bool> CreateBoolFunction(this string functionString, object[] contextData, IJsEngine engine)
         {
-            return CreateFunction<bool>(functionString, contextData);
+            return CreateFunction<bool>(engine, functionString, contextData);
         }
 
-        public static Func<object, string> CreatePredicateFunction(this string functionString, object[] contextData)
+        public static Func<object, string> CreatePredicateFunction(this string functionString, object[] contextData, IJsEngine engine)
         {
-            return CreateFunction<string>(functionString, contextData);
+            return CreateFunction<string>(engine, functionString, contextData);
         }
     }
 }

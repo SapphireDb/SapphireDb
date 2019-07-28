@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JavaScriptEngineSwitcher.Core;
 using RealtimeDatabase.Helper;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -10,6 +11,13 @@ namespace RealtimeDatabase.Models.Prefilter
 {
     public class OrderByPrefilter : IPrefilter
     {
+        public OrderByPrefilter()
+        {
+            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
+        }
+
+        private readonly IJsEngine engine;
+
         public string SelectFunctionString { get; set; }
 
         public object[] ContextData { get; set; }
@@ -24,13 +32,18 @@ namespace RealtimeDatabase.Models.Prefilter
             {
                 if (keySelector == null)
                 {
-                    keySelector = SelectFunctionString.CreatePredicateFunction(ContextData);
+                    keySelector = SelectFunctionString.CreatePredicateFunction(ContextData, engine);
                 }
 
                 return Descending ? array.OrderByDescending(keySelector) : array.OrderBy(keySelector);
             }
 
             return array;
+        }
+
+        public void Dispose()
+        {
+            engine.Dispose();
         }
     }
 }

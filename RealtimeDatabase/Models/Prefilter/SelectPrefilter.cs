@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JavaScriptEngineSwitcher.Core;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Helper;
@@ -12,6 +13,13 @@ namespace RealtimeDatabase.Models.Prefilter
 {
     public class SelectPrefilter : IAfterQueryPrefilter
     {
+        public SelectPrefilter()
+        {
+            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
+        }
+
+        private readonly IJsEngine engine;
+
         public string SelectFunctionString { get; set; }
 
         public object[] ContextData { get; set; }
@@ -26,7 +34,7 @@ namespace RealtimeDatabase.Models.Prefilter
                 {
                     keySelector = x =>
                     {
-                        string result = SelectFunctionString.CreatePredicateFunction(ContextData)(x);
+                        string result = SelectFunctionString.CreatePredicateFunction(ContextData, engine)(x);
 
                         try
                         {
@@ -43,6 +51,11 @@ namespace RealtimeDatabase.Models.Prefilter
             }
 
             return array;
+        }
+
+        public void Dispose()
+        {
+            engine.Dispose();
         }
     }
 }

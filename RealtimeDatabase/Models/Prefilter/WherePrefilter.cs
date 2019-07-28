@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JavaScriptEngineSwitcher.Core;
 using Newtonsoft.Json;
 using RealtimeDatabase.Helper;
 
@@ -11,6 +12,13 @@ namespace RealtimeDatabase.Models.Prefilter
 {
     public class WherePrefilter : IPrefilter
     {
+        public WherePrefilter()
+        {
+            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
+        }
+
+        private readonly IJsEngine engine;
+
         public string CompareFunctionString { get; set; }
 
         public object[] ContextData { get; set; }
@@ -23,13 +31,18 @@ namespace RealtimeDatabase.Models.Prefilter
             {
                 if (predicate == null)
                 {
-                    predicate = CompareFunctionString.CreateBoolFunction(ContextData);
+                    predicate = CompareFunctionString.CreateBoolFunction(ContextData, engine);
                 }
 
                 return array.Where(predicate);
             }
 
             return array;
+        }
+
+        public void Dispose()
+        {
+            engine.Dispose();
         }
     }
 }

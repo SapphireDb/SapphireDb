@@ -1,4 +1,5 @@
-﻿using RealtimeDatabase.Websocket.Models;
+﻿using System;
+using RealtimeDatabase.Websocket.Models;
 using System.Collections.Concurrent;
 using System.Linq;
 
@@ -20,7 +21,9 @@ namespace RealtimeDatabase.Websocket
 
         public void RemoveConnection(WebsocketConnection connection)
         {
-            connections = new ConcurrentBag<WebsocketConnection>(connections.Where(c => c.Id != connection.Id));
+            Guid connectionId = connection.Id;
+            connections = new ConcurrentBag<WebsocketConnection>(connections.Where(c => c.Id != connectionId));
+            connection.Dispose();
         }
     }
 }

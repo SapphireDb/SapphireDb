@@ -15,7 +15,7 @@ using Microsoft.Extensions.Primitives;
 namespace RealtimeDatabase.Websocket.Models
 {
     [DataContract]
-    public class WebsocketConnection
+    public class WebsocketConnection : IDisposable
     {
         public WebsocketConnection(WebSocket webSocket, HttpContext context)
         {
@@ -72,6 +72,12 @@ namespace RealtimeDatabase.Websocket.Models
             {
                 Lock.Release();
             }
+        }
+
+        public void Dispose()
+        {
+            Websocket.Dispose();
+            Subscriptions.ForEach(s => s.Dispose());
         }
     }
 }

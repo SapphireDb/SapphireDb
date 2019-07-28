@@ -11,5 +11,10 @@ namespace RealtimeDatabase.Models.Prefilter
         {
             return array.Skip(Number);
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 }

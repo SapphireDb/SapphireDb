@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RealtimeDatabase.Models.Prefilter
 {
-    public interface IPrefilterBase
+    public interface IPrefilterBase : IDisposable
     {
     }
 }

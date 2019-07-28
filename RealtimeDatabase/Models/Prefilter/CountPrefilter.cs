@@ -16,5 +16,10 @@ namespace RealtimeDatabase.Models.Prefilter
         {
             return array.Count();
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 }

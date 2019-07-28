@@ -68,7 +68,7 @@ namespace RealtimeDatabase.Internal
             if (handler != null)
             {
                 logger.LogInformation("Handling " + command.GetType().Name + " with " + handler.GetType().Name);
-                new Thread(async () =>
+                Task.Run(async () =>
                 {
                     try
                     {
@@ -88,7 +88,7 @@ namespace RealtimeDatabase.Internal
                         logger.LogError("Error handling " + command.GetType().Name);
                         logger.LogError(ex.Message);
                     }
-                }).Start();
+                });
             }
             else
             {
