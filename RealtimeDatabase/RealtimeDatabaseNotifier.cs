@@ -1,4 +1,5 @@
-﻿using RealtimeDatabase.Models.Responses;
+﻿using System;
+using RealtimeDatabase.Models.Responses;
 using RealtimeDatabase.Websocket;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,9 +15,9 @@ namespace RealtimeDatabase
             this.notifier = notifier;
         }
 
-        public void HandleChanges(List<ChangeResponse> changes)
+        public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
-            notifier.HandleChanges(changes);
+            notifier.HandleChanges(changes, dbContextType);
         }
     }
 }

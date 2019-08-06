@@ -23,7 +23,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public Task<ResponseBase> Handle(HttpContext context, CreateCommand command)
         {
-            RealtimeDbContext db = GetContext();
+            RealtimeDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
             if (property.Key != null)

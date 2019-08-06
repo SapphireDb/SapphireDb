@@ -9,6 +9,8 @@ namespace RealtimeDatabase.Models
     {
         public string CollectionName { get; set; }
 
+        public string ContextName { get; set; }
+
         public string ReferenceId { get; set; }
 
         public List<IPrefilterBase> Prefilters { get; set; }

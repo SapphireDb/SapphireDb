@@ -31,8 +31,9 @@ namespace WebUI
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/,
-                new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")));
+            services.AddRealtimeDatabase(new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")))
+                .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/)
+                .AddContext<SecondRealtimeContext>(cfg => cfg.UseInMemoryDatabase("second"), "second");
 
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContext(databasename: "auth"));
 

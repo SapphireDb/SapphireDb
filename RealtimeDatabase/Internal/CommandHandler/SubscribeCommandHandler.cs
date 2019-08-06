@@ -26,6 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {
                 CollectionName = command.CollectionName.ToLowerInvariant(),
+                ContextName = command.ContextName,
                 ReferenceId = command.ReferenceId,
                 Prefilters = command.Prefilters
             };
@@ -41,7 +42,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 websocketConnection.Lock.Release();
             }
 
-            ResponseBase response = MessageHelper.GetCollection(GetContext(), command, context, serviceProvider, out List<object[]> transmittedData);
+            ResponseBase response = MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider, out List<object[]> transmittedData);
 
             await collectionSubscription.Lock.WaitAsync();
             collectionSubscription.TransmittedData = transmittedData;

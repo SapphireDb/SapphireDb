@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity.UI.V3.Pages.Internal.Account;
 
 namespace RealtimeDatabase
 {
@@ -27,7 +26,7 @@ namespace RealtimeDatabase
         {
             List<ChangeResponse> changes = GetChanges();
             int result = base.SaveChanges(acceptAllChangesOnSuccess);
-            notifier.HandleChanges(changes);
+            notifier.HandleChanges(changes, GetType());
             return result;
         }
 
@@ -35,7 +34,7 @@ namespace RealtimeDatabase
         {
             List<ChangeResponse> changes = GetChanges();
             int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            notifier.HandleChanges(changes);
+            notifier.HandleChanges(changes, GetType());
             return result;
         }
 

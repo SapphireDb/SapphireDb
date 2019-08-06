@@ -9,9 +9,9 @@
             this.contextAccessor = contextAccessor;
         }
 
-        protected RealtimeDbContext GetContext()
+        protected RealtimeDbContext GetContext(string contextName = "Default")
         {
-            return contextAccessor.GetContext();
+            return contextAccessor.GetContext(contextName);
         }
     }
 }

@@ -27,22 +27,34 @@ namespace RealtimeDatabase.Websocket
         private readonly DbContextAccesor dbContextAccessor;
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<WebsocketConnection> logger;
+        private readonly DbContextTypeContainer contextTypeContainer;
 
-        public WebsocketChangeNotifier(WebsocketConnectionManager connectionManager, DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
+        public WebsocketChangeNotifier(
+            WebsocketConnectionManager connectionManager,
+            DbContextAccesor dbContextAccessor,
+            IServiceProvider serviceProvider,
+            ILogger<WebsocketConnection> logger,
+            DbContextTypeContainer contextTypeContainer)
         {
             this.connectionManager = connectionManager;
             this.dbContextAccessor = dbContextAccessor;
             this.serviceProvider = serviceProvider;
             this.logger = logger;
+            this.contextTypeContainer = contextTypeContainer;
         }
 
-        public void HandleChanges(List<ChangeResponse> changes)
+        public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
             IEnumerable<SubscriptionWebsocketMapping> subscriptions = connectionManager.connections
                 .SelectMany(c => c.Subscriptions.Select(s => new SubscriptionWebsocketMapping() { Subscription = s, Websocket = c}));
 
+            KeyValuePair<string, Type> dbKeyValuePair =
+                contextTypeContainer.DbContextTypes.FirstOrDefault(v => v.Value == dbContextType);
+
             IEnumerable<IGrouping<string, SubscriptionWebsocketMapping>> subscriptionGroupings =
-                subscriptions.GroupBy(s => s.Subscription.CollectionName);
+                subscriptions
+                    .Where(s => s.Subscription.ContextName.ToLowerInvariant() == dbKeyValuePair.Key.ToLowerInvariant())
+                    .GroupBy(s => s.Subscription.CollectionName);
 
             foreach (IGrouping<string, SubscriptionWebsocketMapping> subscriptionGrouping in subscriptionGroupings)
             {
@@ -55,7 +67,7 @@ namespace RealtimeDatabase.Websocket
 
                 Task.Run(() =>
                 {
-                    RealtimeDbContext db = dbContextAccessor.GetContext();
+                    RealtimeDbContext db = dbContextAccessor.GetContext(dbContextType);
                     KeyValuePair<Type, string> property = db.sets
                         .FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
                     List<object> collectionSet = db.GetValues(property).ToList();

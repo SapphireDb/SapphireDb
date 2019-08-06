@@ -13,9 +13,15 @@ namespace RealtimeDatabase.Internal
             this.serviceProvider = serviceProvider;
         }
 
-        public RealtimeDbContext GetContext()
+        public RealtimeDbContext GetContext(string contextName = "Default")
         {
-            return (RealtimeDbContext)serviceProvider.GetService(contextTypeContainer.DbContextType);
+            return (RealtimeDbContext)serviceProvider.GetService(
+                contextTypeContainer.DbContextTypes[contextName.ToLowerInvariant()]);
+        }
+
+        public RealtimeDbContext GetContext(Type dbContextType)
+        {
+            return (RealtimeDbContext)serviceProvider.GetService(dbContextType);
         }
     }
 }

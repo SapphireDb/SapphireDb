@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public Task<ResponseBase> Handle(HttpContext context, InfoCommand command)
         {
-            RealtimeDbContext db = GetContext();
+            RealtimeDbContext db = GetContext(command.ContextName);
 
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 

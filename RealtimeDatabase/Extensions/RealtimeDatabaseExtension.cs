@@ -48,15 +48,12 @@ namespace RealtimeDatabase.Extensions
             return builder;
         }
 
-        public static IServiceCollection AddRealtimeDatabase<ContextType>(this IServiceCollection services, Action<DbContextOptionsBuilder> dbContextOptions = null, RealtimeDatabaseOptions options = null)
-            where ContextType : RealtimeDbContext
+        public static RealtimeDatabaseBuilder AddRealtimeDatabase(this IServiceCollection services, RealtimeDatabaseOptions options = null)
         {
             if (options == null)
             {
                 options = new RealtimeDatabaseOptions();
             }
-            
-            services.AddDbContext<ContextType>(dbContextOptions, ServiceLifetime.Transient);
 
             services.AddSingleton(options);
 
@@ -68,10 +65,11 @@ namespace RealtimeDatabase.Extensions
                 services.AddTransient(handler.Value);
             }
 
-            services.AddSingleton(new DbContextTypeContainer() { DbContextType = typeof(ContextType) });
-            services.AddTransient<DbContextAccesor>();
+            services.AddSingleton(new DbContextTypeContainer());
 
             services.AddScoped<RealtimeDatabaseNotifier>();
+
+            services.AddTransient<DbContextAccesor>();
 
             services.AddSingleton<WebsocketConnectionManager>();
             services.AddTransient<WebsocketChangeNotifier>();
@@ -90,12 +88,16 @@ namespace RealtimeDatabase.Extensions
             services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = ChakraCoreJsEngine.EngineName)
                 .AddChakraCore();
 
-            return services;
+            return new RealtimeDatabaseBuilder(services);
         }
 
-        public static IServiceCollection AddRealtimeAuth<ContextType, UserType>(this IServiceCollection services, JwtOptions jwtOptions, Action<DbContextOptionsBuilder> dbContextOptionsAction = null, Action<IdentityOptions> identityOptionsAction = null) 
-            where ContextType : RealtimeAuthContext<UserType>
-            where UserType : IdentityUser
+        public static IServiceCollection AddRealtimeAuth<TContextType, TUserType>(
+            this IServiceCollection services,
+            JwtOptions jwtOptions,
+            Action<DbContextOptionsBuilder> dbContextOptionsAction = null,
+            Action<IdentityOptions> identityOptionsAction = null) 
+            where TContextType : RealtimeAuthContext<TUserType>
+            where TUserType : IdentityUser
         {
             RealtimeDatabaseOptions realtimeDatabaseOptions =
                 (RealtimeDatabaseOptions)services.FirstOrDefault(s => s.ServiceType == typeof(RealtimeDatabaseOptions))?.ImplementationInstance;
@@ -103,17 +105,17 @@ namespace RealtimeDatabase.Extensions
             // ReSharper disable once PossibleNullReferenceException
             realtimeDatabaseOptions.EnableBuiltinAuth = true;
 
-            services.AddDbContext<ContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
+            services.AddDbContext<TContextType>(dbContextOptionsAction, ServiceLifetime.Transient);
             services.AddTransient<AuthDbContextAccesor>();
 
             services.AddSingleton(new AuthDbContextTypeContainer() {
-                DbContextType = typeof(ContextType),
-                UserManagerType = typeof(UserManager<UserType>),
-                UserType = typeof(UserType)
+                DbContextType = typeof(TContextType),
+                UserManagerType = typeof(UserManager<TUserType>),
+                UserType = typeof(TUserType)
             });
 
             AddHandlers(services, realtimeDatabaseOptions);
-            AddIdentityProviders<UserType, ContextType>(services, identityOptionsAction);
+            AddIdentityProviders<TUserType, TContextType>(services, identityOptionsAction);
             AddAuthenticationProviders(services, jwtOptions);
 
             return services;
@@ -141,9 +143,9 @@ namespace RealtimeDatabase.Extensions
             }
         }
 
-        private static void AddIdentityProviders<UserType, ContextType>(IServiceCollection services, Action<IdentityOptions> identityOptionsAction)
-            where ContextType : RealtimeAuthContext<UserType>
-            where UserType : IdentityUser
+        private static void AddIdentityProviders<TUserType, TContextType>(IServiceCollection services, Action<IdentityOptions> identityOptionsAction)
+            where TContextType : RealtimeAuthContext<TUserType>
+            where TUserType : IdentityUser
         {
             if (identityOptionsAction == null)
             {
@@ -158,19 +160,19 @@ namespace RealtimeDatabase.Extensions
                 };
             }
 
-            services.AddIdentity<UserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<ContextType>();
+            services.AddIdentity<TUserType, IdentityRole>(identityOptionsAction).AddEntityFrameworkStores<TContextType>();
 
             services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IRoleStore<IdentityRole>)));
-            services.AddTransient<IRoleStore<IdentityRole>, RoleStore<IdentityRole, RealtimeAuthContext<UserType>, string>>();
+            services.AddTransient<IRoleStore<IdentityRole>, RoleStore<IdentityRole, RealtimeAuthContext<TUserType>, string>>();
 
             services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(RoleManager<IdentityRole>)));
             services.AddTransient<RoleManager<IdentityRole>>();
 
-            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IUserStore<UserType>)));
-            services.AddTransient<IUserStore<UserType>, UserStore<UserType, IdentityRole, RealtimeAuthContext<UserType>, string>>();
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(IUserStore<TUserType>)));
+            services.AddTransient<IUserStore<TUserType>, UserStore<TUserType, IdentityRole, RealtimeAuthContext<TUserType>, string>>();
 
-            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(UserManager<UserType>)));
-            services.AddTransient<UserManager<UserType>>();
+            services.Remove(services.FirstOrDefault(s => s.ServiceType == typeof(UserManager<TUserType>)));
+            services.AddTransient<UserManager<TUserType>>();
         }
 
         private static void AddAuthenticationProviders(IServiceCollection services, JwtOptions jwtOptions)

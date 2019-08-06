@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public Task<ResponseBase> Handle(HttpContext context, QueryCommand command)
         {
-            return Task.FromResult(MessageHelper.GetCollection(GetContext(), command, context, serviceProvider, out _));
+            return Task.FromResult(MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider, out _));
         }
     }
 }
