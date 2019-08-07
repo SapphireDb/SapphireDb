@@ -26,7 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {
                 CollectionName = command.CollectionName.ToLowerInvariant(),
-                ContextName = command.ContextName,
+                ContextName = command.ContextName.ToLowerInvariant(),
                 ReferenceId = command.ReferenceId,
                 Prefilters = command.Prefilters
             };

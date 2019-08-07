@@ -48,12 +48,11 @@ namespace RealtimeDatabase.Websocket
             IEnumerable<SubscriptionWebsocketMapping> subscriptions = connectionManager.connections
                 .SelectMany(c => c.Subscriptions.Select(s => new SubscriptionWebsocketMapping() { Subscription = s, Websocket = c}));
 
-            KeyValuePair<string, Type> dbKeyValuePair =
-                contextTypeContainer.DbContextTypes.FirstOrDefault(v => v.Value == dbContextType);
+            string contextName = contextTypeContainer.GetName(dbContextType);
 
             IEnumerable<IGrouping<string, SubscriptionWebsocketMapping>> subscriptionGroupings =
                 subscriptions
-                    .Where(s => s.Subscription.ContextName.ToLowerInvariant() == dbKeyValuePair.Key.ToLowerInvariant())
+                    .Where(s => s.Subscription.ContextName == contextName)
                     .GroupBy(s => s.Subscription.CollectionName);
 
             foreach (IGrouping<string, SubscriptionWebsocketMapping> subscriptionGrouping in subscriptionGroupings)

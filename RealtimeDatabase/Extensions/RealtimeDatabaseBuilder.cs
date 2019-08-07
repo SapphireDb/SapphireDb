@@ -26,7 +26,7 @@ namespace RealtimeDatabase.Extensions
                 .FirstOrDefault(s => s.ServiceType == typeof(DbContextTypeContainer))?.ImplementationInstance;
 
             // ReSharper disable once PossibleNullReferenceException
-            contextTypes.DbContextTypes.Add(contextName.ToLowerInvariant(), typeof(TContextType));
+            contextTypes.AddContext(contextName, typeof(TContextType));
 
             serviceCollection.AddDbContext<TContextType>(dbContextOptions, ServiceLifetime.Transient);
 

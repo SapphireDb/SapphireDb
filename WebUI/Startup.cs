@@ -1,4 +1,6 @@
-﻿using FileContextCore.Extensions;
+﻿using System;
+using System.Linq;
+using FileContextCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,8 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
 using RealtimeDatabase.Models.Auth;
+using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
+using WebUI.Data.Models;
 
 namespace WebUI
 {
@@ -31,9 +35,26 @@ namespace WebUI
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             //Register services
-            services.AddRealtimeDatabase(new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")))
-                .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/)
-                .AddContext<SecondRealtimeContext>(cfg => cfg.UseInMemoryDatabase("second"), "second");
+            RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")))
+                .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/);
+
+            RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
+
+            if (db != null)
+            {
+                Config dbName = db.Configs.FirstOrDefault(cfg => cfg.Key == "DbName");
+                DbActions.DbName = dbName?.Value;
+            }
+
+            realtimeBuilder.AddContext<SecondRealtimeContext>(cfg =>
+                {
+                    if (string.IsNullOrEmpty(DbActions.DbName))
+                    {
+                        throw new Exception("DbName not configured");
+                    }
+
+                    cfg.UseFileContext(databasename: DbActions.DbName); /*cfg.UseInMemoryDatabase("second")*/
+                }, "second");
 
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContext(databasename: "auth"));
 

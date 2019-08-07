@@ -15,7 +15,7 @@ namespace RealtimeDatabase.Models
 
         public List<IPrefilterBase> Prefilters { get; set; }
 
-        public List<object[]> TransmittedData { get; set; }
+        public List<object[]> TransmittedData { get; set; } = new List<object[]>();
 
         public SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 

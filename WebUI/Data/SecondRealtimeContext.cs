@@ -8,9 +8,9 @@ using WebUI.Data.Models;
 
 namespace WebUI.Data
 {
-    public class SecondRealtimeContext : RealtimeContext
+    public class SecondRealtimeContext : RealtimeDbContext
     {
-        public SecondRealtimeContext(DbContextOptions<RealtimeContext> options, RealtimeDatabaseNotifier notifier) : base(options, notifier) {}
+        public SecondRealtimeContext(DbContextOptions<SecondRealtimeContext> options, RealtimeDatabaseNotifier notifier) : base(options, notifier) {}
 
         public DbSet<Test> Tests { get; set; }
     }

@@ -20,5 +20,7 @@ namespace WebUI.Data
         public DbSet<Message> Messages { get; set; }
 
         public DbSet<Log> Logs { get; set; }
+
+        public DbSet<Config> Configs { get; set; }
     }
 }
