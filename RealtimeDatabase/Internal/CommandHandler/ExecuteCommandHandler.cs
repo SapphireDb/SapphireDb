@@ -59,6 +59,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     if (actionHandler != null)
                     {
+                        actionHandler.websocketConnection = websocketConnection;
+                        actionHandler.executeCommand = command;
+
                         if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
                         {
                             return command.CreateExceptionResponse<ExecuteResponse>(
@@ -85,9 +88,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            actionHandler.websocketConnection = websocketConnection;
-            actionHandler.executeCommand = command;
-
             logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
