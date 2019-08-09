@@ -13,7 +13,6 @@ namespace RealtimeDatabase.Models
         public RealtimeDatabaseOptions()
         {
             EnableAuthCommands = true;
-            RequireAuthenticationForAttribute = true;
             AuthInfoAllowFunction = (context) => true;
             AuthAllowFunction = (context) => context.User.IsInRole("admin");
         }
@@ -22,7 +21,6 @@ namespace RealtimeDatabase.Models
         {
             Secret = configuration[nameof(Secret)];
             AlwaysRequireAuthentication = configuration.GetValue<bool>(nameof(AlwaysRequireAuthentication));
-            RequireAuthenticationForAttribute = configuration.GetValue<bool>(nameof(RequireAuthenticationForAttribute));
             EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
             RestFallback = configuration.GetValue<bool>(nameof(RestFallback));
         }
@@ -30,8 +28,6 @@ namespace RealtimeDatabase.Models
         public string Secret { get; set; }
 
         public bool AlwaysRequireAuthentication { get; set; }
-
-        public bool RequireAuthenticationForAttribute { get; set; }
 
         internal bool EnableBuiltinAuth { get; set; }
 

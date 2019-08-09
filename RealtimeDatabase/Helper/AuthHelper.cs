@@ -96,16 +96,10 @@ namespace RealtimeDatabase.Helper
             }
 
             ClaimsPrincipal user = context.User;
-            RealtimeDatabaseOptions options = (RealtimeDatabaseOptions)serviceProvider.GetService(typeof(RealtimeDatabaseOptions));
-
-            if (options.RequireAuthenticationForAttribute && !user.Identity.IsAuthenticated)
-            {
-                return false;
-            }
 
             if (authAttribute.Roles != null)
             {
-                return authAttribute.Roles.Any(r => user.IsInRole(r));
+                return user.Identity.IsAuthenticated && authAttribute.Roles.Any(r => user.IsInRole(r));
             }
 
             if (!string.IsNullOrEmpty(authAttribute.FunctionName))
