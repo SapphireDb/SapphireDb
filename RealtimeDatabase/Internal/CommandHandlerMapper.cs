@@ -73,7 +73,9 @@ namespace RealtimeDatabase.Internal
                     try
                     {
                         if (handler is INeedsWebsocket handlerWithWebsocket)
+                        {
                             handlerWithWebsocket.InsertWebsocket(websocketConnection);
+                        }
 
                         ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { websocketConnection.HttpContext, command });
 

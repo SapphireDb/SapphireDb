@@ -15,6 +15,9 @@ namespace RealtimeDatabase.Models
             EnableAuthCommands = true;
             AuthInfoAllowFunction = (context) => true;
             AuthAllowFunction = (context) => context.User.IsInRole("admin");
+            IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
+            IsAllowedForTopicSubscribe = (context, topic) => context.User.Identity.IsAuthenticated;
+            IsAllowedForTopicPublish = (context, topic) => context.User.Identity.IsAuthenticated;
         }
 
         public RealtimeDatabaseOptions(IConfigurationSection configuration) : this()
@@ -36,6 +39,12 @@ namespace RealtimeDatabase.Models
         public Func<HttpContext, bool> AuthInfoAllowFunction { get; set; }
 
         public Func<HttpContext, bool> AuthAllowFunction { get; set; }
+
+        public Func<HttpContext, bool> IsAllowedToSendMessages { get; set; }
+
+        public Func<HttpContext, string, bool> IsAllowedForTopicSubscribe { get; set; }
+
+        public Func<HttpContext, string, bool> IsAllowedForTopicPublish { get; set; }
 
         public bool RestFallback { get; set; }
     }
