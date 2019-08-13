@@ -111,7 +111,7 @@ namespace RealtimeDatabase.Helper
                 }
             }
 
-            return true;
+            return user.Identity.IsAuthenticated;
         }
 
         private static bool HandleAuthAttribute<T>(this Type t, HttpContext context, object entityObject,
