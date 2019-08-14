@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Http;
 namespace WebUI.Data.Models
 {
     //[Updatable]
+    [RemoveEvent(after: "AfterDelete")]
+    [CreateEvent(after: "AfterCreate")]
+    [UpdateEvent(after: "AfterUpdate")]
     public class User : Base
     {
         [Required]

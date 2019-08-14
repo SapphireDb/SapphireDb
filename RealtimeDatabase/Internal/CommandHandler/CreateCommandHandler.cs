@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -57,12 +58,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         private ResponseBase SetPropertiesAndValidate(RealtimeDbContext db, KeyValuePair<Type, string> property, object newValue, HttpContext context,
             CreateCommand command)
         {
-            MethodInfo beforeMethodInfo = property.Key.GetMethod("BeforeCreate",
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (beforeMethodInfo != null && beforeMethodInfo.ReturnType == typeof(void))
-            {
-                beforeMethodInfo.Invoke(newValue, beforeMethodInfo.CreateParameters(context, serviceProvider));
-            }
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newValue, context, serviceProvider);
 
             if (!ValidationHelper.ValidateModel(newValue, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
@@ -75,14 +71,12 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
 
             db.Add(newValue);
+
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newValue, context, serviceProvider);
+
             db.SaveChanges();
 
-            MethodInfo afterMethodInfo = property.Key.GetMethod("AfterCreate",
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (afterMethodInfo != null && afterMethodInfo.ReturnType == typeof(void))
-            {
-                afterMethodInfo.Invoke(newValue, afterMethodInfo.CreateParameters(context, serviceProvider));
-            }
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.After, newValue, context, serviceProvider);
 
             return new CreateResponse()
             {

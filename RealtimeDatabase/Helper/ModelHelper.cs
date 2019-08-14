@@ -165,5 +165,26 @@ namespace RealtimeDatabase.Helper
 
             return values;
         }
+
+        public static void ExecuteHookMethod<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
+            object newValue, HttpContext context, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
+        {
+            T attribute = modelType.GetCustomAttribute<T>();
+
+            if (attribute != null)
+            {
+                string methodName = methodSelector(attribute);
+
+                if (!string.IsNullOrEmpty(methodName))
+                {
+                    MethodInfo methodInfo = modelType.GetMethod(methodName,
+                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (methodInfo != null && methodInfo.ReturnType == typeof(void))
+                    {
+                        methodInfo.Invoke(newValue, methodInfo.CreateParameters(context, serviceProvider));
+                    }
+                }
+            }
+        }
     }
 }

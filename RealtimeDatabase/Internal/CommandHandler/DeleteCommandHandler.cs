@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -41,22 +42,15 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     if (value != null)
                     {
-                        MethodInfo beforeMethodInfo = property.Key.GetMethod("BeforeDelete", 
-                            BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        if (beforeMethodInfo != null && beforeMethodInfo.ReturnType == typeof(void))
-                        {
-                            beforeMethodInfo.Invoke(value, beforeMethodInfo.CreateParameters(context, serviceProvider));
-                        }
+                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.Before, value, context, serviceProvider);
 
                         db.Remove(value);
+
+                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
+
                         db.SaveChanges();
 
-                        MethodInfo afterMethodInfo = property.Key.GetMethod("AfterDelete",
-                            BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        if (afterMethodInfo != null && afterMethodInfo.ReturnType == typeof(void))
-                        {
-                            afterMethodInfo.Invoke(value, afterMethodInfo.CreateParameters(context, serviceProvider));
-                        }
+                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.After, value, context, serviceProvider);
 
                         return Task.FromResult<ResponseBase>(new DeleteResponse()
                         {

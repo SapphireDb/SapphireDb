@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -67,12 +68,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         {
             property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
-            MethodInfo beforeMethodInfo = property.Key.GetMethod("BeforeUpdate",
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (beforeMethodInfo != null && beforeMethodInfo.ReturnType == typeof(void))
-            {
-                beforeMethodInfo.Invoke(value, beforeMethodInfo.CreateParameters(context, serviceProvider));
-            }
+            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.Before, value, context, serviceProvider);
 
             if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
@@ -84,14 +80,11 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 };
             }
 
+            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
+
             db.SaveChanges();
 
-            MethodInfo afterMethodInfo = property.Key.GetMethod("AfterUpdate",
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (afterMethodInfo != null && afterMethodInfo.ReturnType == typeof(void))
-            {
-                afterMethodInfo.Invoke(value, afterMethodInfo.CreateParameters(context, serviceProvider));
-            }
+            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.After, value, context, serviceProvider);
 
             return new UpdateResponse()
             {
