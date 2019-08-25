@@ -1,5 +1,4 @@
-﻿using RealtimeDatabase.Websocket.Models;
-using System;
+﻿using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

@@ -4,22 +4,22 @@ using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsWebsocket, IRestFallback
+    class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsConnection, IRestFallback
     {
         private readonly ActionMapper actionMapper;
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<ExecuteCommandHandler> logger;
-        private WebsocketConnection websocketConnection;
+        public ConnectionBase Connection { get; set; }
 
         public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccessor)
@@ -59,7 +59,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                     if (actionHandler != null)
                     {
-                        actionHandler.websocketConnection = websocketConnection;
+                        actionHandler.connection = Connection;
                         actionHandler.executeCommand = command;
 
                         if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
@@ -134,11 +134,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 return parameterValue;
             }).ToArray();
-        }
-
-        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
-        {
-            websocketConnection = currentWebsocketConnection;
         }
     }
 }

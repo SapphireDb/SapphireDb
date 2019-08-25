@@ -1,5 +1,4 @@
 ﻿using RealtimeDatabase.Attributes;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;

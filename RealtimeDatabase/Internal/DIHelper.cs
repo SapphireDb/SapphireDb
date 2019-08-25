@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Http;
-using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Internal
 {

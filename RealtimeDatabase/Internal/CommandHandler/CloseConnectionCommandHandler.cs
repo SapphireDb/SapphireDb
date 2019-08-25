@@ -1,21 +1,20 @@
 ﻿using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
-using RealtimeDatabase.Websocket;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
     class CloseConnectionCommandHandler : AuthCommandHandlerBase, ICommandHandler<CloseConnectionCommand>, IRestFallback
     {
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
 
-        public CloseConnectionCommandHandler(AuthDbContextAccesor authDbContextAccessor, IServiceProvider serviceProvider, WebsocketConnectionManager connectionManager)
+        public CloseConnectionCommandHandler(AuthDbContextAccesor authDbContextAccessor, IServiceProvider serviceProvider, RealtimeConnectionManager connectionManager)
             : base(authDbContextAccessor, serviceProvider)
         {
             this.connectionManager = connectionManager;
@@ -29,7 +28,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    WebsocketConnection connectionToClose = connectionManager.connections.FirstOrDefault(c => c.UserId == userId && c.Id == command.ConnectionId);
+                    ConnectionBase connectionToClose = connectionManager.connections.FirstOrDefault(c => c.UserId == userId && c.Id == command.ConnectionId);
 
                     if (connectionToClose != null)
                     {
@@ -40,7 +39,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                             db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(rt => rt.UserId == userId));
                         }
 
-                        await connectionToClose.Websocket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "The connection was closed by another client", WebsocketHelper.token);
+                        await connectionToClose.Close();
 
                         CloseConnectionResponse response = new CloseConnectionResponse()
                         {

@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
+using RealtimeDatabase.Connection.Websocket;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -13,10 +13,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
     class CreateRoleCommandHandler : AuthCommandHandlerBase, ICommandHandler<CreateRoleCommand>, IRestFallback
     {
         private readonly RoleManager<IdentityRole> roleManager;
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
 
         public CreateRoleCommandHandler(AuthDbContextAccesor authDbContextAccessor,
-            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager, WebsocketConnectionManager connectionManager)
+            IServiceProvider serviceProvider, RoleManager<IdentityRole> roleManager, RealtimeConnectionManager connectionManager)
             : base(authDbContextAccessor, serviceProvider)
         {
             this.roleManager = roleManager;

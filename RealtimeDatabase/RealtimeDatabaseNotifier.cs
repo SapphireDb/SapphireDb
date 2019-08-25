@@ -1,16 +1,16 @@
 ﻿using System;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RealtimeDatabase.Connection;
 
 namespace RealtimeDatabase
 {
     public class RealtimeDatabaseNotifier
     {
-        private readonly WebsocketChangeNotifier notifier;
+        private readonly RealtimeChangeNotifier notifier;
 
-        public RealtimeDatabaseNotifier(WebsocketChangeNotifier notifier)
+        public RealtimeDatabaseNotifier(RealtimeChangeNotifier notifier)
         {
             this.notifier = notifier;
         }

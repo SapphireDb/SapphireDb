@@ -2,26 +2,28 @@
 using Microsoft.Extensions.Logging;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using RealtimeDatabase.Helper;
+using RealtimeDatabase.Internal;
+using RealtimeDatabase.Models.Commands;
 
-namespace RealtimeDatabase.Websocket
+namespace RealtimeDatabase.Connection.Websocket
 {
     class RealtimeDatabaseWebsocketMiddleware
     {
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
         private readonly RealtimeDatabaseOptions options;
 
         // ReSharper disable once UnusedParameter.Local
-        public RealtimeDatabaseWebsocketMiddleware(RequestDelegate next, WebsocketConnectionManager connectionManager, RealtimeDatabaseOptions options)
+        public RealtimeDatabaseWebsocketMiddleware(RequestDelegate next, RealtimeConnectionManager connectionManager, RealtimeDatabaseOptions options)
         {
             this.connectionManager = connectionManager;
             this.options = options;
         }
 
-        public async Task Invoke(HttpContext context, WebsocketCommandHandler commandHandler, ILogger<WebsocketConnection> logger)
+        public async Task Invoke(HttpContext context, CommandHandlerMapper commandHandlerMapper, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
         {
             if (context.WebSockets.IsWebSocketRequest && await CheckAuthentication(context))
             {
@@ -37,7 +39,20 @@ namespace RealtimeDatabase.Websocket
                 {
                     try
                     {
-                        await commandHandler.HandleCommand(connection);
+                        string message = await connection.Websocket.Receive();
+
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                CommandBase command = JsonHelper.DeserialzeCommand(message);
+
+                                if (command != null)
+                                {
+                                    commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
+                                }
+                            });
+                        }
                     }
                     catch(Exception ex)
                     {

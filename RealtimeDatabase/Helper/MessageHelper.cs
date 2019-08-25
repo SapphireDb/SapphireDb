@@ -5,12 +5,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Attributes;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket;
-using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Helper
 {
@@ -79,29 +78,29 @@ namespace RealtimeDatabase.Helper
         }
 
         public static void SendUsersUpdate(IRealtimeAuthContext db, AuthDbContextTypeContainer typeContainer, object usermanager,
-            WebsocketConnectionManager connectionManager)
+            RealtimeConnectionManager connectionManager)
         {
             List<Dictionary<string, object>> users = ModelHelper.GetUsers(db, typeContainer, usermanager).ToList();
 
-            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.UsersSubscription)))
+            foreach (ConnectionBase connection in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.UsersSubscription)))
             {
-                _ = ws.Send(new SubscribeUsersResponse()
+                _ = connection.Send(new SubscribeUsersResponse()
                 {
-                    ReferenceId = ws.UsersSubscription,
+                    ReferenceId = connection.UsersSubscription,
                     Users = users
                 });
             }
         }
 
-        public static void SendRolesUpdate(IRealtimeAuthContext db, WebsocketConnectionManager connectionManager)
+        public static void SendRolesUpdate(IRealtimeAuthContext db, RealtimeConnectionManager connectionManager)
         {
             List<Dictionary<string, object>> roles = ModelHelper.GetRoles(db).ToList();
 
-            foreach (WebsocketConnection ws in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.RolesSubscription)))
+            foreach (ConnectionBase connection in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.RolesSubscription)))
             {
-                _ = ws.Send(new SubscribeRolesResponse()
+                _ = connection.Send(new SubscribeRolesResponse()
                 {
-                    ReferenceId = ws.RolesSubscription,
+                    ReferenceId = connection.RolesSubscription,
                     Roles = roles
                 });
             }

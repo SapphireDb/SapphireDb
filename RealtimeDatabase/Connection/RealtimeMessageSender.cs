@@ -1,23 +1,23 @@
 ﻿using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using RealtimeDatabase.Connection.Websocket;
 
-namespace RealtimeDatabase.Websocket
+namespace RealtimeDatabase.Connection
 {
     public class RealtimeMessageSender
     {
-        private readonly WebsocketConnectionManager websocketConnectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
 
-        public RealtimeMessageSender(WebsocketConnectionManager websocketConnectionManager)
+        public RealtimeMessageSender(RealtimeConnectionManager connectionManager)
         {
-            this.websocketConnectionManager = websocketConnectionManager;
+            this.connectionManager = connectionManager;
         }
 
         public void Send(object message)
         {
-            foreach (WebsocketConnection connection in websocketConnectionManager.connections)
+            foreach (ConnectionBase connection in connectionManager.connections)
             {
                 _ = connection.Send(new MessageResponse()
                 {
@@ -26,9 +26,9 @@ namespace RealtimeDatabase.Websocket
             }
         }
 
-        public void Send(Func<WebsocketConnection, bool> filter, object message)
+        public void Send(Func<ConnectionBase, bool> filter, object message)
         {
-            foreach (WebsocketConnection connection in websocketConnectionManager.connections.Where(filter))
+            foreach (ConnectionBase connection in connectionManager.connections.Where(filter))
             {
                 _ = connection.Send(new MessageResponse()
                 {
@@ -39,8 +39,8 @@ namespace RealtimeDatabase.Websocket
 
         public void Publish(string topic, object message)
         {
-            foreach (WebsocketConnection connection in 
-                websocketConnectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
+            foreach (ConnectionBase connection in 
+                connectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
             {
                 foreach (string subscriptionId in 
                     connection.MessageSubscriptions.Where(s => s.Value.ToLowerInvariant() == topic).Select(s => s.Key))

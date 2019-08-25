@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RealtimeDatabase.Helper;
 
-namespace RealtimeDatabase.Websocket
+namespace RealtimeDatabase.Connection.Websocket
 {
     static class WebsocketHelper
     {

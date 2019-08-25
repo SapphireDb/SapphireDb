@@ -1,21 +1,20 @@
 ﻿using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
-using RealtimeDatabase.Websocket;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
     class QueryConnectionsCommandHandler : CommandHandlerBase, ICommandHandler<QueryConnectionsCommand>, IRestFallback
     {
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
 
-        public QueryConnectionsCommandHandler(DbContextAccesor dbContextAccessor, WebsocketConnectionManager connectionManager)
+        public QueryConnectionsCommandHandler(DbContextAccesor dbContextAccessor, RealtimeConnectionManager connectionManager)
             : base(dbContextAccessor)
         {
             this.connectionManager = connectionManager;

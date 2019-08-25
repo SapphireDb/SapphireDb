@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
+using RealtimeDatabase.Connection.Websocket;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -14,10 +14,10 @@ namespace RealtimeDatabase.Internal.CommandHandler
     class DeleteUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<DeleteUserCommand>, IRestFallback
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
 
         public DeleteUserCommandHandler(AuthDbContextAccesor authDbContextAccessor, AuthDbContextTypeContainer contextTypeContainer, 
-            IServiceProvider serviceProvider, WebsocketConnectionManager connectionManager)
+            IServiceProvider serviceProvider, RealtimeConnectionManager connectionManager)
             : base(authDbContextAccessor, serviceProvider)
         {
             this.contextTypeContainer = contextTypeContainer;

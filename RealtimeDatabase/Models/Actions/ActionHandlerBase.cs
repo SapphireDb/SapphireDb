@@ -1,20 +1,20 @@
 ﻿using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
+using RealtimeDatabase.Connection;
 
 namespace RealtimeDatabase.Models.Actions
 {
     public class ActionHandlerBase
     {
-        public WebsocketConnection websocketConnection;
+        public ConnectionBase connection;
         public ExecuteCommand executeCommand;
 
         public void Notify(object data)
         {
-            if (websocketConnection != null)
+            if (connection != null)
             {
-                _ = websocketConnection.Send(new ExecuteResponse()
+                _ = connection.Send(new ExecuteResponse()
                 {
                     ReferenceId = executeCommand.ReferenceId,
                     Result = data,

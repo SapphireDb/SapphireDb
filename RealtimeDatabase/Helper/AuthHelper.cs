@@ -10,7 +10,6 @@ using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Auth;
 using RealtimeDatabase.Models.Prefilter;
-using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Helper
 {

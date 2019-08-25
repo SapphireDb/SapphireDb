@@ -13,10 +13,8 @@ using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket;
-using RealtimeDatabase.Websocket.Models;
 
-namespace RealtimeDatabase.Internal
+namespace RealtimeDatabase.Connection
 {
     class RestMiddleware
     {

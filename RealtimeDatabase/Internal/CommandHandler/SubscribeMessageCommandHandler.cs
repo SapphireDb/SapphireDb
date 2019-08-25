@@ -1,17 +1,17 @@
 ﻿using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>, INeedsWebsocket
+    class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>, INeedsConnection
     {
-        private readonly RealtimeDatabaseOptions options;
-        private WebsocketConnection websocketConnection;
+        public ConnectionBase Connection { get; set; }
+        private RealtimeDatabaseOptions options;
 
         public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, RealtimeDatabaseOptions options)
             : base(dbContextAccessor)
@@ -26,23 +26,9 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 return command.CreateExceptionResponse<ResponseBase>("Not allowed to subscribe this topic");
             }
 
-            await websocketConnection.Lock.WaitAsync();
-
-            try
-            {
-                websocketConnection.MessageSubscriptions.Add(command.ReferenceId, command.Topic);
-            }
-            finally
-            {
-                websocketConnection.Lock.Release();
-            }
+            await Connection.AddMessageSubscription(command);
 
             return null;
-        }
-
-        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
-        {
-            websocketConnection = currentWebsocketConnection;
         }
     }
 }

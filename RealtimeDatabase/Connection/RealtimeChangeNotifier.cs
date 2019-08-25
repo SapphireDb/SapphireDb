@@ -1,36 +1,27 @@
-﻿using RealtimeDatabase.Internal;
-using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Prefilter;
-using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RealtimeDatabase.Connection.Websocket;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Models.Prefilter;
+using RealtimeDatabase.Models.Responses;
 
-namespace RealtimeDatabase.Websocket
+namespace RealtimeDatabase.Connection
 {
-    class SubscriptionWebsocketMapping
+    public class RealtimeChangeNotifier
     {
-        public WebsocketConnection Websocket { get; set; }
-
-        public CollectionSubscription Subscription { get; set; } 
-    }
-
-    public class WebsocketChangeNotifier
-    {
-        private readonly WebsocketConnectionManager connectionManager;
+        private readonly RealtimeConnectionManager connectionManager;
         private readonly DbContextAccesor dbContextAccessor;
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<WebsocketConnection> logger;
         private readonly DbContextTypeContainer contextTypeContainer;
 
-        public WebsocketChangeNotifier(
-            WebsocketConnectionManager connectionManager,
+        public RealtimeChangeNotifier(
+            RealtimeConnectionManager connectionManager,
             DbContextAccesor dbContextAccessor,
             IServiceProvider serviceProvider,
             ILogger<WebsocketConnection> logger,
@@ -45,17 +36,17 @@ namespace RealtimeDatabase.Websocket
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
-            IEnumerable<SubscriptionWebsocketMapping> subscriptions = connectionManager.connections
-                .SelectMany(c => c.Subscriptions.Select(s => new SubscriptionWebsocketMapping() { Subscription = s, Websocket = c}));
+            IEnumerable<SubscriptionConnectionMapping> subscriptions = connectionManager.connections
+                .SelectMany(c => c.Subscriptions.Select(s => new SubscriptionConnectionMapping() { Subscription = s, Connection = c}));
 
             string contextName = contextTypeContainer.GetName(dbContextType);
 
-            IEnumerable<IGrouping<string, SubscriptionWebsocketMapping>> subscriptionGroupings =
+            IEnumerable<IGrouping<string, SubscriptionConnectionMapping>> subscriptionGroupings =
                 subscriptions
                     .Where(s => s.Subscription.ContextName == contextName)
                     .GroupBy(s => s.Subscription.CollectionName);
 
-            foreach (IGrouping<string, SubscriptionWebsocketMapping> subscriptionGrouping in subscriptionGroupings)
+            foreach (IGrouping<string, SubscriptionConnectionMapping> subscriptionGrouping in subscriptionGroupings)
             {
                 List<ChangeResponse> relevantChanges = changes.Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
 
@@ -71,11 +62,11 @@ namespace RealtimeDatabase.Websocket
                         .FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
                     List<object> collectionSet = db.GetValues(property).ToList();
 
-                    foreach (IGrouping<WebsocketConnection, SubscriptionWebsocketMapping> websocketGrouping in subscriptionGrouping.GroupBy(s => s.Websocket))
+                    foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                     {
-                        List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(websocketGrouping.Key.HttpContext, rc.Value, serviceProvider)).ToList();
+                        List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(connectionGrouping.Key.HttpContext, rc.Value, serviceProvider)).ToList();
 
-                        foreach (SubscriptionWebsocketMapping mapping in websocketGrouping)
+                        foreach (SubscriptionConnectionMapping mapping in connectionGrouping)
                         {
                             try
                             {
@@ -90,7 +81,7 @@ namespace RealtimeDatabase.Websocket
                                     Prefilters = mapping.Subscription.Prefilters
                                 };
 
-                                _ = mapping.Websocket.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
+                                _ = mapping.Connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
                                 logger.LogError($"Error handling subscription '{mapping.Subscription.ReferenceId}' of {subscriptionGrouping.Key}");
                                 logger.LogError(ex.Message);
                             }
@@ -100,7 +91,7 @@ namespace RealtimeDatabase.Websocket
             }
         }
 
-        private void HandleSubscription(SubscriptionWebsocketMapping mapping, List<ChangeResponse> changes, 
+        private void HandleSubscription(SubscriptionConnectionMapping mapping, List<ChangeResponse> changes, 
             RealtimeDbContext db, Type modelType, IEnumerable<object> collectionSet)
         {
             Task.Run(() =>
@@ -122,11 +113,11 @@ namespace RealtimeDatabase.Websocket
                     if (afterQueryPrefilter != null)
                     {
                         List<object> result = currentCollectionSet.Where(v =>
-                                modelType.CanQuery(mapping.Websocket.HttpContext, v, serviceProvider))
-                            .Select(v => v.GetAuthenticatedQueryModel(mapping.Websocket.HttpContext, serviceProvider))
+                                modelType.CanQuery(mapping.Connection.HttpContext, v, serviceProvider))
+                            .Select(v => v.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider))
                             .ToList();
 
-                        _ = mapping.Websocket.Send(new QueryResponse()
+                        _ = mapping.Connection.Send(new QueryResponse()
                         {
                             ReferenceId = mapping.Subscription.ReferenceId,
                             Result = afterQueryPrefilter.Execute(result)
@@ -145,7 +136,7 @@ namespace RealtimeDatabase.Websocket
         }
 
         private void SendDataToClient(List<object> currentCollectionSetLoaded,
-            Type modelType, RealtimeDbContext db, SubscriptionWebsocketMapping mapping, List<ChangeResponse> relevantChanges)
+            Type modelType, RealtimeDbContext db, SubscriptionConnectionMapping mapping, List<ChangeResponse> relevantChanges)
         {
             List<object[]> currentCollectionPrimaryValues = new List<object[]>();
 
@@ -158,7 +149,7 @@ namespace RealtimeDatabase.Websocket
             {
                 if (currentCollectionPrimaryValues.All(pks => pks.Except(transmittedObject).Any()))
                 {
-                    _ = mapping.Websocket.Send(new UnloadResponse
+                    _ = mapping.Connection.Send(new UnloadResponse
                     {
                         PrimaryValues = transmittedObject,
                         ReferenceId = mapping.Subscription.ReferenceId
@@ -170,7 +161,7 @@ namespace RealtimeDatabase.Websocket
         }
 
         private void SendRelevantFilesToClient(Type modelType, RealtimeDbContext db, object obj,
-            List<object[]> currentCollectionPrimaryValues, SubscriptionWebsocketMapping mapping, List<ChangeResponse> relevantChanges)
+            List<object[]> currentCollectionPrimaryValues, SubscriptionConnectionMapping mapping, List<ChangeResponse> relevantChanges)
         {
             object[] primaryValues = modelType.GetPrimaryKeyValues(db, obj);
             currentCollectionPrimaryValues.Add(primaryValues);
@@ -184,15 +175,15 @@ namespace RealtimeDatabase.Websocket
 
                 if (change != null)
                 {
-                    object value = change.Value.GetAuthenticatedQueryModel(mapping.Websocket.HttpContext, serviceProvider);
-                    _ = mapping.Websocket.Send(change.CreateResponse(mapping.Subscription.ReferenceId, value));
+                    object value = change.Value.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider);
+                    _ = mapping.Connection.Send(change.CreateResponse(mapping.Subscription.ReferenceId, value));
                 }
             }
             else
             {
-                _ = mapping.Websocket.Send(new LoadResponse
+                _ = mapping.Connection.Send(new LoadResponse
                 {
-                    NewObject = obj.GetAuthenticatedQueryModel(mapping.Websocket.HttpContext, serviceProvider),
+                    NewObject = obj.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider),
                     ReferenceId = mapping.Subscription.ReferenceId
                 });
             }

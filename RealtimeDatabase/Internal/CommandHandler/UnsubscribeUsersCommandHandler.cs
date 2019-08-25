@@ -1,14 +1,14 @@
 ﻿using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Websocket.Models;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UnsubscribeUsersCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeUsersCommand>, INeedsWebsocket
+    class UnsubscribeUsersCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeUsersCommand>, INeedsConnection
     {
-        private WebsocketConnection websocketConnection;
+        public ConnectionBase Connection { get; set; }
 
         public UnsubscribeUsersCommandHandler(DbContextAccesor dbContextAccessor)
             : base(dbContextAccessor)
@@ -18,23 +18,8 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public async Task<ResponseBase> Handle(HttpContext context, UnsubscribeUsersCommand command)
         {
-            await websocketConnection.Lock.WaitAsync();
-
-            try
-            {
-                websocketConnection.UsersSubscription = null;
-            }
-            finally
-            {
-                websocketConnection.Lock.Release();
-            }
-
+            await Connection.RemoveUsersSubscription();
             return null;
-        }
-
-        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
-        {
-            websocketConnection = currentWebsocketConnection;
         }
     }
 }

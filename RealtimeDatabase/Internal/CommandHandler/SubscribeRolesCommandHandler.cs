@@ -1,17 +1,17 @@
 ﻿using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Responses;
-using RealtimeDatabase.Websocket.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class SubscribeRolesCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeRolesCommand>, INeedsWebsocket
+    class SubscribeRolesCommandHandler : AuthCommandHandlerBase, ICommandHandler<SubscribeRolesCommand>, INeedsConnection
     {
-        private WebsocketConnection websocketConnection;
+        public ConnectionBase Connection { get; set; }
 
         public SubscribeRolesCommandHandler(AuthDbContextAccesor authDbContextAccessor, IServiceProvider serviceProvider)
             : base(authDbContextAccessor, serviceProvider)
@@ -20,27 +20,13 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         public async Task<ResponseBase> Handle(HttpContext context, SubscribeRolesCommand command)
         {
-            await websocketConnection.Lock.WaitAsync();
-
-            try
-            {
-                websocketConnection.RolesSubscription = command.ReferenceId;
-            }
-            finally
-            {
-                websocketConnection.Lock.Release();
-            }
+            await Connection.AddRolesSubscription(command);
 
             return new SubscribeRolesResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Roles = ModelHelper.GetRoles(GetContext()).ToList()
             };
-        }
-
-        public void InsertWebsocket(WebsocketConnection currentWebsocketConnection)
-        {
-            websocketConnection = currentWebsocketConnection;
         }
     }
 }

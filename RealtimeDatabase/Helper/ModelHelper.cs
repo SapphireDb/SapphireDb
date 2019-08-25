@@ -10,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Auth;
-using RealtimeDatabase.Websocket.Models;
 
 namespace RealtimeDatabase.Helper
 {

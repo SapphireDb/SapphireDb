@@ -9,7 +9,6 @@ using RealtimeDatabase.Internal;
 using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Auth;
-using RealtimeDatabase.Websocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +16,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using JavaScriptEngineSwitcher.ChakraCore;
 using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
+using RealtimeDatabase.Connection;
+using RealtimeDatabase.Connection.Websocket;
 
 namespace RealtimeDatabase.Extensions
 {
@@ -71,9 +72,8 @@ namespace RealtimeDatabase.Extensions
 
             services.AddTransient<DbContextAccesor>();
 
-            services.AddSingleton<WebsocketConnectionManager>();
-            services.AddTransient<WebsocketChangeNotifier>();
-            services.AddTransient<WebsocketCommandHandler>();
+            services.AddSingleton<RealtimeConnectionManager>();
+            services.AddTransient<RealtimeChangeNotifier>();
 
             services.AddSingleton<RealtimeMessageSender>();
 
