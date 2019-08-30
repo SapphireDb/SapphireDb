@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>, IRestFallback
+    class UpdateCommandHandler : CommandHandlerBase, ICommandHandler<UpdateCommand>
     {
         private readonly IServiceProvider serviceProvider;
 

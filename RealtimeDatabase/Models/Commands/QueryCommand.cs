@@ -5,6 +5,6 @@ namespace RealtimeDatabase.Models.Commands
 {
     public class QueryCommand : CollectionCommandBase
     {
-        public List<IPrefilterBase> Prefilters { get; set; }
+        public List<IPrefilterBase> Prefilters { get; set; } = new List<IPrefilterBase>();
     }
 }

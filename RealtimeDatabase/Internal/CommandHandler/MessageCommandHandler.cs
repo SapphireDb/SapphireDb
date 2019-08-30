@@ -8,7 +8,7 @@ using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class MessageCommandHandler : CommandHandlerBase, ICommandHandler<MessageCommand>, IRestFallback
+    class MessageCommandHandler : CommandHandlerBase, ICommandHandler<MessageCommand>
     {
         private readonly RealtimeMessageSender messageSender;
         private readonly RealtimeDatabaseOptions options;

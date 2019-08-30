@@ -10,7 +10,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class CloseConnectionCommandHandler : AuthCommandHandlerBase, ICommandHandler<CloseConnectionCommand>, IRestFallback
+    class CloseConnectionCommandHandler : AuthCommandHandlerBase, ICommandHandler<CloseConnectionCommand>
     {
         private readonly RealtimeConnectionManager connectionManager;
 

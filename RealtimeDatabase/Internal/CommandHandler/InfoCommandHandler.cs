@@ -9,7 +9,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class InfoCommandHandler : CommandHandlerBase, ICommandHandler<InfoCommand>, IRestFallback
+    class InfoCommandHandler : CommandHandlerBase, ICommandHandler<InfoCommand>
     {
         public InfoCommandHandler(DbContextAccesor dbContextAccessor)
             : base(dbContextAccessor)

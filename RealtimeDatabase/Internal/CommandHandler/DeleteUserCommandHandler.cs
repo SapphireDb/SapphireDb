@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class DeleteUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<DeleteUserCommand>, IRestFallback
+    class DeleteUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<DeleteUserCommand>
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RealtimeConnectionManager connectionManager;

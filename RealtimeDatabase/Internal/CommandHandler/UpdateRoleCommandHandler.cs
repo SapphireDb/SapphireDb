@@ -10,7 +10,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class UpdateRoleCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateRoleCommand>, IRestFallback
+    class UpdateRoleCommandHandler : AuthCommandHandlerBase, ICommandHandler<UpdateRoleCommand>
     {
         private readonly AuthDbContextTypeContainer contextTypeContainer;
         private readonly RoleManager<IdentityRole> roleManager;

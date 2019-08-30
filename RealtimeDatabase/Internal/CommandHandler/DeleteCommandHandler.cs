@@ -11,7 +11,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class DeleteCommandHandler : CommandHandlerBase, ICommandHandler<DeleteCommand>, IRestFallback
+    class DeleteCommandHandler : CommandHandlerBase, ICommandHandler<DeleteCommand>
     {
         private readonly IServiceProvider serviceProvider;
 

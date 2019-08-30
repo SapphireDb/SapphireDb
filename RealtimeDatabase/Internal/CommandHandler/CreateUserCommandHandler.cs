@@ -13,7 +13,7 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class CreateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<CreateUserCommand>, IRestFallback
+    class CreateUserCommandHandler : AuthCommandHandlerBase, ICommandHandler<CreateUserCommand>
     {
         private readonly RealtimeConnectionManager connectionManager;
         private readonly AuthDbContextTypeContainer contextTypeContainer;

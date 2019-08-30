@@ -7,7 +7,7 @@ using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
-    class QueryCommandHandler : CommandHandlerBase, ICommandHandler<QueryCommand>, IRestFallback
+    class QueryCommandHandler : CommandHandlerBase, ICommandHandler<QueryCommand>
     {
         private readonly IServiceProvider serviceProvider;
 

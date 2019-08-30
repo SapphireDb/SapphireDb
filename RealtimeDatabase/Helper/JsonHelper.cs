@@ -34,12 +34,27 @@ namespace RealtimeDatabase.Helper
 
         public static object Deserialze(string value, Type t)
         {
-            return JsonConvert.DeserializeObject(value, t, Settings);
+            try
+            {
+                return JsonConvert.DeserializeObject(value, t, Settings);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static CommandBase DeserialzeCommand(string value)
         {
-            return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
+            try
+            {
+                return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
+
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 

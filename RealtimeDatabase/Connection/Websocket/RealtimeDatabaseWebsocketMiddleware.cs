@@ -43,13 +43,18 @@ namespace RealtimeDatabase.Connection.Websocket
 
                         if (!string.IsNullOrEmpty(message))
                         {
-                            _ = Task.Run(() =>
+                            _ = Task.Run(async () =>
                             {
                                 CommandBase command = JsonHelper.DeserialzeCommand(message);
 
                                 if (command != null)
                                 {
-                                    commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection, logger);
+                                    ResponseBase response = await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection.HttpContext, logger, connection);
+
+                                    if (response != null)
+                                    {
+                                        await connection.Send(response);
+                                    }
                                 }
                             });
                         }

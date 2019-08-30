@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
 
@@ -28,7 +29,7 @@ namespace RealtimeDatabase.Internal
             authCommandHandlerTypes = GetHandlerTypes(typeof(AuthCommandHandlerBase));
         }
 
-        public void ExecuteCommand(CommandBase command, IServiceProvider serviceProvider, ConnectionBase connection, ILogger<ConnectionBase> logger)
+        public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider, HttpContext context, ILogger<T> logger, ConnectionBase connection = null)
         {
             string commandTypeName = command.GetType().Name;
 
@@ -42,14 +43,27 @@ namespace RealtimeDatabase.Internal
             {
                 handlerType = authCommandHandlerTypes[commandTypeName];
 
-                if (!CanExecuteAuthCommand(handlerType, connection, command))
-                    return;
+                ResponseBase authResponse = CreateAuthResponseOrNull(handlerType, context, command);
+
+                if (authResponse != null)
+                {
+                    return authResponse;
+                }
             }
 
-            if (handlerType != null && HandleAuthentication(handlerType, connection, command))
+            if (handlerType != null)
             {
-                ExecuteAction(handlerType, serviceProvider, command, logger, connection);
+                ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, context, command);
+
+                if (authResponse != null)
+                {
+                    return authResponse;
+                }
+
+                return await ExecuteAction(handlerType, serviceProvider, command, logger, context, connection);
             }
+
+            return null;
         }
 
         private Dictionary<string, Type> GetHandlerTypes(Type type)
@@ -60,79 +74,86 @@ namespace RealtimeDatabase.Internal
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)), t => t);
         }
 
-        private void ExecuteAction(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<ConnectionBase> logger,
-            ConnectionBase connection)
+        private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<T> logger,
+            HttpContext context, ConnectionBase connection = null)
         {
             object handler = serviceProvider.GetService(handlerType);
 
             if (handler != null)
             {
                 logger.LogInformation("Handling " + command.GetType().Name + " with " + handler.GetType().Name);
-                Task.Run(async () =>
+                try
                 {
-                    try
+                    if (handler is INeedsConnection handlerWithConnection)
                     {
-                        if (handler is INeedsConnection handlerWithConnection)
+                        if (handler is ExecuteCommandHandler || connection != null)
                         {
                             handlerWithConnection.Connection = connection;
                         }
-
-                        ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { connection.HttpContext, command });
-
-                        if (response != null)
-                            _ = connection.Send(response);
-
-                        logger.LogInformation("Handled " + command.GetType().Name);
+                        else
+                        {
+                            logger.LogError("Cannot handle " + command.GetType().Name + " without realtime connection");
+                            return command.CreateExceptionResponse<ResponseBase>("Cannot handle this command without realtime connection");
+                        }
                     }
-                    catch (Exception ex)
+
+                    ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { context, command });
+
+                    logger.LogInformation("Handled " + command.GetType().Name);
+
+                    if (response?.Error != null)
                     {
-                        _ = connection.Send(command.CreateExceptionResponse<ResponseBase>(ex));
-                        logger.LogError("Error handling " + command.GetType().Name);
-                        logger.LogError(ex.Message);
+                        logger.LogError("The handler returned an error for " + command.GetType().Name, response.Error);
                     }
-                });
+
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Error handling " + command.GetType().Name);
+                    logger.LogError(ex.Message);
+                    return command.CreateExceptionResponse<ResponseBase>(ex);
+                }
             }
             else
             {
                 logger.LogError("No handler was found to handle " + command.GetType().Name);
-                _ = connection.Send(command.CreateExceptionResponse<ResponseBase>("No handler was found for command"));
+                return command.CreateExceptionResponse<ResponseBase>("No handler was found for command");
             }
         }
 
-        private bool HandleAuthentication(Type handlerType, ConnectionBase connection, CommandBase command)
+        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpContext context, CommandBase command)
         {
-            if (options.AlwaysRequireAuthentication && handlerType != typeof(LoginCommandHandler) && !connection.HttpContext.User.Identity.IsAuthenticated)
+            if (options.AlwaysRequireAuthentication && handlerType != typeof(LoginCommandHandler) && !context.User.Identity.IsAuthenticated)
             {
-                _ = connection.Send(command.CreateExceptionResponse<ResponseBase>("Authentication required to perform this action"));
-                return false;
+                return command.CreateExceptionResponse<ResponseBase>("Authentication required to perform this action");
             }
 
-            return true;
+            return null;
         }
 
-        private bool CanExecuteAuthCommand(Type handlerType, ConnectionBase connection, CommandBase command)
+        private ResponseBase CreateAuthResponseOrNull(Type handlerType, HttpContext context, CommandBase command)
         {
             if (options.EnableAuthCommands && handlerType != typeof(LoginCommandHandler) && handlerType != typeof(RenewCommandHandler))
             {
-                if (!connection.HttpContext.User.Identity.IsAuthenticated)
+                if (!context.User.Identity.IsAuthenticated)
                 {
-                    _ = connection.Send(command.CreateExceptionResponse<ResponseBase>("User needs authentication to execute auth commands."));
-                    return false;
+                    return command.CreateExceptionResponse<ResponseBase>("User needs authentication to execute auth commands.");
                 } 
-                else if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler) || handlerType == typeof(QueryConnectionsCommandHandler) || handlerType == typeof(CloseConnectionCommandHandler)) 
-                    && !options.AuthInfoAllowFunction(connection.HttpContext))
+
+                if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler) || handlerType == typeof(QueryConnectionsCommandHandler) || handlerType == typeof(CloseConnectionCommandHandler)) 
+                    && !options.AuthInfoAllowFunction(context))
                 {
-                    _ = connection.Send(command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands."));
-                    return false;
+                    return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands.");
                 }
-                else if (!options.AuthAllowFunction(connection.HttpContext))
+
+                if (!options.AuthAllowFunction(context))
                 {
-                    _ = connection.Send(command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth commands."));
-                    return false;
+                    return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth commands.");
                 }
             }
 
-            return true;
+            return null;
         }
     }
 }
