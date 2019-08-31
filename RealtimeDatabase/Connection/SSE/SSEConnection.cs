@@ -24,7 +24,7 @@ namespace RealtimeDatabase.Connection.SSE
             {
                 string messageString = JsonHelper.Serialize(message);
                 await HttpContext.Response.WriteAsync($"data: {messageString}\n\n");
-                HttpContext.Response.Body.Flush();
+                await HttpContext.Response.Body.FlushAsync();
             }
             finally
             {
@@ -34,7 +34,8 @@ namespace RealtimeDatabase.Connection.SSE
 
         public override Task Close()
         {
-            throw new NotImplementedException();
+            HttpContext.Response.Clear();
+            return Task.CompletedTask;
         }
     }
 }

@@ -34,7 +34,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
                     {
                         if (command.DeleteRenewToken)
                         {
-                            string sessionId = connectionToClose.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "SessionId")?.Value;
                             IRealtimeAuthContext db = GetContext();
                             db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(rt => rt.UserId == userId));
                         }

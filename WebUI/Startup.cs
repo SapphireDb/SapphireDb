@@ -10,7 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Auth;
+using RealtimeDatabase.Models.Commands;
 using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
@@ -34,8 +36,12 @@ namespace WebUI
         {
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
+            RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
+            Func<CommandBase, HttpContext, bool> oldFunc = options.CanExecuteCommand;
+            options.CanExecuteCommand = (command, context) => command is ExecuteCommand || oldFunc(command, context);
+
             //Register services
-            RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(new RealtimeDatabase.Models.RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase")))
+            RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
                 .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/);
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();

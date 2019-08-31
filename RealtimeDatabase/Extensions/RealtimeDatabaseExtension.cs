@@ -35,15 +35,21 @@ namespace RealtimeDatabase.Extensions
 
             builder.Map("/realtimedatabase", (realtimeApp) =>
             {
-                realtimeApp.Map("/socket", (socket) =>
+                if (options.WebsocketInterface)
                 {
-                    socket.UseWebSockets();
-                    socket.UseMiddleware<WebsocketMiddleware>();
-                });
+                    realtimeApp.Map("/socket", (socket) =>
+                    {
+                        socket.UseWebSockets();
+                        socket.UseMiddleware<WebsocketMiddleware>();
+                    });
+                }
 
-                realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
+                if (options.ServerSentEventsInterface)
+                {
+                    realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
+                }
 
-                if (options.RestFallback)
+                if (options.RestInterface || options.ServerSentEventsInterface)
                 {
                     realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                 }

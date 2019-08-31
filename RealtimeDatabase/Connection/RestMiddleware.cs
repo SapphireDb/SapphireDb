@@ -64,6 +64,20 @@ namespace RealtimeDatabase.Connection
             {
                 Guid connectionId = Guid.Parse(context.Request.Headers["connectionId"]);
                 connection = connectionManager.connections.FirstOrDefault(c => c.Id == connectionId);
+
+                if (connection != null)
+                {
+                    ConnectionInfo connectionInfo = connection.HttpContext.Connection;
+
+                    if (!connectionInfo.LocalIpAddress.Equals(context.Connection.LocalIpAddress) ||
+                        !connectionInfo.LocalPort.Equals(context.Connection.LocalPort) ||
+                        !connectionInfo.RemoteIpAddress.Equals(context.Connection.RemoteIpAddress))
+                    {
+                        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                        await context.Response.WriteAsync("The connection does not match you origin");
+                        return;
+                    }
+                }
             }
 
             StreamReader sr = new StreamReader(context.Request.Body);

@@ -124,9 +124,9 @@ namespace RealtimeDatabase.Internal
 
         private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpContext context, CommandBase command)
         {
-            if (options.AlwaysRequireAuthentication && handlerType != typeof(LoginCommandHandler) && !context.User.Identity.IsAuthenticated)
+            if (!options.CanExecuteCommand(command, context))
             {
-                return command.CreateExceptionResponse<ResponseBase>("Authentication required to perform this action");
+                return command.CreateExceptionResponse<ResponseBase>("You are not allowed to execute this command");
             }
 
             return null;
