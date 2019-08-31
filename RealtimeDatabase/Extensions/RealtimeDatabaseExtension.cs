@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using JavaScriptEngineSwitcher.ChakraCore;
 using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
 using RealtimeDatabase.Connection;
+using RealtimeDatabase.Connection.SSE;
 using RealtimeDatabase.Connection.Websocket;
 
 namespace RealtimeDatabase.Extensions
@@ -37,8 +38,10 @@ namespace RealtimeDatabase.Extensions
                 realtimeApp.Map("/socket", (socket) =>
                 {
                     socket.UseWebSockets();
-                    socket.UseMiddleware<RealtimeDatabaseWebsocketMiddleware>();
+                    socket.UseMiddleware<WebsocketMiddleware>();
                 });
+
+                realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
 
                 if (options.RestFallback)
                 {
@@ -58,10 +61,10 @@ namespace RealtimeDatabase.Extensions
 
             services.AddSingleton(options);
 
-            CommandHandlerMapper commandHandlerMapper = new CommandHandlerMapper(options);
-            services.AddSingleton(commandHandlerMapper);
+            CommandExecutor commandExecutor = new CommandExecutor(options);
+            services.AddSingleton(commandExecutor);
 
-            foreach (KeyValuePair<string, Type> handler in commandHandlerMapper.commandHandlerTypes)
+            foreach (KeyValuePair<string, Type> handler in commandExecutor.commandHandlerTypes)
             {
                 services.AddTransient(handler.Value);
             }
@@ -125,8 +128,8 @@ namespace RealtimeDatabase.Extensions
         {
             if (realtimeDatabaseOptions.EnableAuthCommands)
             {
-                CommandHandlerMapper commandHandlerMapper =
-                    (CommandHandlerMapper)services.FirstOrDefault(s => s.ServiceType == typeof(CommandHandlerMapper))?.ImplementationInstance;
+                CommandExecutor commandHandlerMapper =
+                    (CommandExecutor)services.FirstOrDefault(s => s.ServiceType == typeof(CommandExecutor))?.ImplementationInstance;
 
                 if (commandHandlerMapper != null)
                 {

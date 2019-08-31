@@ -15,13 +15,13 @@ using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal
 {
-    class CommandHandlerMapper
+    class CommandExecutor
     {
         private readonly RealtimeDatabaseOptions options;
         public readonly Dictionary<string, Type> commandHandlerTypes;
         public readonly Dictionary<string, Type> authCommandHandlerTypes;
 
-        public CommandHandlerMapper(RealtimeDatabaseOptions options)
+        public CommandExecutor(RealtimeDatabaseOptions options)
         {
             this.options = options;
 
@@ -103,7 +103,7 @@ namespace RealtimeDatabase.Internal
 
                     if (response?.Error != null)
                     {
-                        logger.LogError("The handler returned an error for " + command.GetType().Name, response.Error);
+                        logger.LogWarning("The handler returned an error for " + command.GetType().Name, response.Error);
                     }
 
                     return response;

@@ -32,7 +32,7 @@ namespace RealtimeDatabase.Helper
             return JsonConvert.SerializeObject(value, Settings);
         }
 
-        public static object Deserialze(string value, Type t)
+        public static object Deserialize(string value, Type t)
         {
             try
             {
@@ -44,12 +44,11 @@ namespace RealtimeDatabase.Helper
             }
         }
 
-        public static CommandBase DeserialzeCommand(string value)
+        public static CommandBase DeserializeCommand(string value)
         {
             try
             {
                 return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
-
             }
             catch
             {
@@ -60,19 +59,19 @@ namespace RealtimeDatabase.Helper
 
     class CustomJsonConverter<T> : JsonConverter
     {
-        private readonly Dictionary<string, Type> NameTypeMappings = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> nameTypeMappings = new Dictionary<string, Type>();
 
         public CustomJsonConverter()
         {
             if (typeof(T) == typeof(IPrefilterBase))
             {
-                NameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
+                nameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
                     .Where(t => t.Namespace == "RealtimeDatabase.Models.Prefilter" && t.Name.EndsWith("Prefilter"))
                     .ToDictionary(t => t.Name, t => t);
             }
             else if (typeof(T) == typeof(CommandBase))
             {
-                NameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
+                nameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
                     .Where(t => t.Namespace == "RealtimeDatabase.Models.Commands" && t.Name.EndsWith("Command"))
                     .ToDictionary(t => t.Name, t => t);
             }
@@ -91,9 +90,9 @@ namespace RealtimeDatabase.Helper
 
             string typeString = jObject[key].Value<string>();
 
-            if (NameTypeMappings.ContainsKey(typeString))
+            if (nameTypeMappings.ContainsKey(typeString))
             {
-                return jObject.ToObject(NameTypeMappings[typeString], serializer);
+                return jObject.ToObject(nameTypeMappings[typeString], serializer);
             }
 
             return null;

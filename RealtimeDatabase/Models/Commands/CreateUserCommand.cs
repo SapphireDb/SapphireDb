@@ -11,8 +11,8 @@ namespace RealtimeDatabase.Models.Commands
 
         public string Password { get; set; }
 
-        public string[] Roles { get; set; }
+        public string[] Roles { get; set; } = new string[0];
 
-        public Dictionary<string, JValue> AdditionalData { get; set; }
+        public Dictionary<string, JValue> AdditionalData { get; set; } = new Dictionary<string, JValue>();
     }
 }

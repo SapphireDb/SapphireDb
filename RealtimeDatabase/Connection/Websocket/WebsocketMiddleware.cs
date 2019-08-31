@@ -5,25 +5,26 @@ using RealtimeDatabase.Models.Responses;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models.Commands;
 
 namespace RealtimeDatabase.Connection.Websocket
 {
-    class RealtimeDatabaseWebsocketMiddleware
+    class WebsocketMiddleware
     {
         private readonly RealtimeConnectionManager connectionManager;
         private readonly RealtimeDatabaseOptions options;
 
         // ReSharper disable once UnusedParameter.Local
-        public RealtimeDatabaseWebsocketMiddleware(RequestDelegate next, RealtimeConnectionManager connectionManager, RealtimeDatabaseOptions options)
+        public WebsocketMiddleware(RequestDelegate next, RealtimeConnectionManager connectionManager, RealtimeDatabaseOptions options)
         {
             this.connectionManager = connectionManager;
             this.options = options;
         }
 
-        public async Task Invoke(HttpContext context, CommandHandlerMapper commandHandlerMapper, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
+        public async Task Invoke(HttpContext context, CommandExecutor commandExecutor, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
         {
             if (context.WebSockets.IsWebSocketRequest && await CheckAuthentication(context))
             {
@@ -31,7 +32,7 @@ namespace RealtimeDatabase.Connection.Websocket
                 WebsocketConnection connection = new WebsocketConnection(webSocket, context);
 
                 connectionManager.AddConnection(connection);
-                await connection.Websocket.Send(new ConnectionResponse() {
+                await connection.Send(new ConnectionResponse() {
                     ConnectionId = connection.Id
                 });
 
@@ -45,11 +46,12 @@ namespace RealtimeDatabase.Connection.Websocket
                         {
                             _ = Task.Run(async () =>
                             {
-                                CommandBase command = JsonHelper.DeserialzeCommand(message);
+                                CommandBase command = JsonHelper.DeserializeCommand(message);
 
                                 if (command != null)
                                 {
-                                    ResponseBase response = await commandHandlerMapper.ExecuteCommand(command, serviceProvider, connection.HttpContext, logger, connection);
+                                    ResponseBase response = await commandExecutor.ExecuteCommand(command,
+                                        serviceProvider.CreateScope().ServiceProvider, connection.HttpContext, logger, connection);
 
                                     if (response != null)
                                     {

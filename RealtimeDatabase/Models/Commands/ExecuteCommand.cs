@@ -6,6 +6,6 @@
 
         public string ActionName { get; set; }
 
-        public object[] Parameters { get; set; }
+        public object[] Parameters { get; set; } = new object[0];
     }
 }
