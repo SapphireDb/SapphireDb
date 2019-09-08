@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 namespace WebUI.Data.Models
 {
     [QueryAuth("Auth")]
+    [CreateEvent("BeforeCreate")]
+    [UpdateEvent("BeforeUpdate")]
     public class Message : Base
     {
         public Message()
