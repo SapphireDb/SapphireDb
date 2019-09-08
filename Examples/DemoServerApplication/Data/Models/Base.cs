@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RealtimeDatabase.Attributes;
 
 namespace DemoServerApplication.Data.Models
 {
+    [UpdateEvent("BeforeUpdate")]
     public class Base
     {
         public Base()

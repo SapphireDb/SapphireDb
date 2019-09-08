@@ -29,11 +29,12 @@ namespace DemoServerApplication
         public void ConfigureServices(IServiceCollection services)
         {
             //Register services
-            services.AddRealtimeDatabase<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"),
-                new RealtimeDatabaseOptions()
+            services.AddRealtimeDatabase(new RealtimeDatabaseOptions()
                 {
-                    RestFallback = true
-                });
+                    // Options
+                })
+                .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
+
             //services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => cfg.UseFileContext(databasename: "auth"));
         }
 

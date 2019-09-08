@@ -3,9 +3,12 @@
 ## Overview
 
 Realtime database is a provider for Asp.Net Core and Entity Framework.
-It enables realtime transport of data using websockets.
+It enables realtime transport of data using modern webstandars.
 By subscribing to specific collections the clients can get notified about changes in the database.
 This enables easy data synchronization.
+
+But realtime database also adds features like handlers,
+messaging, authentication and authorization and integrates well with existing frameworks.
 
 ??? success "Easy configuration"
 
@@ -22,18 +25,15 @@ This enables easy data synchronization.
     Realtime database also comes with server side prefilters to only query
     the data your client needs
 
+??? success "Communication using Websockets, REST or ServerSentEvents"
 
-??? success "Communication over websockets"
-
-    Realtime database communicates over websockets.
-    Not only is websocket a modern web technology.
-    It also performs very well and reduces data because things like headers
-    cookies etc. only have to get transfered once.
+    Realtime database communicates over websockets or server sent events.
+    Those are not only modern web technologies, they also make realtime applications possible.
 
 ??? success "Validation"
 
-    Realtime database is also able to validate your models send to the server.
-    You can check the validity using Annotations.
+    Realtime database is also able to validate your models sent to the server.
+    You can check and control the validity using annotations.
 
 ??? success "Authentication and authorization integrated"
 
@@ -42,7 +42,7 @@ This enables easy data synchronization.
 
 ??? success "Extends existing code"
     
-    The library is build on top of entity framework. If you already have a database context
+    The library is build on top of Entity Framework. If you already have a database context
     with models etc. you do not have change anything. All actions on the context anywhere else
     in your project will also synchronized with the clients.
 
@@ -56,11 +56,15 @@ This enables easy data synchronization.
         
     2. Register the services
         ``` csharp
-        services.AddRealtimeDatabase<MyDbContext>();
-        services.AddDbContext<MyDbContext>(cfg => ...);
+        services.AddRealtimeDatabase(new RealtimeDatabaseOptions()
+            {
+                // options
+            })
+        .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime"));
         ```
     
     3. Configure Request pipeline
+        ```
         app.UseRealtimeDatabase();
         ```
     
@@ -75,7 +79,9 @@ This enables easy data synchronization.
         imports: [
             BrowserModule,
             ...,
-            RealtimeDatabaseModule, 
+            RealtimeDatabaseModule.config({
+                // options
+            }), 
         ]
         ```
     
