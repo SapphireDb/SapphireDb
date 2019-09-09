@@ -34,7 +34,7 @@ namespace RealtimeDatabase.Connection.SSE
 
         public override Task Close()
         {
-            HttpContext.Response.Clear();
+            HttpContext.Abort();
             return Task.CompletedTask;
         }
     }
