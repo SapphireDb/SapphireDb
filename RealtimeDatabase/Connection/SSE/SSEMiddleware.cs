@@ -35,7 +35,8 @@ namespace RealtimeDatabase.Connection.SSE
 
                 connectionManager.AddConnection(connection);
                 await connection.Send(new ConnectionResponse() {
-                    ConnectionId = connection.Id
+                    ConnectionId = connection.Id,
+                    BearerValid = context.User.Identity.IsAuthenticated
                 });
 
                 context.RequestAborted.WaitHandle.WaitOne();
