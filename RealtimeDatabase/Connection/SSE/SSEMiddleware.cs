@@ -28,6 +28,8 @@ namespace RealtimeDatabase.Connection.SSE
         {
             if (context.Request.Headers["Accept"] == "text/event-stream" && await CheckAuthentication(context))
             {
+                context.Response.Headers["Cache-Control"] = "no-cache";
+                context.Response.Headers["X-Accel-Buffering"] = "no";
                 context.Response.ContentType = "text/event-stream";
                 context.Response.Body.Flush();
 

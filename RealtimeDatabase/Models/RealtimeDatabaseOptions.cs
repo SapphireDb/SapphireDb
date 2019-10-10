@@ -13,7 +13,7 @@ namespace RealtimeDatabase.Models
         public RealtimeDatabaseOptions()
         {
             CanExecuteCommand = (command, context) =>
-                command is LoginCommand || command is RenewCommand || command is CheckAuthCommand || context.User.Identity.IsAuthenticated;
+                command is LoginCommand || command is RenewCommand || context.User.Identity.IsAuthenticated;
             AuthInfoAllowFunction = (context) => context.User.IsInRole("admin");
             AuthAllowFunction = (context) => context.User.IsInRole("admin");
             IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
