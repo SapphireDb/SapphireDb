@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,14 +27,13 @@ namespace RealtimeDatabase.Models
 
         public RealtimeDatabaseOptions(IConfigurationSection configuration) : this()
         {
-            Secret = configuration[nameof(Secret)];
+            ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
             EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
-            RestInterface = configuration[nameof(RestInterface)]?.ToLowerInvariant() != "false";
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
         }
 
-        public string Secret { get; set; }
+        public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
 
         internal bool EnableBuiltinAuth { get; set; }
 
@@ -54,10 +55,26 @@ namespace RealtimeDatabase.Models
         public Func<HttpContext, bool> IsAllowedForConnectionManagement { get; set; }
 
 
-        public bool RestInterface { get; set; } = true;
-
         public bool ServerSentEventsInterface { get; set; } = true;
 
         public bool WebsocketInterface { get; set; } = true;
+
+        public class ApiConfiguration
+        {
+            public ApiConfiguration()
+            {
+
+            }
+
+            public ApiConfiguration(IConfigurationSection configurationSection)
+            {
+                Key = configurationSection[nameof(Key)];
+                Secret = configurationSection[nameof(Secret)];
+            }
+
+            public string Key { get; set; }
+
+            public string Secret { get; set; }
+        }
     }
 }

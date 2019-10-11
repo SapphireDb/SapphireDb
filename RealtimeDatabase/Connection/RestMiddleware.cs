@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -44,14 +46,11 @@ namespace RealtimeDatabase.Connection
                 return;
             }
 
-            if (!string.IsNullOrEmpty(options.Secret))
+            if (!AuthHelper.CheckApiAuth(context.Request.Headers["key"], context.Request.Headers["secret"], options))
             {
-                if (context.Request.Headers["secret"] != options.Secret)
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("The secret does not match");
-                    return;
-                }
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsync(JsonHelper.Serialize(new WrongApiResponse()));
+                return;
             }
 
             if (!requestPath.EndsWith("command"))
@@ -67,6 +66,23 @@ namespace RealtimeDatabase.Connection
 
                 if (connection != null)
                 {
+                    if (connection.HttpContext.User.Identity.IsAuthenticated)
+                    {
+                        ClaimsPrincipal connectionUser = connection.HttpContext.User;
+                        
+                        if (connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value !=
+                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value ||
+                            connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value !=
+                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value ||
+                            connectionUser.Claims.FirstOrDefault(c => c.Type == "Id")?.Value !=
+                            context.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value)
+                        {
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            await context.Response.WriteAsync("The connection does not match your authentication details");
+                            return;
+                        }
+                    }
+
                     ConnectionInfo connectionInfo = connection.HttpContext.Connection;
 
                     if (!connectionInfo.LocalIpAddress.Equals(context.Connection.LocalIpAddress) ||

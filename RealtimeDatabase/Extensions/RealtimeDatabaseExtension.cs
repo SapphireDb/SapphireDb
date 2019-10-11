@@ -46,12 +46,8 @@ namespace RealtimeDatabase.Extensions
 
                 if (options.ServerSentEventsInterface)
                 {
-                    realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
-                }
-
-                if (options.RestInterface || options.ServerSentEventsInterface)
-                {
                     realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
+                    realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
                 }
             });
 

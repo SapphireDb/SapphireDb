@@ -26,39 +26,48 @@ namespace RealtimeDatabase.Connection.SSE
 
         public async Task Invoke(HttpContext context, CommandExecutor commandExecutor, IServiceProvider serviceProvider, ILogger<SSEConnection> logger)
         {
-            if (context.Request.Headers["Accept"] == "text/event-stream" && await CheckAuthentication(context))
+            SSEConnection connection = null;
+
+            try
             {
-                context.Response.Headers["Cache-Control"] = "no-cache";
-                context.Response.Headers["X-Accel-Buffering"] = "no";
-                context.Response.ContentType = "text/event-stream";
-                context.Response.Body.Flush();
-
-                SSEConnection connection = new SSEConnection(context);
-
-                connectionManager.AddConnection(connection);
-                await connection.Send(new ConnectionResponse() {
-                    ConnectionId = connection.Id,
-                    BearerValid = context.User.Identity.IsAuthenticated
-                });
-
-                context.RequestAborted.WaitHandle.WaitOne();
-                connectionManager.RemoveConnection(connection);
-            }
-        }
-
-        private async Task<bool> CheckAuthentication(HttpContext context)
-        {
-            if (!string.IsNullOrEmpty(options.Secret))
-            {
-                if (context.Request.Query["secret"] != options.Secret)
+                if (context.Request.Headers["Accept"] == "text/event-stream")
                 {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("The secret does not match");
-                    return false;
+                    context.Response.Headers["Cache-Control"] = "no-cache";
+                    context.Response.Headers["X-Accel-Buffering"] = "no";
+                    context.Response.ContentType = "text/event-stream";
+                    context.Response.Body.Flush();
+
+                    connection = new SSEConnection(context);
+
+                    if (!AuthHelper.CheckApiAuth(context.Request.Query["key"], context.Request.Query["secret"], options))
+                    {
+                        await connection.Send(new WrongApiResponse());
+                        context.Response.Body.Close();
+                        return;
+                    }
+
+                    connectionManager.AddConnection(connection);
+                    await connection.Send(new ConnectionResponse()
+                    {
+                        ConnectionId = connection.Id,
+                        BearerValid = context.User.Identity.IsAuthenticated
+                    });
+
+                    context.RequestAborted.WaitHandle.WaitOne();
                 }
             }
-
-            return true;
+            catch (Exception ex)
+            {
+                await context.Response.WriteAsync(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connectionManager.RemoveConnection(connection);
+                }
+            }
+            
         }
     }
 }

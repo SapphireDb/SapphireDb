@@ -15,6 +15,11 @@ namespace RealtimeDatabase.Helper
 {
     static class AuthHelper
     {
+        public static bool CheckApiAuth(string key, string secret, RealtimeDatabaseOptions options)
+        {
+            return !options.ApiConfigurations.Any() || options.ApiConfigurations.Any((config) => config.Secret == secret && config.Key == key);
+        }
+
         public static bool CanQuery(this Type t, HttpContext context, object entityObject,
             IServiceProvider serviceProvider)
         {

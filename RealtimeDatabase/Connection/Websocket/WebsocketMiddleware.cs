@@ -4,6 +4,7 @@ using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
 using System;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Helper;
@@ -26,9 +27,17 @@ namespace RealtimeDatabase.Connection.Websocket
 
         public async Task Invoke(HttpContext context, CommandExecutor commandExecutor, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
         {
-            if (context.WebSockets.IsWebSocketRequest && await CheckAuthentication(context))
+            if (context.WebSockets.IsWebSocketRequest)
             {
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+                if (!AuthHelper.CheckApiAuth(context.Request.Query["key"], context.Request.Query["secret"], options))
+                {
+                    await webSocket.Send(new WrongApiResponse());
+                    await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Wrong API key or secret", CancellationToken.None);
+                    return;
+                }
+
                 WebsocketConnection connection = new WebsocketConnection(webSocket, context);
 
                 connectionManager.AddConnection(connection);
@@ -70,21 +79,6 @@ namespace RealtimeDatabase.Connection.Websocket
 
                 connectionManager.RemoveConnection(connection);
             }
-        }
-
-        private async Task<bool> CheckAuthentication(HttpContext context)
-        {
-            if (!string.IsNullOrEmpty(options.Secret))
-            {
-                if (context.Request.Query["secret"] != options.Secret)
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("The secret does not match");
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }
