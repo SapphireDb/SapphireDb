@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace RealtimeDatabase.Internal
 {
-    static class DIHelper
+    static class DiHelper
     {
         public static object[] CreateParameters(this MethodInfo mi, HttpContext context, IServiceProvider serviceProvider)
         {

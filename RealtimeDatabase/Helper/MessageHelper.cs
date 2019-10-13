@@ -113,7 +113,7 @@ namespace RealtimeDatabase.Helper
 
             if (property.Key != null)
             {
-                IEnumerable<object> collectionSet = db.GetValues(property);
+                IEnumerable<object> collectionSet = db.GetValues(property, serviceProvider, context);
 
                 foreach (IPrefilter prefilter in command.Prefilters.OfType<IPrefilter>())
                 {

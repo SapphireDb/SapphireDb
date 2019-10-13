@@ -8,6 +8,7 @@ namespace WebUI.Data.Models
     [QueryAuth("Auth")]
     [CreateEvent("BeforeCreate")]
     [UpdateEvent("BeforeUpdate")]
+    [QueryFunction("QueryFunction")]
     public class Message : Base
     {
         public Message()
@@ -15,10 +16,23 @@ namespace WebUI.Data.Models
             CreatedOn = DateTime.UtcNow;
         }
 
-        public bool Auth(HttpContext context)
+        public static Func<Message, bool> QueryFunction(HttpContext context)
         {
             string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
-            return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return (m) => false;
+            }
+            
+            return (m) => m.UserId == userId || m.ToId == userId;
+        }
+
+        public bool Auth(HttpContext context)
+        {
+            return true;
+            //string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
+            //return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
         public void BeforeCreate(HttpContext context)

@@ -60,10 +60,11 @@ namespace RealtimeDatabase.Connection
                     RealtimeDbContext db = dbContextAccessor.GetContext(dbContextType);
                     KeyValuePair<Type, string> property = db.sets
                         .FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
-                    List<object> collectionSet = db.GetValues(property).ToList();
 
                     foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                     {
+                        List<object> collectionSet = db.GetValues(property, serviceProvider, connectionGrouping.Key.HttpContext).ToList();
+
                         List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(connectionGrouping.Key.HttpContext, rc.Value, serviceProvider)).ToList();
 
                         foreach (SubscriptionConnectionMapping mapping in connectionGrouping)

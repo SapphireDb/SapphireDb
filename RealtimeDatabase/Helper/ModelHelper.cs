@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -148,9 +149,36 @@ namespace RealtimeDatabase.Helper
             return db.Roles.Select(r => GenerateRoleData(r, userRoles));
         }
 
-        public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property)
+        public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpContext httpContext)
         {
-            IEnumerable<object> values = (IEnumerable<object>)db.GetType().GetProperty(property.Value).GetValue(db);
+            IEnumerable<object> values = (IEnumerable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
+
+            QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+            if (queryFunctionAttribute != null)
+            {
+                var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function);
+
+                if (queryFunctionInfo != null)
+                {
+                    object[] methodParameters = queryFunctionInfo.CreateParameters(httpContext, serviceProvider);
+                    object queryFunctionRaw = queryFunctionInfo.Invoke(null, methodParameters);
+                    MethodInfo invokeMethod = queryFunctionRaw.GetType().GetMethod("Invoke");
+
+                    if (invokeMethod != null)
+                    {
+                        ParameterExpression valueParameter = Expression.Parameter(typeof(object));
+                        Func<object, bool> queryFunction = Expression.Lambda<Func<object, bool>>(
+                            Expression.Call(
+                                Expression.Constant(queryFunctionRaw),
+                                invokeMethod,
+                                Expression.Convert(valueParameter, property.Key)
+                            ),
+                            valueParameter).Compile();
+
+                        values = values?.Where(queryFunction);
+                    }
+                }
+            }
 
             IProperty[] primaryProperties = property.Key.GetPrimaryKeys(db);
 
@@ -158,8 +186,8 @@ namespace RealtimeDatabase.Helper
             {
                 PropertyInfo pi = primaryProperties[i].PropertyInfo;
 
-                values = i == 0 ? values.OrderBy(o => pi.GetValue(o))
-                    : ((IOrderedEnumerable<object>)values).ThenBy(o => pi.GetValue(o));
+                values = i == 0 ? values?.OrderBy(o => pi.GetValue(o))
+                    : ((IOrderedEnumerable<object>)values)?.ThenBy(o => pi.GetValue(o));
             }
 
             return values;

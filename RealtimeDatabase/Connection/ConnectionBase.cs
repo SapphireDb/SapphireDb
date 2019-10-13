@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
@@ -21,6 +22,12 @@ namespace RealtimeDatabase.Connection
             Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
             HttpContext = context;
+
+            if (HttpContext.Request.Query.TryGetValue("key", out StringValues apiKey))
+            {
+                RealtimeDatabaseOptions options = context.RequestServices.GetService<RealtimeDatabaseOptions>();
+                ApiName = options.ApiConfigurations.FirstOrDefault(c => c.Key == apiKey.ToString())?.Name;
+            }
 
             if (HttpContext.Request.Headers.TryGetValue("User-Agent", out StringValues userAgent))
             {
@@ -44,6 +51,9 @@ namespace RealtimeDatabase.Connection
 
         [DataMember]
         public abstract string Type { get; }
+
+        [DataMember]
+        public string ApiName { get; set; }
 
         public HttpContext HttpContext { get; set; }
 

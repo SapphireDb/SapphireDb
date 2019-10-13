@@ -66,6 +66,7 @@ namespace RealtimeDatabase.Connection
 
                 if (connection != null)
                 {
+                    // Compare user Information of the request and the found connection
                     if (connection.HttpContext.User.Identity.IsAuthenticated)
                     {
                         ClaimsPrincipal connectionUser = connection.HttpContext.User;
@@ -83,6 +84,7 @@ namespace RealtimeDatabase.Connection
                         }
                     }
 
+                    // Compare connection info of request and found connection
                     ConnectionInfo connectionInfo = connection.HttpContext.Connection;
 
                     if (!connectionInfo.LocalIpAddress.Equals(context.Connection.LocalIpAddress) ||

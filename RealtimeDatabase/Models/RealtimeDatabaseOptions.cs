@@ -70,11 +70,14 @@ namespace RealtimeDatabase.Models
             {
                 Key = configurationSection[nameof(Key)];
                 Secret = configurationSection[nameof(Secret)];
+                Name = configurationSection[nameof(Name)];
             }
 
             public string Key { get; set; }
 
             public string Secret { get; set; }
+
+            public string Name { get; set; }
         }
     }
 }
