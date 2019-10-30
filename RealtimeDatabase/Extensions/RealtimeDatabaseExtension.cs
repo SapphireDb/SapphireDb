@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Internal;
@@ -16,9 +14,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using JavaScriptEngineSwitcher.ChakraCore;
 using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.SSE;
 using RealtimeDatabase.Connection.Websocket;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace RealtimeDatabase.Extensions
 {

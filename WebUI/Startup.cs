@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using FileContextCore.Extensions;
+using FileContextCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
 using RealtimeDatabase.Models;
@@ -24,9 +26,9 @@ namespace WebUI
     {
         public IConfiguration Configuration { get; }
 
-        public IHostingEnvironment Environment { get; }
+        public IWebHostEnvironment Environment { get; }
 
-        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
             Environment = env;
@@ -34,6 +36,7 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
+
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
@@ -42,7 +45,7 @@ namespace WebUI
 
             //Register services
             RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
-                .AddContext<RealtimeContext>(cfg => cfg.UseFileContext(databasename: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/);
+                .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/);
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
 
@@ -59,15 +62,17 @@ namespace WebUI
                         throw new Exception("DbName not configured");
                     }
 
-                    cfg.UseFileContext(databasename: DbActions.DbName); /*cfg.UseInMemoryDatabase("second")*/
+                    cfg.UseFileContextDatabase(databaseName: DbActions.DbName); /*cfg.UseInMemoryDatabase("second")*/
                 }, "second");
 
-            services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))), cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContext(databasename: "auth"));
+            services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
+                cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContextDatabase(databaseName: "auth"));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(cfg =>
+
+            services.AddMvc().AddJsonOptions(cfg =>
             {
-                cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
+                //cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                //cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
             });
 
             services.AddSpaStaticFiles(configuration =>
@@ -76,7 +81,7 @@ namespace WebUI
             });
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -94,7 +99,7 @@ namespace WebUI
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
-            app.UseMvcWithDefaultRoute();
+            //app.UseMvcWithDefaultRoute();
 
             app.UseSpa(spa =>
             {

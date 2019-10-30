@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FileContextCore.Extensions;
+using FileContextCore;
 using Microsoft.EntityFrameworkCore;
 using RealtimeDatabase.Models.Actions;
 using WebUI.Data;
@@ -24,7 +24,7 @@ namespace WebUI.Actions
         public bool testConnection(string key)
         {
             DbContextOptions<SecondRealtimeContext> options = new DbContextOptionsBuilder<SecondRealtimeContext>()
-                .UseFileContext(databasename: key)
+                .UseFileContextDatabase(databaseName: key)
                 .Options as DbContextOptions<SecondRealtimeContext>;
 
             SecondRealtimeContext testDb = new SecondRealtimeContext(options, null);

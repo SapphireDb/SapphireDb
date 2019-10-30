@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUI", "WebUI\WebUI.csproj", "{69BAE536-90FF-4A8A-922C-5D37839954F4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealtimeDatabase", "RealtimeDatabase\RealtimeDatabase.csproj", "{6BA035A1-0BD9-4062-9E1C-93E55699403F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealtimeDatabase-Tests", "RealtimeDatabase-Tests\RealtimeDatabase-Tests.csproj", "{AE319EE9-13B9-4816-8B9A-198022E2E4DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +21,6 @@ Global
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AE319EE9-13B9-4816-8B9A-198022E2E4DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AE319EE9-13B9-4816-8B9A-198022E2E4DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE319EE9-13B9-4816-8B9A-198022E2E4DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AE319EE9-13B9-4816-8B9A-198022E2E4DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

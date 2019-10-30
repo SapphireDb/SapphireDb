@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.ApplicationInsights.Extensibility.Implementation;
-using Newtonsoft.Json.Linq;
-using RealtimeDatabase.Helper;
 
 // ReSharper disable PossibleMultipleEnumeration
 
