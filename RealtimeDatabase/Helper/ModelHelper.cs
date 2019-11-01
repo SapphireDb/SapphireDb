@@ -146,7 +146,7 @@ namespace RealtimeDatabase.Helper
         {
             IEnumerable<IdentityUserRole<string>> userRoles = db.UserRoles;
 
-            return db.Roles.Select(r => GenerateRoleData(r, userRoles));
+            return db.Roles.ToList().Select(r => GenerateRoleData(r, userRoles));
         }
 
         public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpContext httpContext)

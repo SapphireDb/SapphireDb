@@ -57,12 +57,12 @@ namespace WebUI
 
             realtimeBuilder.AddContext<SecondRealtimeContext>(cfg =>
                 {
-                    if (string.IsNullOrEmpty(DbActions.DbName))
-                    {
-                        throw new Exception("DbName not configured");
-                    }
+                    //if (string.IsNullOrEmpty(DbActions.DbName))
+                    //{
+                    //    throw new Exception("DbName not configured");
+                    //}
 
-                    cfg.UseFileContextDatabase(databaseName: DbActions.DbName); /*cfg.UseInMemoryDatabase("second")*/
+                    cfg.UseFileContextDatabase(databaseName: DbActions.DbName ?? "test"); /*cfg.UseInMemoryDatabase("second")*/
                 }, "second");
 
             services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
@@ -81,7 +81,7 @@ namespace WebUI
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RealtimeContext db)
         {
             if (env.IsDevelopment())
             {

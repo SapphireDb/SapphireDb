@@ -35,7 +35,7 @@ namespace RealtimeDatabase.Connection.SSE
                     context.Response.Headers["Cache-Control"] = "no-cache";
                     context.Response.Headers["X-Accel-Buffering"] = "no";
                     context.Response.ContentType = "text/event-stream";
-                    context.Response.Body.Flush();
+                    await context.Response.Body.FlushAsync();
 
                     connection = new SSEConnection(context);
 

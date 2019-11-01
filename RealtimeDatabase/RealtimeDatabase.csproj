@@ -8,7 +8,7 @@
     <Description>A .NET Core Extension for Entity Framework Core to enable Realtime Capability.</Description>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/morrisjdev/RealtimeDatabase</PackageProjectUrl>
-    <PackageIconUrl>https://morrisj.net/storage/icons/realtimedatabase/icon.svg</PackageIconUrl>
+    <PackageIconUrl>https://morrisj.net/storage/morrisjdev_logo.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/morrisjdev/RealtimeDatabase</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -16,13 +16,14 @@
     <PackageTags>realtime, authentication, core, .net, entityframework, database, websocket</PackageTags>
     <SignAssembly Condition="'$(OS)' == 'Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile>RealtimeDatabaseCert.pfx</AssemblyOriginatorKeyFile>
-    <Version>3.2.0</Version>
-    <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <FileVersion>3.1.0.0</FileVersion>
+    <Version>3.3.0</Version>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.0.0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FileContextCore" Version="3.2.2" />
     <PackageReference Include="JavaScriptEngineSwitcher.ChakraCore" Version="3.2.1" />
     <PackageReference Include="JavaScriptEngineSwitcher.ChakraCore.Native.linux-x64" Version="3.1.10" />
     <PackageReference Include="JavaScriptEngineSwitcher.ChakraCore.Native.osx-x64" Version="3.1.10" />
@@ -46,17 +47,5 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
-      <HintPath>..\..\..\..\..\..\..\program files\dotnet\packs\Microsoft.AspNetCore.App.Ref\3.0.0\ref\netcoreapp3.0\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Identity.Core">
-      <HintPath>..\..\..\..\..\..\..\program files\dotnet\packs\Microsoft.AspNetCore.App.Ref\3.0.0\ref\netcoreapp3.0\Microsoft.Extensions.Identity.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Identity.Stores">
-      <HintPath>..\..\..\..\..\..\..\program files\dotnet\packs\Microsoft.AspNetCore.App.Ref\3.0.0\ref\netcoreapp3.0\Microsoft.Extensions.Identity.Stores.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
