@@ -108,7 +108,7 @@ namespace RealtimeDatabase.Helper
 
             if (!string.IsNullOrEmpty(authAttribute.FunctionName))
             {
-                MethodInfo mi = t.GetMethod(authAttribute.FunctionName);
+                MethodInfo mi = t.GetMethod(authAttribute.FunctionName, BindingFlags.Default|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance);
                 if (mi != null && mi.ReturnType == typeof(bool))
                 {
                     return (bool) mi.Invoke(entityObject, mi.CreateParameters(context, serviceProvider));

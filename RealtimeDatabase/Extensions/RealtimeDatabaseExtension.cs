@@ -12,8 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using JavaScriptEngineSwitcher.ChakraCore;
 using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
+using JavaScriptEngineSwitcher.Jint;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.SSE;
@@ -90,8 +90,8 @@ namespace RealtimeDatabase.Extensions
                 services.AddTransient(handler.Value);
             }
 
-            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = ChakraCoreJsEngine.EngineName)
-                .AddChakraCore();
+            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = JintJsEngine.EngineName)
+                .AddJint();
 
             return new RealtimeDatabaseBuilder(services);
         }
