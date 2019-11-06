@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Helper
         private static string PrepareNewHeader(string functionHeader)
         {
             functionHeader = functionHeader.Replace("(", "").Replace(")", "");
-            string[] headerParts = functionHeader.Split(',').Select(v => v.Trim()).ToArray();
+            string[] headerParts = functionHeader.Split(',', 2).Select(v => v.Trim()).ToArray();
 
             if (headerParts.Length == 2)
             {
@@ -62,7 +62,7 @@ namespace RealtimeDatabase.Helper
             {
                 if (d is string stringValue)
                 {
-                    return stringValue;
+                    return $"'{stringValue}'";
                 }
 
                 return $"JSON.parse('{JsonHelper.Serialize(d)}')";
