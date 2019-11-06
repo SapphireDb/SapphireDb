@@ -26,7 +26,7 @@
     <PackageReference Include="FileContextCore" Version="3.2.2" />
     <PackageReference Include="JavaScriptEngineSwitcher.Core" Version="3.1.0" />
     <PackageReference Include="JavaScriptEngineSwitcher.Extensions.MsDependencyInjection" Version="3.1.0" />
-    <PackageReference Include="JavaScriptEngineSwitcher.Jint" Version="3.1.0" />
+    <PackageReference Include="JavaScriptEngineSwitcher.Jint" Version="3.2.2-preview" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="3.0.0" />
