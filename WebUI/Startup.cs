@@ -45,7 +45,9 @@ namespace WebUI
 
             //Register services
             RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
-                .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime")/*cfg.UseInMemoryDatabase("realtime")*/);
+                .AddContext<RealtimeContext>(
+                    cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
+                .AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
 

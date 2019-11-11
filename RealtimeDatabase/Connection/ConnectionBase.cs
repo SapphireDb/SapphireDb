@@ -82,7 +82,10 @@ namespace RealtimeDatabase.Connection
 
             try
             {
-                Subscriptions.Add(subscription);
+                if (Subscriptions.All(s => s.ReferenceId != subscription.ReferenceId))
+                {
+                    Subscriptions.Add(subscription);
+                }
             }
             finally
             {
