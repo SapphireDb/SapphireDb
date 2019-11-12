@@ -41,7 +41,7 @@ namespace WebUI
 
             RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
             Func<CommandBase, HttpContext, bool> oldFunc = options.CanExecuteCommand;
-            options.CanExecuteCommand = (command, context) => command is ExecuteCommand || oldFunc(command, context);
+            options.CanExecuteCommand = (command, context) => true || command is ExecuteCommand || oldFunc(command, context);
 
             //Register services
             RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
