@@ -17,7 +17,6 @@ namespace WebUI.Actions
             this.db = db;
         }
 
-        [ActionAuth]
         public async Task<int> GenerateRandomNumber()
         {
             for (int i = 0; i <= 100; i++)
@@ -29,6 +28,17 @@ namespace WebUI.Actions
             await Task.Delay(1000);
 
             return db.Users.Count();
+        }
+
+        public async Task<string> AsyncDelay()
+        {
+            for (int i = 0; i <= 100; i++)
+            {
+                await Task.Delay(10);
+                Notify(i);
+            }
+
+            return "complete";
         }
 
         //public bool test(WebsocketConnection connection)

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using RealtimeDatabase.Attributes;
 
 namespace WebUI.Data.Models
 {

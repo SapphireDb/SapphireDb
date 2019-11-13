@@ -17,7 +17,7 @@ namespace RealtimeDatabase.Helper
     {
         public static bool CheckApiAuth(string key, string secret, RealtimeDatabaseOptions options)
         {
-            return !options.ApiConfigurations.Any() || options.ApiConfigurations.Any((config) => config.Secret == secret && config.Key == key);
+            return !options.ApiConfigurations.Any() || options.ApiConfigurations.Any((config) => config.Key == key && config.Secret == secret.ComputeHash());
         }
 
         public static bool CanQuery(this Type t, HttpContext context, object entityObject,
