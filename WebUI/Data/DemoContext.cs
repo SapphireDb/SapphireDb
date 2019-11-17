@@ -15,5 +15,7 @@ namespace WebUI.Data
         }
 
         public DbSet<DemoEntry> Entries { get; set; }
+
+        public DbSet<Message> Messages { get; set; }
     }
 }

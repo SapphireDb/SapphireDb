@@ -55,5 +55,10 @@ namespace WebUI.Actions
         {
             Console.WriteLine("This is a test");
         }
+
+        public string CreateHash(string input)
+        {
+            return input.ComputeHash();
+        }
     }
 }
