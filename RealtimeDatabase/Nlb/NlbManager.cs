@@ -24,30 +24,59 @@ namespace RealtimeDatabase.Nlb
 
         public void SendChanges(List<ChangeResponse> changes, Type dbContextType)
         {
-            if (options.Nlb.Enabled)
+            SendChangesRequest sendChangesRequest = new SendChangesRequest()
             {
-                SendChangesRequest sendChangesRequest = new SendChangesRequest()
-                {
-                    Changes = changes,
-                    DbType = dbContextType.FullName
-                };
+                Changes = changes,
+                DbType = dbContextType.FullName
+            };
 
-                string requestString = JsonHelper.Serialize(sendChangesRequest).Encrypt(options.Nlb.EncryptionKey);
+            SendToNlbs(sendChangesRequest, "changes");
+        }
 
-                options.Nlb.Entries.ForEach(nlbEntry =>
-                {
-                    Task.Run(async () =>
-                    {
-                        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
-                            $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}realtimedatabase/nlb");
-                        request.Headers.Add("Secret", nlbEntry.Secret);
-                        request.Content = new StringContent(requestString);
+        public void SendPublish(string topic, object message)
+        {
+            SendPublishRequest sendPublishRequest = new SendPublishRequest()
+            {
+                Topic = topic,
+                Message = message
+            };
 
-                        HttpClient client = httpClientFactory.CreateClient();
-                        await client.SendAsync(request);
-                    });
-                });
+            SendToNlbs(sendPublishRequest, "publish");
+        }
+
+        public void SendMessage(object message)
+        {
+            SendMessageRequest sendMessageRequest = new SendMessageRequest()
+            {
+                Message = message
+            };
+
+            SendToNlbs(sendMessageRequest, "message");
+        }
+
+        private void SendToNlbs(object messageObject, string path)
+        {
+            if (!options.Nlb.Enabled)
+            {
+                return;
             }
+
+            string requestString = JsonHelper.Serialize(messageObject).Encrypt(options.Nlb.EncryptionKey);
+
+            options.Nlb.Entries.ForEach(nlbEntry =>
+            {
+                Task.Run(async () =>
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
+                        $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}realtimedatabase/nlb/{path}");
+                    request.Headers.Add("Secret", nlbEntry.Secret);
+                    request.Headers.Add("OriginId", options.Nlb.Id);
+                    request.Content = new StringContent(requestString);
+
+                    HttpClient client = httpClientFactory.CreateClient();
+                    await client.SendAsync(request);
+                });
+            });
         }
     }
 }

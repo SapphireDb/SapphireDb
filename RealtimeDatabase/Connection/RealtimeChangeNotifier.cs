@@ -57,12 +57,13 @@ namespace RealtimeDatabase.Connection
 
                 Task.Run(() =>
                 {
-                    RealtimeDbContext db = dbContextAccessor.GetContext(dbContextType);
-                    KeyValuePair<Type, string> property = db.sets
-                        .FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
-
                     foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                     {
+                        IServiceProvider requestServiceProvider = connectionGrouping.Key.HttpContext.RequestServices;
+
+                        RealtimeDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
+                        KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
+
                         List<object> collectionSet = db.GetValues(property, serviceProvider, connectionGrouping.Key.HttpContext).ToList();
 
                         List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(connectionGrouping.Key.HttpContext, rc.Value, serviceProvider)).ToList();

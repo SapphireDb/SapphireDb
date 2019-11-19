@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RealtimeDatabase.Internal
 {
@@ -13,14 +14,14 @@ namespace RealtimeDatabase.Internal
             this.serviceProvider = serviceProvider;
         }
 
-        public RealtimeDbContext GetContext(string contextName)
+        public RealtimeDbContext GetContext(string contextName, IServiceProvider customServiceProvider = null)
         {
-            return (RealtimeDbContext)serviceProvider.GetService(contextTypeContainer.GetContext(contextName));
+            return (RealtimeDbContext)(customServiceProvider ?? serviceProvider).GetService(contextTypeContainer.GetContext(contextName));
         }
 
-        public RealtimeDbContext GetContext(Type dbContextType)
+        public RealtimeDbContext GetContext(Type dbContextType, IServiceProvider customServiceProvider = null)
         {
-            return (RealtimeDbContext)serviceProvider.GetService(dbContextType);
+            return (RealtimeDbContext)(customServiceProvider ?? serviceProvider).GetService(dbContextType);
         }
     }
 }

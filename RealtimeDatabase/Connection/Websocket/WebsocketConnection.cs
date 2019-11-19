@@ -43,7 +43,7 @@ namespace RealtimeDatabase.Connection.Websocket
 
         public override Task Close()
         {
-            return Websocket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "The connection was closed by another client", WebsocketHelper.token);
+            return Websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "The connection was closed by another client", WebsocketHelper.token);
         }
 
         public new void Dispose()

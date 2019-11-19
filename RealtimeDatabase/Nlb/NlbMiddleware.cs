@@ -37,7 +37,7 @@ namespace RealtimeDatabase.Nlb
             this.logger = logger;
         }
 
-        public async Task Invoke(HttpContext context, RealtimeChangeNotifier changeNotifier)
+        public async Task Invoke(HttpContext context, RealtimeChangeNotifier changeNotifier, RealtimeMessageSender sender)
         {
             if (context.Request.Method != "POST")
             {
@@ -47,8 +47,9 @@ namespace RealtimeDatabase.Nlb
 
             logger.LogInformation("Started handling nlb message");
 
+            string originId = context.Request.Headers["OriginId"].ToString();
             if (context.Request.Headers["Secret"].ToString().ComputeHash() != options.Nlb.Secret ||
-                /*context.Connection.RemoteIpAddress*/ false)
+                options.Nlb.Entries.All(e => e.Id != originId))
             {
                 logger.LogError("Prevented unauthorized access to nlb sync methods");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -60,40 +61,32 @@ namespace RealtimeDatabase.Nlb
             string requestBody = await sr.ReadToEndAsync();
             requestBody = requestBody.Decrypt(options.Nlb.EncryptionKey);
 
-            SendChangesRequest request = JsonConvert.DeserializeObject<SendChangesRequest>(requestBody);
+            string requestPath = context.Request.Path.Value.Split('/').LastOrDefault();
 
-            Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes.FirstOrDefault(t => t.FullName == request.DbType);
-
-            if (dbType != null)
+            switch (requestPath)
             {
-                changeNotifier.HandleChanges(request.Changes, dbType);
+                case "changes":
+                    SendChangesRequest changesRequest = JsonConvert.DeserializeObject<SendChangesRequest>(requestBody);
+
+                    Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes.FirstOrDefault(t => t.FullName == changesRequest.DbType);
+
+                    if (dbType != null)
+                    {
+                        logger.LogInformation("Handling changes from other server");
+                        changeNotifier.HandleChanges(changesRequest.Changes, dbType);
+                    }
+                    break;
+                case "publish":
+                    SendPublishRequest publishRequest = JsonConvert.DeserializeObject<SendPublishRequest>(requestBody);
+                    logger.LogInformation("Handling publish from other server");
+                    sender.Publish(publishRequest.Topic, publishRequest.Message, true);
+                    break;
+                case "message":
+                    SendMessageRequest messageRequest = JsonConvert.DeserializeObject<SendMessageRequest>(requestBody);
+                    logger.LogInformation("Handling message from other server");
+                    sender.Send(messageRequest.Message, true);
+                    break;
             }
-
-            //CommandBase command = JsonHelper.DeserializeCommand(requestBody);
-            //if (command != null)
-            //{
-            //    if (command.GetType().Name.ToLowerInvariant() != requestPath)
-            //    {
-            //        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            //        await context.Response.WriteAsync("The specified path did not match the command type");
-            //        return;
-            //    }
-
-            //    ResponseBase response = await commandExecutor.ExecuteCommand(command,
-            //        serviceProvider.CreateScope().ServiceProvider, context, logger, connection);
-
-            //    if (response?.Error != null)
-            //    {
-            //        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            //    }
-
-            //    await context.Response.WriteAsync(JsonHelper.Serialize(response));
-            //}
-            //else
-            //{
-            //    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            //    await context.Response.WriteAsync("Parsing of the command was not successful");
-            //}
         }
     }
 }

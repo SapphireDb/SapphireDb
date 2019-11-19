@@ -13,7 +13,7 @@ namespace WebUI.Data.DemoDb
     public class DemoEntry
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Content { get; set; }
     }

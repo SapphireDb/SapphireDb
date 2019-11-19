@@ -16,7 +16,7 @@ namespace WebUI.Data.DemoDb
         }
 
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public DateTime CreatedOn { get; set; }
 

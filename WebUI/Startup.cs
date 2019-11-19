@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Npgsql;
 using RealtimeDatabase;
 using RealtimeDatabase.Extensions;
 using RealtimeDatabase.Models;
@@ -42,13 +43,17 @@ namespace WebUI
             RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
             Func<CommandBase, HttpContext, bool> oldFunc = options.CanExecuteCommand;
             options.CanExecuteCommand = (command, context) => true || command is ExecuteCommand || oldFunc(command, context);
+            options.IsAllowedForTopicPublish = (context, topic) => true;
+            options.IsAllowedForTopicSubscribe = (context, topic) => true;
+            options.IsAllowedToSendMessages = (context) => true;
 
             //Register services
             RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
                 .AddContext<RealtimeContext>(
                     cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
                 //.AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=webui;Password=pw1234;Host=localhost;Port=5432;Database=webui"), "demo");
-                .AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
+                //.AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
+                .AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;"), "demo");
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
 

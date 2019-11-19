@@ -72,12 +72,15 @@ namespace RealtimeDatabase.Models
             public NlbConfiguration(IConfigurationSection configurationSection)
             {
                 Enabled = configurationSection.GetValue<bool>(nameof(Enabled));
+                Id = configurationSection[nameof(Id)];
                 Secret = configurationSection[nameof(Secret)];
                 EncryptionKey = configurationSection[nameof(EncryptionKey)];
                 Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new NlbEntry(section)).ToList();
             }
 
             public bool Enabled { get; set; }
+
+            public string Id { get; set; }
 
             public string Secret { get; set; }
 
@@ -97,11 +100,14 @@ namespace RealtimeDatabase.Models
             {
                 Url = configurationSection[nameof(Url)];
                 Secret = configurationSection[nameof(Secret)];
+                Id = configurationSection[nameof(Id)];
             }
 
             public string Url { get; set; }
 
             public string Secret { get; set; }
+
+            public string Id { get; set; }
         }
 
         public class ApiConfiguration

@@ -61,7 +61,8 @@ namespace RealtimeDatabase.Connection.Websocket
                                 if (command != null)
                                 {
                                     ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                                        serviceProvider.CreateScope().ServiceProvider, connection.HttpContext, logger, connection);
+                                        serviceProvider.CreateScope().ServiceProvider, connection.HttpContext, logger,
+                                        connection);
 
                                     if (response != null)
                                     {
@@ -70,6 +71,10 @@ namespace RealtimeDatabase.Connection.Websocket
                                 }
                             });
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
                     }
                     catch(Exception ex)
                     {

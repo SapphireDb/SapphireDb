@@ -2,21 +2,30 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Esprima.Ast;
 using RealtimeDatabase.Connection.Websocket;
+using RealtimeDatabase.Nlb;
 
 namespace RealtimeDatabase.Connection
 {
     public class RealtimeMessageSender
     {
         private readonly RealtimeConnectionManager connectionManager;
+        private readonly NlbManager nlbManager;
 
-        public RealtimeMessageSender(RealtimeConnectionManager connectionManager)
+        public RealtimeMessageSender(RealtimeConnectionManager connectionManager, NlbManager nlbManager)
         {
             this.connectionManager = connectionManager;
+            this.nlbManager = nlbManager;
         }
 
-        public void Send(object message)
+        public void Send(object message, bool noNlb = false)
         {
+            if (!noNlb)
+            {
+                nlbManager.SendMessage(message);
+            }
+
             foreach (ConnectionBase connection in connectionManager.connections)
             {
                 _ = connection.Send(new MessageResponse()
@@ -37,8 +46,13 @@ namespace RealtimeDatabase.Connection
             }
         }
 
-        public void Publish(string topic, object message)
+        public void Publish(string topic, object message, bool noNlb = false)
         {
+            if (!noNlb)
+            {
+                nlbManager.SendPublish(topic, message);
+            }
+
             foreach (ConnectionBase connection in 
                 connectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
             {

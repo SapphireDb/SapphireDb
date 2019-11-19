@@ -10,6 +10,7 @@ using RealtimeDatabase.Models.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
@@ -91,8 +92,11 @@ namespace RealtimeDatabase.Extensions
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);
 
-            services.AddHttpClient();
-            services.AddSingleton<NlbManager>();
+            services.AddHttpClient<HttpClient>((client) =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+            services.AddTransient<NlbManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)
             {
