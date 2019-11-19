@@ -47,6 +47,7 @@ namespace WebUI
             RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
                 .AddContext<RealtimeContext>(
                     cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
+                //.AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=webui;Password=pw1234;Host=localhost;Port=5432;Database=webui"), "demo");
                 .AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
@@ -83,8 +84,10 @@ namespace WebUI
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RealtimeContext db)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RealtimeContext db, DemoContext demoContext)
         {
+            demoContext.Database.EnsureCreated();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
