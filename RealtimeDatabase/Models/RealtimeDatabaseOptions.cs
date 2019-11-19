@@ -27,6 +27,7 @@ namespace RealtimeDatabase.Models
 
         public RealtimeDatabaseOptions(IConfigurationSection configuration) : this()
         {
+            Nlb = new NlbConfiguration(configuration.GetSection(nameof(Nlb)));
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
             EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
@@ -58,6 +59,50 @@ namespace RealtimeDatabase.Models
         public bool ServerSentEventsInterface { get; set; } = true;
 
         public bool WebsocketInterface { get; set; } = true;
+
+        public NlbConfiguration Nlb { get; set; } = new NlbConfiguration();
+
+        public class NlbConfiguration
+        {
+            public NlbConfiguration()
+            {
+
+            }
+
+            public NlbConfiguration(IConfigurationSection configurationSection)
+            {
+                Enabled = configurationSection.GetValue<bool>(nameof(Enabled));
+                Secret = configurationSection[nameof(Secret)];
+                EncryptionKey = configurationSection[nameof(EncryptionKey)];
+                Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new NlbEntry(section)).ToList();
+            }
+
+            public bool Enabled { get; set; }
+
+            public string Secret { get; set; }
+
+            public string EncryptionKey { get; set; }
+
+            public List<NlbEntry> Entries { get; set; } = new List<NlbEntry>();
+        }
+
+        public class NlbEntry
+        {
+            public NlbEntry()
+            {
+
+            }
+
+            public NlbEntry(IConfigurationSection configurationSection)
+            {
+                Url = configurationSection[nameof(Url)];
+                Secret = configurationSection[nameof(Secret)];
+            }
+
+            public string Url { get; set; }
+
+            public string Secret { get; set; }
+        }
 
         public class ApiConfiguration
         {

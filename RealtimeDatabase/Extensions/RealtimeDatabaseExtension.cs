@@ -19,6 +19,7 @@ using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.SSE;
 using RealtimeDatabase.Connection.Websocket;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RealtimeDatabase.Nlb;
 
 namespace RealtimeDatabase.Extensions
 {
@@ -48,6 +49,11 @@ namespace RealtimeDatabase.Extensions
                 {
                     realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                     realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
+                }
+
+                if (options.Nlb.Enabled)
+                {
+                    realtimeApp.Map("/nlb", (nlb) => { nlb.UseMiddleware<NlbMiddleware>(); });
                 }
             });
 
@@ -84,6 +90,9 @@ namespace RealtimeDatabase.Extensions
 
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);
+
+            services.AddHttpClient();
+            services.AddSingleton<NlbManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)
             {
