@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -20,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, CloseConnectionCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, CloseConnectionCommand command)
         {
             if (context.User.Identity.IsAuthenticated)
             {
@@ -28,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    ConnectionBase connectionToClose = connectionManager.connections.FirstOrDefault(c => c.UserId == userId && c.Id == command.ConnectionId);
+                    ConnectionBase connectionToClose = connectionManager.connections.FirstOrDefault(c => c.Information.UserId == userId && c.Id == command.ConnectionId);
 
                     if (connectionToClose != null)
                     {

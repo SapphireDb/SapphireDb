@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Internal;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Commands;
 using RealtimeDatabase.Models.Prefilter;
 using RealtimeDatabase.Models.Responses;
@@ -107,13 +108,13 @@ namespace RealtimeDatabase.Helper
         }
 
         public static ResponseBase GetCollection(RealtimeDbContext db, QueryCommand command,
-            HttpContext context, IServiceProvider serviceProvider, out List<object[]> transmittedData)
+            HttpInformation information, IServiceProvider serviceProvider, out List<object[]> transmittedData)
         {
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
 
             if (property.Key != null)
             {
-                IEnumerable<object> collectionSet = db.GetValues(property, serviceProvider, context);
+                IEnumerable<object> collectionSet = db.GetValues(property, serviceProvider, information);
 
                 foreach (IPrefilter prefilter in command.Prefilters.OfType<IPrefilter>())
                 {
@@ -122,8 +123,8 @@ namespace RealtimeDatabase.Helper
 
                 List<object> collectionSetList = collectionSet.ToList();
 
-                List<object> result = collectionSetList.Where(cs => property.Key.CanQuery(context, cs, serviceProvider))
-                    .Select(cs => cs.GetAuthenticatedQueryModel(context, serviceProvider)).ToList();
+                List<object> result = collectionSetList.Where(cs => property.Key.CanQuery(information, cs, serviceProvider))
+                    .Select(cs => cs.GetAuthenticatedQueryModel(information, serviceProvider)).ToList();
 
                 IAfterQueryPrefilter afterQueryPrefilter = command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
 

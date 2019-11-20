@@ -3,6 +3,7 @@ using RealtimeDatabase.Models.Commands;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -17,7 +18,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, QueryCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, QueryCommand command)
         {
             return Task.FromResult(MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider, out _));
         }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -21,7 +22,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, DeleteCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, DeleteCommand command)
         {
             RealtimeDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());

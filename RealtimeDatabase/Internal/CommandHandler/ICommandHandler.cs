@@ -1,6 +1,7 @@
 ﻿using RealtimeDatabase.Models.Commands;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -9,6 +10,6 @@ namespace RealtimeDatabase.Internal.CommandHandler
     internal interface ICommandHandler<T>
         where T : CommandBase
     {
-        Task<ResponseBase> Handle(HttpContext context, T command);
+        Task<ResponseBase> Handle(HttpInformation context, T command);
     }
 }

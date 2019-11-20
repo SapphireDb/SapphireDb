@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Auth;
 
 namespace RealtimeDatabase.Helper
@@ -72,7 +73,7 @@ namespace RealtimeDatabase.Helper
         }
 
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
-            RealtimeDbContext db, HttpContext context, IServiceProvider serviceProvider)
+            RealtimeDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
             bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
@@ -81,7 +82,7 @@ namespace RealtimeDatabase.Helper
             {
                 if ((isClassUpdatable || pi.UpdatableAttribute != null) && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
                 {
-                    if (pi.CanUpdate(context, entityObject, serviceProvider))
+                    if (pi.CanUpdate(information, entityObject, serviceProvider))
                     {
                         pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
                     }
@@ -149,7 +150,7 @@ namespace RealtimeDatabase.Helper
             return db.Roles.ToList().Select(r => GenerateRoleData(r, userRoles));
         }
 
-        public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpContext httpContext)
+        public static IEnumerable<object> GetValues(this RealtimeDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpInformation httpInformation)
         {
             IEnumerable<object> values = (IEnumerable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
 
@@ -160,7 +161,7 @@ namespace RealtimeDatabase.Helper
 
                 if (queryFunctionInfo != null)
                 {
-                    object[] methodParameters = queryFunctionInfo.CreateParameters(httpContext, serviceProvider);
+                    object[] methodParameters = queryFunctionInfo.CreateParameters(httpInformation, serviceProvider);
                     object queryFunctionRaw = queryFunctionInfo.Invoke(null, methodParameters);
                     MethodInfo invokeMethod = queryFunctionRaw.GetType().GetMethod("Invoke");
 
@@ -194,7 +195,7 @@ namespace RealtimeDatabase.Helper
         }
 
         public static void ExecuteHookMethod<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
-            object newValue, HttpContext context, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
+            object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
         {
             T attribute = modelType.GetCustomAttribute<T>();
 
@@ -208,7 +209,7 @@ namespace RealtimeDatabase.Helper
                         BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     if (methodInfo != null && methodInfo.ReturnType == typeof(void))
                     {
-                        methodInfo.Invoke(newValue, methodInfo.CreateParameters(context, serviceProvider));
+                        methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
                     }
                 }
             }

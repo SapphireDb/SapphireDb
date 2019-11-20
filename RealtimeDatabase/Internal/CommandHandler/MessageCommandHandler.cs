@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.options = options;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, MessageCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, MessageCommand command)
         {
             if (!options.IsAllowedToSendMessages(context))
             {

@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Models;
 
 namespace WebUI.Data.Models
 {
@@ -23,12 +24,12 @@ namespace WebUI.Data.Models
         [Updatable]
         public string FirstName { get; set; }
 
-        public bool Test(HttpContext context)
+        public bool Test(HttpInformation context)
         {
             return context.User.IsInRole("admin");
         }
 
-        public bool Test2(HttpContext context, RealtimeContext db)
+        public bool Test2(HttpInformation context, RealtimeContext db)
         {
             return db.Users.Count() > 3;
             //return DateTime.UtcNow.Millisecond % 2 == 0;
@@ -39,7 +40,7 @@ namespace WebUI.Data.Models
         [Updatable]
         public string LastName { get; set; }
 
-        public void afterCreate(HttpContext context, RealtimeContext db)
+        public void afterCreate(HttpInformation context, RealtimeContext db)
         {
             db.Logs.Add(new Log()
             {
@@ -49,7 +50,7 @@ namespace WebUI.Data.Models
             db.SaveChanges();
         }
 
-        private void AfterUpdate(HttpContext context, RealtimeContext db)
+        private void AfterUpdate(HttpInformation context, RealtimeContext db)
         {
             db.Logs.Add(new Log()
             {
@@ -59,7 +60,7 @@ namespace WebUI.Data.Models
             db.SaveChanges();
         }
 
-        public void AfterDelete(HttpContext context, RealtimeContext db)
+        public void AfterDelete(HttpInformation context, RealtimeContext db)
         {
             db.Logs.Add(new Log()
             {

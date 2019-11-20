@@ -61,7 +61,7 @@ namespace RealtimeDatabase.Connection.Websocket
                                 if (command != null)
                                 {
                                     ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                                        serviceProvider.CreateScope().ServiceProvider, connection.HttpContext, logger,
+                                        serviceProvider.CreateScope().ServiceProvider, connection.Information, logger,
                                         connection);
 
                                     if (response != null)

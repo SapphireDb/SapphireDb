@@ -59,14 +59,14 @@ namespace RealtimeDatabase.Connection
                 {
                     foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                     {
-                        IServiceProvider requestServiceProvider = connectionGrouping.Key.HttpContext.RequestServices;
+                        IServiceProvider requestServiceProvider = connectionGrouping.Key.HttpContext?.RequestServices;
 
                         RealtimeDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
                         KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);
 
-                        List<object> collectionSet = db.GetValues(property, serviceProvider, connectionGrouping.Key.HttpContext).ToList();
+                        List<object> collectionSet = db.GetValues(property, serviceProvider, connectionGrouping.Key.Information).ToList();
 
-                        List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(connectionGrouping.Key.HttpContext, rc.Value, serviceProvider)).ToList();
+                        List<ChangeResponse> changesForConnection = relevantChanges.Where(rc => property.Key.CanQuery(connectionGrouping.Key.Information, rc.Value, serviceProvider)).ToList();
 
                         foreach (SubscriptionConnectionMapping mapping in connectionGrouping)
                         {
@@ -115,8 +115,8 @@ namespace RealtimeDatabase.Connection
                     if (afterQueryPrefilter != null)
                     {
                         List<object> result = currentCollectionSet.Where(v =>
-                                modelType.CanQuery(mapping.Connection.HttpContext, v, serviceProvider))
-                            .Select(v => v.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider))
+                                modelType.CanQuery(mapping.Connection.Information, v, serviceProvider))
+                            .Select(v => v.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider))
                             .ToList();
 
                         _ = mapping.Connection.Send(new QueryResponse()
@@ -177,7 +177,7 @@ namespace RealtimeDatabase.Connection
 
                 if (change != null)
                 {
-                    object value = change.Value.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider);
+                    object value = change.Value.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider);
                     _ = mapping.Connection.Send(change.CreateResponse(mapping.Subscription.ReferenceId, value));
                 }
             }
@@ -185,7 +185,7 @@ namespace RealtimeDatabase.Connection
             {
                 _ = mapping.Connection.Send(new LoadResponse
                 {
-                    NewObject = obj.GetAuthenticatedQueryModel(mapping.Connection.HttpContext, serviceProvider),
+                    NewObject = obj.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider),
                     ReferenceId = mapping.Subscription.ReferenceId
                 });
             }

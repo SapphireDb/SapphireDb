@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -17,7 +18,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, InfoCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, InfoCommand command)
         {
             RealtimeDbContext db = GetContext(command.ContextName);
 

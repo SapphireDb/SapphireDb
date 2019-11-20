@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -24,7 +25,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.jwtIssuer = jwtIssuer;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, LoginCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, LoginCommand command)
         {
             if (string.IsNullOrEmpty(command.Username) || string.IsNullOrEmpty(command.Password))
             {

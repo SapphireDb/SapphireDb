@@ -20,7 +20,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.options = options;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, PublishCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, PublishCommand command)
         {
             if (!options.IsAllowedForTopicPublish(context, command.Topic))
             {

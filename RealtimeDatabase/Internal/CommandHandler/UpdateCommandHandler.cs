@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -21,7 +22,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, UpdateCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, UpdateCommand command)
         {
             RealtimeDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
@@ -42,7 +43,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         }
 
         private ResponseBase InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
-            HttpContext context, RealtimeDbContext db)
+            HttpInformation context, RealtimeDbContext db)
         {
             object updateValue = command.UpdateValue.ToObject(property.Key);
 
@@ -63,7 +64,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
         }
 
         private ResponseBase SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
-            RealtimeDbContext db, HttpContext context, UpdateCommand command)
+            RealtimeDbContext db, HttpInformation context, UpdateCommand command)
         {
             property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 

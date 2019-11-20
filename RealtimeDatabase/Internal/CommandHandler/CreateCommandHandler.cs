@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -21,7 +22,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, CreateCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, CreateCommand command)
         {
             RealtimeDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
@@ -41,7 +42,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             return Task.FromResult(command.CreateExceptionResponse<CreateResponse>("No set for collection was found."));
         }
 
-        private ResponseBase CreateObject(CreateCommand command, KeyValuePair<Type, string> property, HttpContext context, RealtimeDbContext db)
+        private ResponseBase CreateObject(CreateCommand command, KeyValuePair<Type, string> property, HttpInformation context, RealtimeDbContext db)
         {
             object newValue = command.Value.ToObject(property.Key);
 
@@ -54,7 +55,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             return SetPropertiesAndValidate(db, property, newValue, context, command);
         }
 
-        private ResponseBase SetPropertiesAndValidate(RealtimeDbContext db, KeyValuePair<Type, string> property, object newValue, HttpContext context,
+        private ResponseBase SetPropertiesAndValidate(RealtimeDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context,
             CreateCommand command)
         {
             property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newValue, context, serviceProvider);

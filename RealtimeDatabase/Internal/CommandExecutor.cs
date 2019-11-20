@@ -29,7 +29,7 @@ namespace RealtimeDatabase.Internal
             authCommandHandlerTypes = GetHandlerTypes(typeof(AuthCommandHandlerBase));
         }
 
-        public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider, HttpContext context, ILogger<T> logger, ConnectionBase connection = null)
+        public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider, HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
         {
             string commandTypeName = command.GetType().Name;
 
@@ -43,7 +43,7 @@ namespace RealtimeDatabase.Internal
             {
                 handlerType = authCommandHandlerTypes[commandTypeName];
 
-                ResponseBase authResponse = CreateAuthResponseOrNull(handlerType, context, command);
+                ResponseBase authResponse = CreateAuthResponseOrNull(handlerType, information, command);
 
                 if (authResponse != null)
                 {
@@ -53,14 +53,14 @@ namespace RealtimeDatabase.Internal
 
             if (handlerType != null)
             {
-                ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, context, command);
+                ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, information, command);
 
                 if (authResponse != null)
                 {
                     return authResponse;
                 }
 
-                return await ExecuteAction(handlerType, serviceProvider, command, logger, context, connection);
+                return await ExecuteAction(handlerType, serviceProvider, command, logger, information, connection);
             }
 
             return null;
@@ -75,7 +75,7 @@ namespace RealtimeDatabase.Internal
         }
 
         private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<T> logger,
-            HttpContext context, ConnectionBase connection = null)
+            HttpInformation information, ConnectionBase connection = null)
         {
             object handler = serviceProvider.GetService(handlerType);
 
@@ -97,7 +97,7 @@ namespace RealtimeDatabase.Internal
                         }
                     }
 
-                    ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { context, command });
+                    ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { information, command });
 
                     logger.LogInformation("Handled " + command.GetType().Name);
 
@@ -122,9 +122,9 @@ namespace RealtimeDatabase.Internal
             }
         }
 
-        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpContext context, CommandBase command)
+        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpInformation information, CommandBase command)
         {
-            if (!options.CanExecuteCommand(command, context))
+            if (!options.CanExecuteCommand(command, information))
             {
                 return command.CreateExceptionResponse<ResponseBase>("You are not allowed to execute this command");
             }
@@ -132,22 +132,22 @@ namespace RealtimeDatabase.Internal
             return null;
         }
 
-        private ResponseBase CreateAuthResponseOrNull(Type handlerType, HttpContext context, CommandBase command)
+        private ResponseBase CreateAuthResponseOrNull(Type handlerType, HttpInformation information, CommandBase command)
         {
             if (options.EnableAuthCommands && handlerType != typeof(LoginCommandHandler) && handlerType != typeof(RenewCommandHandler))
             {
-                if (!context.User.Identity.IsAuthenticated)
+                if (!information.User.Identity.IsAuthenticated)
                 {
                     return command.CreateExceptionResponse<ResponseBase>("User needs authentication to execute auth commands.");
                 } 
 
                 if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler) || handlerType == typeof(QueryConnectionsCommandHandler) || handlerType == typeof(CloseConnectionCommandHandler)) 
-                    && !options.AuthInfoAllowFunction(context))
+                    && !options.AuthInfoAllowFunction(information))
                 {
                     return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands.");
                 }
 
-                if (!options.AuthAllowFunction(context))
+                if (!options.AuthAllowFunction(information))
                 {
                     return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth commands.");
                 }

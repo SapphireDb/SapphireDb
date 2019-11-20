@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -25,7 +26,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, UpdateRoleCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UpdateRoleCommand command)
         {
             IdentityRole role = await roleManager.FindByIdAsync(command.Id);
 

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -28,7 +29,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.roleManager = roleManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, UpdateUserCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UpdateUserCommand command)
         {
             try
             {

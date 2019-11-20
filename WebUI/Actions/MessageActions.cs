@@ -20,7 +20,7 @@ namespace WebUI.Actions
 
         public void SendToAdmin(string message)
         {
-            MessageSender.Send(c => c.HttpContext.User.IsInRole("admin"), message);
+            MessageSender.Send(c => c.Information.User.IsInRole("admin"), message);
         }
     }
 }

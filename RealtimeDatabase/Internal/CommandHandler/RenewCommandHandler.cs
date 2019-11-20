@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -24,7 +25,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.contextTypeContainer = contextTypeContainer;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, RenewCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, RenewCommand command)
         {
             if (string.IsNullOrEmpty(command.UserId) || string.IsNullOrEmpty(command.RefreshToken))
             {

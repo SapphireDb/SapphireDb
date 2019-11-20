@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RealtimeDatabase.Connection.Poll;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Internal.CommandHandler;
@@ -38,6 +39,8 @@ namespace RealtimeDatabase.Connection
 
         public async Task Invoke(HttpContext context, IServiceProvider serviceProvider, CommandExecutor commandExecutor)
         {
+            connectionManager.CheckExistingConnections();
+
             string requestPath = context.Request.Path.Value.Substring(1).ToLowerInvariant();
 
             if (context.Request.Method != "POST" || string.IsNullOrEmpty(requestPath))
@@ -58,45 +61,7 @@ namespace RealtimeDatabase.Connection
                 requestPath += "command";
             }
 
-            ConnectionBase connection = null;
-            if (!string.IsNullOrEmpty(context.Request.Headers["connectionId"]))
-            {
-                Guid connectionId = Guid.Parse(context.Request.Headers["connectionId"]);
-                connection = connectionManager.connections.FirstOrDefault(c => c.Id == connectionId);
-
-                if (connection != null)
-                {
-                    // Compare user Information of the request and the found connection
-                    if (connection.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        ClaimsPrincipal connectionUser = connection.HttpContext.User;
-                        
-                        if (connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value ||
-                            connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value ||
-                            connectionUser.Claims.FirstOrDefault(c => c.Type == "Id")?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value)
-                        {
-                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                            await context.Response.WriteAsync("The connection does not match your authentication details");
-                            return;
-                        }
-                    }
-
-                    // Compare connection info of request and found connection
-                    ConnectionInfo connectionInfo = connection.HttpContext.Connection;
-
-                    if (!connectionInfo.LocalIpAddress.Equals(context.Connection.LocalIpAddress) ||
-                        !connectionInfo.LocalPort.Equals(context.Connection.LocalPort) ||
-                        !connectionInfo.RemoteIpAddress.Equals(context.Connection.RemoteIpAddress))
-                    {
-                        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                        await context.Response.WriteAsync("The connection does not match you origin");
-                        return;
-                    }
-                }
-            }
+            ConnectionBase connection = connectionManager.GetConnection(context);
 
             StreamReader sr = new StreamReader(context.Request.Body);
             string requestBody = await sr.ReadToEndAsync();
@@ -112,7 +77,7 @@ namespace RealtimeDatabase.Connection
                 }
 
                 ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                    serviceProvider.CreateScope().ServiceProvider, context, logger, connection);
+                    serviceProvider.CreateScope().ServiceProvider, connection != null ? connection.Information : new HttpInformation(context), logger, connection);
 
                 if (response?.Error != null)
                 {

@@ -21,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, SubscribeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command)
         {
             CollectionSubscription collectionSubscription = new CollectionSubscription()
             {

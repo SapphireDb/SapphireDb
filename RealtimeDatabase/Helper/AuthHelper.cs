@@ -20,43 +20,43 @@ namespace RealtimeDatabase.Helper
             return !options.ApiConfigurations.Any() || options.ApiConfigurations.Any((config) => config.Key == key && config.Secret == secret.ComputeHash());
         }
 
-        public static bool CanQuery(this Type t, HttpContext context, object entityObject,
+        public static bool CanQuery(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<QueryAuthAttribute>(context, entityObject, serviceProvider);
+            return t.HandleAuthAttribute<QueryAuthAttribute>(httpInformation, entityObject, serviceProvider);
         }
 
-        public static bool CanQuery(this AuthPropertyInfo pi, HttpContext context, object entityObject,
+        public static bool CanQuery(this AuthPropertyInfo pi, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.QueryAuthAttribute, context, entityObject, serviceProvider);
+            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.QueryAuthAttribute, httpInformation, entityObject, serviceProvider);
         }
 
-        public static bool CanCreate(this Type t, HttpContext context, object entityObject,
+        public static bool CanCreate(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<CreateAuthAttribute>(context, entityObject, serviceProvider);
+            return t.HandleAuthAttribute<CreateAuthAttribute>(httpInformation, entityObject, serviceProvider);
         }
 
-        public static bool CanRemove(this Type t, HttpContext context, object entityObject,
+        public static bool CanRemove(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<RemoveAuthAttribute>(context, entityObject, serviceProvider);
+            return t.HandleAuthAttribute<RemoveAuthAttribute>(httpInformation, entityObject, serviceProvider);
         }
 
-        public static bool CanUpdate(this Type t, HttpContext context, object entityObject,
+        public static bool CanUpdate(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return t.HandleAuthAttribute<UpdateAuthAttribute>(context, entityObject, serviceProvider);
+            return t.HandleAuthAttribute<UpdateAuthAttribute>(httpInformation, entityObject, serviceProvider);
         }
 
-        public static bool CanUpdate(this AuthPropertyInfo pi, HttpContext context, object entityObject,
+        public static bool CanUpdate(this AuthPropertyInfo pi, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.UpdateAuthAttribute, context, entityObject, serviceProvider);
+            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.UpdateAuthAttribute, httpInformation, entityObject, serviceProvider);
         }
 
-        public static object GetAuthenticatedQueryModel(this object model, HttpContext context,
+        public static object GetAuthenticatedQueryModel(this object model, HttpInformation httpInformation,
             IServiceProvider serviceProvider)
         {
             AuthPropertyInfo[] propertyInfos = model.GetType().GetAuthPropertyInfos();
@@ -70,7 +70,7 @@ namespace RealtimeDatabase.Helper
 
             foreach (AuthPropertyInfo pi in propertyInfos)
             {
-                if (pi.CanQuery(context, model, serviceProvider))
+                if (pi.CanQuery(httpInformation, model, serviceProvider))
                 {
                     value.Add(pi.PropertyInfo.Name.ToCamelCase(), pi.PropertyInfo.GetValue(model));
                 }
@@ -79,27 +79,27 @@ namespace RealtimeDatabase.Helper
             return value;
         }
 
-        public static bool CanExecuteAction(this Type type, HttpContext context,
+        public static bool CanExecuteAction(this Type type, HttpInformation httpInformation,
             ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
-            return type.HandleAuthAttribute<ActionAuthAttribute>(context, actionHandler, serviceProvider);
+            return type.HandleAuthAttribute<ActionAuthAttribute>(httpInformation, actionHandler, serviceProvider);
         }
 
-        public static bool CanExecuteAction(this MethodInfo methodInfo, HttpContext context,
+        public static bool CanExecuteAction(this MethodInfo methodInfo, HttpInformation httpInformation,
             ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
             ActionAuthAttribute authAttribute = methodInfo.GetCustomAttribute<ActionAuthAttribute>();
-            return HandleAuthAttribute(methodInfo.DeclaringType, authAttribute, context, actionHandler, serviceProvider);
+            return HandleAuthAttribute(methodInfo.DeclaringType, authAttribute, httpInformation, actionHandler, serviceProvider);
         }
 
-        private static bool HandleAuthAttribute(Type t, AuthAttributeBase authAttribute, HttpContext context, object entityObject, IServiceProvider serviceProvider)
+        private static bool HandleAuthAttribute(Type t, AuthAttributeBase authAttribute, HttpInformation httpInformation, object entityObject, IServiceProvider serviceProvider)
         {
             if (authAttribute == null)
             {
                 return true;
             }
 
-            ClaimsPrincipal user = context.User;
+            ClaimsPrincipal user = httpInformation.User;
 
             if (authAttribute.Roles != null)
             {
@@ -111,18 +111,18 @@ namespace RealtimeDatabase.Helper
                 MethodInfo mi = t.GetMethod(authAttribute.FunctionName, BindingFlags.Default|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance);
                 if (mi != null && mi.ReturnType == typeof(bool))
                 {
-                    return (bool) mi.Invoke(entityObject, mi.CreateParameters(context, serviceProvider));
+                    return (bool) mi.Invoke(entityObject, mi.CreateParameters(httpInformation, serviceProvider));
                 }
             }
 
             return user.Identity.IsAuthenticated;
         }
 
-        private static bool HandleAuthAttribute<T>(this Type t, HttpContext context, object entityObject,
+        private static bool HandleAuthAttribute<T>(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider) where T : AuthAttributeBase
         {
             AuthAttributeBase authAttribute = t.GetCustomAttribute<T>();
-            return HandleAuthAttribute(t, authAttribute, context, entityObject, serviceProvider);
+            return HandleAuthAttribute(t, authAttribute, httpInformation, entityObject, serviceProvider);
         }
     }
 }

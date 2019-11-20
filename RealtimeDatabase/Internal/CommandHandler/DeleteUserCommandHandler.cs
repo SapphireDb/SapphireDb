@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.Websocket;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -24,7 +25,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, DeleteUserCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, DeleteUserCommand command)
         {
             dynamic usermanager = serviceProvider.GetService(contextTypeContainer.UserManagerType);
 

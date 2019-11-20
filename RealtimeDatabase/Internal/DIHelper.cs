@@ -4,19 +4,20 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal
 {
     static class DiHelper
     {
-        public static object[] CreateParameters(this MethodInfo mi, HttpContext context, IServiceProvider serviceProvider)
+        public static object[] CreateParameters(this MethodInfo mi, HttpInformation httpInformation, IServiceProvider serviceProvider)
         {
             ParameterInfo[] parameters = mi.GetParameters();
             return parameters.Select(p =>
             {
-                if (p.ParameterType == typeof(HttpContext))
+                if (p.ParameterType == typeof(HttpInformation))
                 {
-                    return context;
+                    return httpInformation;
                 }
 
                 return serviceProvider.GetService(p.ParameterType);

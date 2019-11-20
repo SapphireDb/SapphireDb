@@ -32,6 +32,7 @@ namespace RealtimeDatabase.Models
             EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
+            PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
         }
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
@@ -41,24 +42,26 @@ namespace RealtimeDatabase.Models
         public bool EnableAuthCommands { get; set; } = true;
 
 
-        public Func<CommandBase, HttpContext, bool> CanExecuteCommand { get; set; }
+        public Func<CommandBase, HttpInformation, bool> CanExecuteCommand { get; set; }
 
-        public Func<HttpContext, bool> AuthInfoAllowFunction { get; set; }
+        public Func<HttpInformation, bool> AuthInfoAllowFunction { get; set; }
 
-        public Func<HttpContext, bool> AuthAllowFunction { get; set; }
+        public Func<HttpInformation, bool> AuthAllowFunction { get; set; }
 
-        public Func<HttpContext, bool> IsAllowedToSendMessages { get; set; }
+        public Func<HttpInformation, bool> IsAllowedToSendMessages { get; set; }
 
-        public Func<HttpContext, string, bool> IsAllowedForTopicSubscribe { get; set; }
+        public Func<HttpInformation, string, bool> IsAllowedForTopicSubscribe { get; set; }
 
-        public Func<HttpContext, string, bool> IsAllowedForTopicPublish { get; set; }
+        public Func<HttpInformation, string, bool> IsAllowedForTopicPublish { get; set; }
 
-        public Func<HttpContext, bool> IsAllowedForConnectionManagement { get; set; }
+        public Func<HttpInformation, bool> IsAllowedForConnectionManagement { get; set; }
 
 
         public bool ServerSentEventsInterface { get; set; } = true;
 
         public bool WebsocketInterface { get; set; } = true;
+
+        public bool PollInterface { get; set; } = true;
 
         public NlbConfiguration Nlb { get; set; } = new NlbConfiguration();
 

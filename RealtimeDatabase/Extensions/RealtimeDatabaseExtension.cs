@@ -20,6 +20,7 @@ using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.SSE;
 using RealtimeDatabase.Connection.Websocket;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RealtimeDatabase.Connection.Poll;
 using RealtimeDatabase.Nlb;
 
 namespace RealtimeDatabase.Extensions
@@ -46,10 +47,19 @@ namespace RealtimeDatabase.Extensions
                     });
                 }
 
-                if (options.ServerSentEventsInterface)
+                if (options.ServerSentEventsInterface || options.PollInterface)
                 {
                     realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
+                }
+
+                if (options.ServerSentEventsInterface)
+                {
                     realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
+                }
+
+                if (options.PollInterface)
+                {
+                    realtimeApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
                 }
 
                 if (options.Nlb.Enabled)

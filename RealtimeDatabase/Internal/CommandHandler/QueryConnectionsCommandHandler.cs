@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -20,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.connectionManager = connectionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpContext context, QueryConnectionsCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, QueryConnectionsCommand command)
         {
             if (context.User.Identity.IsAuthenticated)
             {
@@ -30,7 +31,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
                 {
                     QueryConnectionsResponse response = new QueryConnectionsResponse()
                     {
-                        Connections = connectionManager.connections.Where(c => c.UserId == userId).ToList(),
+                        Connections = connectionManager.connections.Where(c => c.Information.UserId == userId).ToList(),
                         ReferenceId = command.ReferenceId
                     };
 

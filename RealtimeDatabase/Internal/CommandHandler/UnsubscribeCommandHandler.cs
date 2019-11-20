@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
+using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Internal.CommandHandler
@@ -16,7 +17,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
 
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, UnsubscribeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UnsubscribeCommand command)
         {
             await Connection.RemoveSubscription(command);
             return null;

@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Models;
 
 namespace WebUI.Data.Models
 {
@@ -28,18 +29,18 @@ namespace WebUI.Data.Models
             return (m) => m.UserId == userId || m.ToId == userId;
         }
 
-        public bool Auth(HttpContext context)
+        public bool Auth(HttpInformation context)
         {
             string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
             return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
-        public void BeforeCreate(HttpContext context)
+        public void BeforeCreate(HttpInformation context)
         {
             UserId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
         }
 
-        public void BeforeUpdate(HttpContext context)
+        public void BeforeUpdate(HttpInformation context)
         {
             UpdatedOn = DateTime.UtcNow;
         }

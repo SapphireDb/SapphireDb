@@ -19,7 +19,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.options = options;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, SubscribeMessageCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command)
         {
             if (!options.IsAllowedForTopicSubscribe(context, command.Topic))
             {

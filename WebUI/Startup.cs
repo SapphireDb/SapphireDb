@@ -41,7 +41,7 @@ namespace WebUI
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
-            Func<CommandBase, HttpContext, bool> oldFunc = options.CanExecuteCommand;
+            Func<CommandBase, HttpInformation, bool> oldFunc = options.CanExecuteCommand;
             options.CanExecuteCommand = (command, context) => true || command is ExecuteCommand || oldFunc(command, context);
             options.IsAllowedForTopicPublish = (context, topic) => true;
             options.IsAllowedForTopicSubscribe = (context, topic) => true;

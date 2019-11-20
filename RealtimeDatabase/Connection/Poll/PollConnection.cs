@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection.Websocket;
+using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Connection.Poll
 {
@@ -12,22 +14,25 @@ namespace RealtimeDatabase.Connection.Poll
         public PollConnection(HttpContext context)
         {
             Init(context);
+            lastPoll = DateTime.UtcNow;
+            HttpContext = null;
         }
+
+        private readonly ConcurrentQueue<object> messages = new ConcurrentQueue<object>();
+        public DateTime lastPoll;
 
         public override string Type => "Poll";
 
-        public override async Task Send(object message)
+        public override Task Send(object message)
         {
-            await Lock.WaitAsync();
+            messages.Enqueue(message);
+            return Task.CompletedTask;
+        }
 
-            try
-            {
-                //await Websocket.Send(message);
-            }
-            finally
-            {
-                Lock.Release();
-            }
+        public IEnumerable<object> GetMessages()
+        {
+            lastPoll = DateTime.UtcNow;
+            return messages.DequeueChunk();
         }
 
         public override Task Close()
@@ -38,7 +43,6 @@ namespace RealtimeDatabase.Connection.Poll
         public new void Dispose()
         {
             base.Dispose();
-            
         }
     }
 }

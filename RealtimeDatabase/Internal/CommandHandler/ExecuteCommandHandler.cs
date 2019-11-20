@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -29,7 +30,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, ExecuteCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommand command)
         {
             try
             {
@@ -45,7 +46,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             }
         }
 
-        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpContext context)
+        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpInformation context)
         {
             Type actionHandlerType = actionMapper.GetHandler(command);
 

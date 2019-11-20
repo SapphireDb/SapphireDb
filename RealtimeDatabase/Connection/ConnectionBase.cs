@@ -22,39 +22,19 @@ namespace RealtimeDatabase.Connection
             Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
             HttpContext = context;
-
-            if (HttpContext.Request.Query.TryGetValue("key", out StringValues apiKey))
-            {
-                RealtimeDatabaseOptions options = context.RequestServices.GetService<RealtimeDatabaseOptions>();
-                ApiName = options.ApiConfigurations.FirstOrDefault(c => c.Key == apiKey.ToString())?.Name;
-            }
-
-            if (HttpContext.Request.Headers.TryGetValue("User-Agent", out StringValues userAgent))
-            {
-                UserAgent = userAgent.ToString();
-            }
-
-            if (HttpContext.User.Identity.IsAuthenticated)
-            {
-                UserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
-            }
+            Information = new HttpInformation(context);
         }
 
         [DataMember]
         public Guid Id { get; set; }
 
         [DataMember]
-        public string UserId { get; set; }
-
-        [DataMember]
-        public string UserAgent { get; set; }
-
-        [DataMember]
         public abstract string Type { get; }
 
         [DataMember]
-        public string ApiName { get; set; }
+        public HttpInformation Information { get; set; }
 
+        [Obsolete]
         public HttpContext HttpContext { get; set; }
 
         public List<CollectionSubscription> Subscriptions { get; set; }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Internal.CommandHandler
 {
@@ -20,7 +21,7 @@ namespace RealtimeDatabase.Internal.CommandHandler
             this.contextTypeContainer = contextTypeContainer;
         }
 
-        public async Task<ResponseBase> Handle(HttpContext context, SubscribeUsersCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, SubscribeUsersCommand command)
         {
             await Connection.AddUsersSubscription(command);
 
