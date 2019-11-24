@@ -34,7 +34,6 @@ namespace RealtimeDatabase.Connection
         [DataMember]
         public HttpInformation Information { get; set; }
 
-        [Obsolete]
         public HttpContext HttpContext { get; set; }
 
         public List<CollectionSubscription> Subscriptions { get; set; }

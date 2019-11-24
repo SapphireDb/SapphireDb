@@ -52,8 +52,8 @@ namespace WebUI
                 .AddContext<RealtimeContext>(
                     cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
                 //.AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=webui;Password=pw1234;Host=localhost;Port=5432;Database=webui"), "demo");
-                //.AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
-                .AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;"), "demo");
+                .AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
+            //.AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;"), "demo");
 
             RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
 

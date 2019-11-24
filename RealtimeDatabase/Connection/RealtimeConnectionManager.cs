@@ -2,10 +2,12 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.JsonWebTokens;
 using RealtimeDatabase.Connection.Poll;
 using RealtimeDatabase.Connection.Websocket;
+using RealtimeDatabase.Models;
 
 namespace RealtimeDatabase.Connection
 {
@@ -71,7 +73,7 @@ namespace RealtimeDatabase.Connection
                     }
 
                     // Compare connection info of request and found connection
-                    ConnectionInfo connectionInfo = connection.Information.Connection;
+                    HttpInformation connectionInfo = connection.Information;
 
                     if (!connectionInfo.LocalIpAddress.Equals(context.Connection.LocalIpAddress) ||
                         !connectionInfo.LocalPort.Equals(context.Connection.LocalPort) ||
