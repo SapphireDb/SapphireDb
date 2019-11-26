@@ -8,8 +8,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
+using RealtimeDatabase.Command.SubscribeMessage;
+using RealtimeDatabase.Command.SubscribeRoles;
+using RealtimeDatabase.Command.SubscribeUsers;
+using RealtimeDatabase.Command.Unsubscribe;
+using RealtimeDatabase.Command.UnsubscribeMessage;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Commands;
 
 namespace RealtimeDatabase.Connection
 {

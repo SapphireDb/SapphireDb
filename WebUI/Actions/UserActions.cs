@@ -1,12 +1,12 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Identity;
-using RealtimeDatabase.Models.Actions;
 using System.Threading.Tasks;
 using WebUI.Data;
 using WebUI.Data.Authentication;
 using WebUI.Data.Models;
 using WebUI.Data.ViewModels.Account;
 using System.Collections.Generic;
+using RealtimeDatabase.Actions;
 
 namespace WebUI.Actions
 {

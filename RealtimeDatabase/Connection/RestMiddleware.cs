@@ -11,13 +11,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RealtimeDatabase.Command;
+using RealtimeDatabase.Command.Connection;
 using RealtimeDatabase.Connection.Poll;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
-using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Models.Responses;
 
 namespace RealtimeDatabase.Connection
 {

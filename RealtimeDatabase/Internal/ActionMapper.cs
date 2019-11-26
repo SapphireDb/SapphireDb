@@ -1,9 +1,9 @@
-﻿using RealtimeDatabase.Models.Actions;
-using RealtimeDatabase.Models.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using RealtimeDatabase.Actions;
+using RealtimeDatabase.Command.Execute;
 using RealtimeDatabase.Helper;
 
 namespace RealtimeDatabase.Internal

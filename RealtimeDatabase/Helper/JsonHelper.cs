@@ -5,8 +5,8 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Models.Prefilter;
+using RealtimeDatabase.Command;
+using RealtimeDatabase.Internal.Prefilter;
 
 namespace RealtimeDatabase.Helper
 {
@@ -66,13 +66,13 @@ namespace RealtimeDatabase.Helper
             if (typeof(T) == typeof(IPrefilterBase))
             {
                 nameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
-                    .Where(t => t.Namespace == "RealtimeDatabase.Models.Prefilter" && t.Name.EndsWith("Prefilter"))
+                    .Where(t => t.Namespace == "RealtimeDatabase.Internal.Prefilter" && t.Name.EndsWith("Prefilter"))
                     .ToDictionary(t => t.Name, t => t);
             }
             else if (typeof(T) == typeof(CommandBase))
             {
                 nameTypeMappings = Assembly.GetExecutingAssembly().GetTypes()
-                    .Where(t => t.Namespace == "RealtimeDatabase.Models.Commands" && t.Name.EndsWith("Command"))
+                    .Where(t => typeof(CommandBase).IsAssignableFrom(t) && t.Name.EndsWith("Command"))
                     .ToDictionary(t => t.Name, t => t);
             }
         }

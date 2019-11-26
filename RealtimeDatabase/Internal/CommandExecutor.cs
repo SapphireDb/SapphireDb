@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +7,14 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Command;
+using RealtimeDatabase.Command.CloseConnection;
+using RealtimeDatabase.Command.Execute;
+using RealtimeDatabase.Command.Login;
+using RealtimeDatabase.Command.QueryConnections;
+using RealtimeDatabase.Command.Renew;
+using RealtimeDatabase.Command.SubscribeRoles;
+using RealtimeDatabase.Command.SubscribeUsers;
 using RealtimeDatabase.Connection;
 using RealtimeDatabase.Helper;
 
@@ -69,8 +74,7 @@ namespace RealtimeDatabase.Internal
         private Dictionary<string, Type> GetHandlerTypes(Type type)
         {
             return Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => t.Namespace == "RealtimeDatabase.Internal.CommandHandler" &&
-                t.Name.EndsWith("Handler") && t.IsSubclassOf(type))
+                .Where(t => t.Name.EndsWith("Handler") && t.IsSubclassOf(type))
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)), t => t);
         }
 

@@ -4,12 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using RealtimeDatabase.Actions;
 using RealtimeDatabase.Attributes;
 using RealtimeDatabase.Internal;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Actions;
 using RealtimeDatabase.Models.Auth;
-using RealtimeDatabase.Models.Prefilter;
 
 namespace RealtimeDatabase.Helper
 {

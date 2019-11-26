@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RealtimeDatabase.Command;
+using RealtimeDatabase.Command.Query;
+using RealtimeDatabase.Command.Subscribe;
 using RealtimeDatabase.Connection.Websocket;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
-using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Models.Prefilter;
-using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Internal.Prefilter;
 
 namespace RealtimeDatabase.Connection
 {

@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Responses;
 using System;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using RealtimeDatabase.Command.Connection;
 using RealtimeDatabase.Helper;
 using RealtimeDatabase.Internal;
-using RealtimeDatabase.Models.Commands;
 
 namespace RealtimeDatabase.Connection.SSE
 {

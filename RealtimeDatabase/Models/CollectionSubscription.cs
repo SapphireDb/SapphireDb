@@ -1,7 +1,7 @@
 ﻿using System;
-using RealtimeDatabase.Models.Prefilter;
 using System.Collections.Generic;
 using System.Threading;
+using RealtimeDatabase.Internal.Prefilter;
 
 namespace RealtimeDatabase.Models
 {
@@ -22,6 +22,7 @@ namespace RealtimeDatabase.Models
         public void Dispose()
         {
             Prefilters.ForEach(p => p.Dispose());
+            Lock.Dispose();
         }
     }
 }

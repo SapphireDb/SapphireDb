@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using RealtimeDatabase.Models.Commands;
-using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Command;
 
 namespace RealtimeDatabase.Helper
 {

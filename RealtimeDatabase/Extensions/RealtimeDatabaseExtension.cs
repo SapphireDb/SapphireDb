@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeDatabase.Internal;
-using RealtimeDatabase.Internal.CommandHandler;
 using RealtimeDatabase.Models;
 using RealtimeDatabase.Models.Auth;
 using System;
@@ -20,6 +19,8 @@ using RealtimeDatabase.Connection;
 using RealtimeDatabase.Connection.SSE;
 using RealtimeDatabase.Connection.Websocket;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RealtimeDatabase.Command.Login;
+using RealtimeDatabase.Command.Renew;
 using RealtimeDatabase.Connection.Poll;
 using RealtimeDatabase.Nlb;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using RealtimeDatabase.Models.Responses;
+using RealtimeDatabase.Command.Subscribe;
 
 namespace RealtimeDatabase.Nlb.Models
 {

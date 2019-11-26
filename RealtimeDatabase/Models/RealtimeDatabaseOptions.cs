@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RealtimeDatabase.Models.Auth;
 using Microsoft.Extensions.Configuration;
-using RealtimeDatabase.Models.Commands;
+using RealtimeDatabase.Command;
+using RealtimeDatabase.Command.Login;
+using RealtimeDatabase.Command.Renew;
 
 namespace RealtimeDatabase.Models
 {
