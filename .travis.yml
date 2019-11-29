@@ -5,5 +5,5 @@ dist: xenial
 dotnet: 3.0
 
 script:
- - cd RealtimeDatabase
+ - cd SapphireDb
  - dotnet build --configuration Release

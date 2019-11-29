@@ -7,9 +7,9 @@
     <Authors>morrisjdev</Authors>
     <Description>A .NET Core Extension for Entity Framework Core to enable realtime Capability.</Description>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/morrisjdev/RealtimeDatabase</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/morrisjdev/SapphireDb</PackageProjectUrl>
     <PackageIconUrl>https://morrisj.net/storage/morrisjdev_logo.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/morrisjdev/RealtimeDatabase</RepositoryUrl>
+    <RepositoryUrl>https://github.com/morrisjdev/SapphireDb</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Copyright>Copyright © Morris Janatzek</Copyright>

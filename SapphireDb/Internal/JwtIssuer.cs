@@ -70,7 +70,7 @@ namespace SapphireDb.Internal
 
                 if (value != null)
                 {
-                    claims.Add(new Claim("RealtimeAuth." + property.Name, value.ToString()));
+                    claims.Add(new Claim("SapphireAuth." + property.Name, value.ToString()));
                 }
             }
 
