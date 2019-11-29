@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RealtimeDatabase\RealtimeDatabase.csproj" />
+    <ProjectReference Include="..\SapphireDb\SapphireDb.csproj" />
   </ItemGroup>
 
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">

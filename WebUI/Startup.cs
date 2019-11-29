@@ -11,12 +11,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Npgsql;
-using RealtimeDatabase;
-using RealtimeDatabase.Command;
-using RealtimeDatabase.Command.Execute;
-using RealtimeDatabase.Extensions;
-using RealtimeDatabase.Models;
-using RealtimeDatabase.Models.Auth;
+using SapphireDb;
+using SapphireDb.Command;
+using SapphireDb.Command.Execute;
+using SapphireDb.Extensions;
+using SapphireDb.Models;
+using SapphireDb.Models.Auth;
 using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
@@ -41,7 +41,7 @@ namespace WebUI
 
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
-            RealtimeDatabaseOptions options = new RealtimeDatabaseOptions(Configuration.GetSection("RealtimeDatabase"));
+            SapphireDatabaseOptions options = new SapphireDatabaseOptions(Configuration.GetSection("Sapphire"));
             Func<CommandBase, HttpInformation, bool> oldFunc = options.CanExecuteCommand;
             options.CanExecuteCommand = (command, context) => true || command is ExecuteCommand || oldFunc(command, context);
             options.IsAllowedForTopicPublish = (context, topic) => true;
@@ -49,7 +49,7 @@ namespace WebUI
             options.IsAllowedToSendMessages = (context) => true;
 
             //Register services
-            RealtimeDatabaseBuilder realtimeBuilder = services.AddRealtimeDatabase(options)
+            SapphireDatabaseBuilder realtimeBuilder = services.AddSapphireDb(options)
                 .AddContext<RealtimeContext>(
                     cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
                 //.AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=webui;Password=pw1234;Host=localhost;Port=5432;Database=webui"), "demo");
@@ -74,7 +74,7 @@ namespace WebUI
                     cfg.UseFileContextDatabase(databaseName: DbActions.DbName ?? "test"); /*cfg.UseInMemoryDatabase("second")*/
                 }, "second");
 
-            services.AddRealtimeAuth<RealtimeAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
+            services.AddSapphireAuth<SapphireAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
                 cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContextDatabase(databaseName: "auth"));
 
 
@@ -105,7 +105,7 @@ namespace WebUI
             }
 
             //Add Middleware
-            app.UseRealtimeDatabase();
+            app.UseSapphireDb();
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

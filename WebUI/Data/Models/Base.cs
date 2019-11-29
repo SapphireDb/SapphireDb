@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RealtimeDatabase.Attributes;
+using SapphireDb.Attributes;
 
 namespace WebUI.Data.Models
 {

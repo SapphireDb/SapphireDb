@@ -1,14 +1,14 @@
 ﻿using System.Threading.Tasks;
-using RealtimeDatabase.Actions;
-using RealtimeDatabase.Connection;
+using SapphireDb.Actions;
+using SapphireDb.Connection;
 
 namespace WebUI.Actions
 {
     public class MessageActions : ActionHandlerBase
     {
-        private readonly RealtimeMessageSender MessageSender;
+        private readonly SapphireMessageSender MessageSender;
 
-        public MessageActions(RealtimeMessageSender messageSender)
+        public MessageActions(SapphireMessageSender messageSender)
         {
             MessageSender = messageSender;
         }

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using RealtimeDatabase;
+using SapphireDb;
 using WebUI.Data.DemoDb;
 
 namespace WebUI.Data
 {
-    public class DemoContext : RealtimeDbContext
+    public class DemoContext : SapphireDbContext
     {
-        public DemoContext(DbContextOptions<DemoContext> options, RealtimeDatabaseNotifier notifier) : base(options, notifier)
+        public DemoContext(DbContextOptions<DemoContext> options, SapphireDatabaseNotifier notifier) : base(options, notifier)
         {
         }
 

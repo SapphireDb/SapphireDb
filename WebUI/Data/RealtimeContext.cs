@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebUI.Data.Models;
-using RealtimeDatabase;
+using SapphireDb;
 
 namespace WebUI.Data
 {
-    //Derive Context from RealtimeDbContext
-    public class RealtimeContext : RealtimeDbContext
+    //Derive Context from SapphireDbContext
+    public class RealtimeContext : SapphireDbContext
     {
-        //Add RealtimeDatabaseNotifier for DI
-        public RealtimeContext(DbContextOptions<RealtimeContext> options, RealtimeDatabaseNotifier notifier) : base(options, notifier)
+        //Add SapphireDatabaseNotifier for DI
+        public RealtimeContext(DbContextOptions<RealtimeContext> options, SapphireDatabaseNotifier notifier) : base(options, notifier)
         {
 
         }

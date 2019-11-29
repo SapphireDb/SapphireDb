@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using RealtimeDatabase.Attributes;
+using SapphireDb.Attributes;
 
 namespace WebUI.Data.Authentication
 {

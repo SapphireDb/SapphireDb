@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUI", "WebUI\WebUI.csproj", "{69BAE536-90FF-4A8A-922C-5D37839954F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealtimeDatabase", "RealtimeDatabase\RealtimeDatabase.csproj", "{6BA035A1-0BD9-4062-9E1C-93E55699403F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SapphireDb", "SapphireDb\SapphireDb.csproj", "{6BA035A1-0BD9-4062-9E1C-93E55699403F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
