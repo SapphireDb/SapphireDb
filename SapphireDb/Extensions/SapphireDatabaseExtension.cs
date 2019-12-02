@@ -37,11 +37,11 @@ namespace SapphireDb.Extensions
                 builder.UseAuthentication();
             }
 
-            builder.Map("/sapphire", (realtimeApp) =>
+            builder.Map("/sapphire", (sapphireApp) =>
             {
                 if (options.WebsocketInterface)
                 {
-                    realtimeApp.Map("/socket", (socket) =>
+                    sapphireApp.Map("/socket", (socket) =>
                     {
                         socket.UseWebSockets();
                         socket.UseMiddleware<WebsocketMiddleware>();
@@ -50,22 +50,22 @@ namespace SapphireDb.Extensions
 
                 if (options.ServerSentEventsInterface || options.PollInterface)
                 {
-                    realtimeApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
+                    sapphireApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                 }
 
                 if (options.ServerSentEventsInterface)
                 {
-                    realtimeApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
+                    sapphireApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
                 }
 
                 if (options.PollInterface)
                 {
-                    realtimeApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
+                    sapphireApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
                 }
 
                 if (options.Nlb.Enabled)
                 {
-                    realtimeApp.Map("/nlb", (nlb) => { nlb.UseMiddleware<NlbMiddleware>(); });
+                    sapphireApp.Map("/nlb", (nlb) => { nlb.UseMiddleware<NlbMiddleware>(); });
                 }
             });
 

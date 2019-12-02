@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Authors>morrisjdev</Authors>
-    <Description>A .NET Core Extension for Entity Framework Core to enable realtime Capability.</Description>
+    <Description>A .NET Core Extension for Entity Framework Core to enable realtime capability.</Description>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/morrisjdev/SapphireDb</PackageProjectUrl>
     <PackageIconUrl>https://morrisj.net/storage/morrisjdev_logo.png</PackageIconUrl>

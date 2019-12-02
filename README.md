@@ -1,9 +1,9 @@
-# Realtime Database [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
+# SapphireDb [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
 
-Realtime database is an open source library that enables you to easily create your own realtime application.
+SapphireDb is an open source library that enables you to easily create your own realtime application.
 
 Build amazing applications with less effort and get the best results of your project.
-Realtime database should serve as a self hosted alternative to firebase and also gives you an alternative to SignalR.
+SapphireDb should serve as a self hosted alternative to firebase and also gives you an alternative to SignalR.
 
 [Documentation](https://realtime-database.azurewebsites.net/)
 
@@ -23,7 +23,11 @@ Realtime database should serve as a self hosted alternative to firebase and also
 
 Check out the documentation for more details: [Documentation](https://realtime-database.azurewebsites.net/)
 
-[ng-realtime-database - Angular Client](https://github.com/morrisjdev/ng-realtime-database)
+## Implementations
+
+[SapphireDb - Server](https://github.com/morrisjdev/SapphireDb)
+
+[ng-sapphiredb - Angular Client](https://github.com/morrisjdev/ng-sapphiredb)
 
 ## Author
 
