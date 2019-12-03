@@ -2,10 +2,9 @@
 
 SapphireDb is an open source library that enables you to easily create your own realtime application.
 
-Build amazing applications with less effort and get the best results of your project.
-SapphireDb should serve as a self hosted alternative to firebase and also gives you an alternative to SignalR.
+Build amazing applications with less effort and get the best results of your project. SapphireDb should serve as a self hosted alternative to firebase and also gives you an alternative to SignalR.
 
-[Documentation](https://realtime-database.azurewebsites.net/)
+Check out the documentation for more details: [Documentation](https://sapphire-db.com/)
 
 ## Advantages
 
@@ -13,7 +12,7 @@ SapphireDb should serve as a self hosted alternative to firebase and also gives 
 - Blazing fast development
 - Modern technologies
 - Self hosted
-- API generation
+- easy CRUD operations
 - Authentication/Authorization included
 - Database support
 - Actions
@@ -21,7 +20,7 @@ SapphireDb should serve as a self hosted alternative to firebase and also gives 
 
 ## Install
 
-Check out the documentation for more details: [Documentation](https://realtime-database.azurewebsites.net/)
+Check out the documentation for more details: [Documentation](https://sapphire-db.com/)
 
 ## Implementations
 
