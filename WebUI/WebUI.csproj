@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <SpaRoot>..\..\ng-realtime-database\</SpaRoot>
+    <SpaRoot>..\..\ng-sapphiredb\</SpaRoot>
     <UserSecretsId>8bbe278d-014f-4323-86d8-16084c863ee3</UserSecretsId>
   </PropertyGroup>
 
