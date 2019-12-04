@@ -96,3 +96,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 ## Author
 
 [Morris Janatzek](http://morrisj.net) ([morrisjdev](https://github.com/morrisjdev))
+
+## License
+
+SapphireDb - [MIT License](https://github.com/morrisjdev/SapphireDb/blob/master/LICENSE)
