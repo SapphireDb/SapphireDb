@@ -12,7 +12,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 - Blazing fast development
 - Modern technologies
 - Self hosted
-- easy CRUD operations
+- Easy CRUD operations
 - Authentication/Authorization included
 - Database support
 - Actions

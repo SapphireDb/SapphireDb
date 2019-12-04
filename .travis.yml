@@ -6,4 +6,4 @@ dotnet: 3.0
 
 script:
  - cd SapphireDb
- - dotnet build --configuration Release
+ - dotnet build ./SapphireDb.csproj --configuration Release
