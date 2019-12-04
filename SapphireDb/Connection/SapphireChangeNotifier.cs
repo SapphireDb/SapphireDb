@@ -60,7 +60,17 @@ namespace SapphireDb.Connection
                 {
                     foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                     {
-                        IServiceProvider requestServiceProvider = connectionGrouping.Key.HttpContext?.RequestServices;
+                        IServiceProvider requestServiceProvider = null;
+
+                        try
+                        {
+                            requestServiceProvider = connectionGrouping.Key.HttpContext?.RequestServices;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            connectionManager.RemoveConnection(connectionGrouping.Key);
+                            return;
+                        }
 
                         SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
                         KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == subscriptionGrouping.Key);

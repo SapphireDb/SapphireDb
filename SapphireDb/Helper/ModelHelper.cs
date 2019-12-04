@@ -76,11 +76,11 @@ namespace SapphireDb.Helper
             SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
-            bool isClassUpdatable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
+            bool isClassUpdateable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
             
             foreach (AuthPropertyInfo pi in entityType.GetAuthPropertyInfos())
             {
-                if ((isClassUpdatable || pi.UpdatableAttribute != null) && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
+                if ((isClassUpdateable || pi.UpdatableAttribute != null) && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
                 {
                     if (pi.CanUpdate(information, entityObject, serviceProvider))
                     {
