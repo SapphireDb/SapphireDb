@@ -32,6 +32,59 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 
 ## Install
 
+### Install package
+To install the package execute the following command in your package manager console
+
+````
+PM> Install-Package SapphireDb
+````
+
+You can also install the extension using Nuget package manager. The project can be found here: [https://www.nuget.org/packages/SapphireDb/](https://www.nuget.org/packages/SapphireDb/)
+
+### Configure DbContext
+
+You now have to change your DbContext to derive from `SapphireDbContext`. Also make sure to adjust the constructor parameters.
+
+````csharp
+// Change DbContext to SapphireDbContext
+public class MyDbContext : SapphireDbContext
+{
+  //Add SapphireDatabaseNotifier for DI
+  public MyDbContext(DbContextOptions<MyDbContext> options, SapphireDatabaseNotifier notifier) : base(options, notifier)
+  {
+
+  }
+
+  public DbSet<User> Users { get; set; }
+
+  public DbSet<Test> Tests { get; set; }
+}
+````
+
+### Register services and update pipeline
+
+To use the SapphireDb you also have to make some changes in your `Startup.cs`-File.
+
+````csharp
+public class Startup
+{
+  public void ConfigureServices(IServiceCollection services)
+  {
+    //Register services
+    services.AddSapphireDb(...)
+      .AddContext<MyDbContext>(cfg => ...);
+  }
+
+  public void Configure(IApplicationBuilder app)
+  {
+    //Add Middleware
+    app.UseSapphireDb();
+  }
+}
+````
+
+## Documentation
+
 Check out the documentation for more details: [Documentation](https://sapphire-db.com/)
 
 ## Implementations
