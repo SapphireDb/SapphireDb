@@ -30,7 +30,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 - :electric_plug: Actions
 - :globe_with_meridians: NLB support
 
-## Install
+## Installation
 
 ### Install package
 To install the package execute the following command in your package manager console
