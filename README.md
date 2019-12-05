@@ -1,9 +1,10 @@
+# SapphireDb - Server for .Net Core [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
+
 <p align="center">
   <a href="https://sapphire-db.com/">
     <img src="https://sapphire-db.com/assets/banner/SapphireDB%20Banner.png" alt="SapphireDb logo">
   </a>
-  
-  <h3 align="center">SapphireDb</h3>
+
 </p>
 
 SapphireDb is an open source library that enables you to easily create your own realtime application.
@@ -15,8 +16,6 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 <p align="center">
     <a href="https://www.patreon.com/user?u=27738280"><img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160"></a>
 </p>
-
-# SapphireDb - Server [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
 
 ## Advantages
 

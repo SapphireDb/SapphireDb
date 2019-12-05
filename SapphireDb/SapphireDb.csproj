@@ -5,6 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Authors>morrisjdev</Authors>
+	<Title>SapphireDb - Server for .Net Core</Title>
     <Description>A self-hosted, easy to use realtime database</Description>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://sapphire-db.com/</PackageProjectUrl>
