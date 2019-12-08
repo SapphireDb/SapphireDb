@@ -35,6 +35,7 @@ namespace SapphireDb.Models
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
             PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
+            RestInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
         }
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
@@ -64,6 +65,8 @@ namespace SapphireDb.Models
         public bool WebsocketInterface { get; set; } = true;
 
         public bool PollInterface { get; set; } = true;
+
+        public bool RestInterface { get; set; } = true;
 
         public NlbConfiguration Nlb { get; set; } = new NlbConfiguration();
 

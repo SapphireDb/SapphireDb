@@ -48,7 +48,7 @@ namespace SapphireDb.Extensions
                     });
                 }
 
-                if (options.ServerSentEventsInterface || options.PollInterface)
+                if (options.ServerSentEventsInterface || options.PollInterface || options.RestInterface)
                 {
                     sapphireApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                 }

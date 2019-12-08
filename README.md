@@ -1,4 +1,4 @@
-# SapphireDb - Server for .Net Core [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
+# SapphireDb - Server for Asp.Net Core [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase) [![Maintainability](https://api.codeclimate.com/v1/badges/a80b67f61f2c952d3b49/maintainability)](https://codeclimate.com/github/morrisjdev/RealtimeDatabase/maintainability)
 
 <p align="center">
   <a href="https://sapphire-db.com/">
@@ -88,9 +88,9 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 
 ## Implementations
 
-[SapphireDb - Server](https://github.com/morrisjdev/SapphireDb)
+[SapphireDb - Server for Asp.Net Core](https://github.com/morrisjdev/SapphireDb)
 
-[ng-sapphiredb - Angular Client](https://github.com/morrisjdev/ng-sapphiredb)
+[ng-sapphiredb - Angular client](https://github.com/morrisjdev/ng-sapphiredb)
 
 ## Author
 
