@@ -56,9 +56,9 @@ namespace SapphireDb.Connection
                     continue;
                 }
 
-                Task.Run(() =>
+                foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
                 {
-                    foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
+                    Task.Run(() =>
                     {
                         IServiceProvider requestServiceProvider = null;
 
@@ -99,53 +99,50 @@ namespace SapphireDb.Connection
                                 logger.LogError(ex.Message);
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
 
         private void HandleSubscription(SubscriptionConnectionMapping mapping, List<ChangeResponse> changes, 
             SapphireDbContext db, Type modelType, IEnumerable<object> collectionSet)
         {
-            Task.Run(() =>
+            mapping.Subscription.Lock.Wait();
+
+            try
             {
-                mapping.Subscription.Lock.Wait();
+                IEnumerable<object> currentCollectionSet = collectionSet;
 
-                try
+                foreach (IPrefilter prefilter in mapping.Subscription.Prefilters.OfType<IPrefilter>())
                 {
-                    IEnumerable<object> currentCollectionSet = collectionSet;
-
-                    foreach (IPrefilter prefilter in mapping.Subscription.Prefilters.OfType<IPrefilter>())
-                    {
-                        currentCollectionSet = prefilter.Execute(currentCollectionSet);
-                    }
-
-                    IAfterQueryPrefilter afterQueryPrefilter =
-                        mapping.Subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
-
-                    if (afterQueryPrefilter != null)
-                    {
-                        List<object> result = currentCollectionSet.Where(v =>
-                                modelType.CanQuery(mapping.Connection.Information, v, serviceProvider))
-                            .Select(v => v.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider))
-                            .ToList();
-
-                        _ = mapping.Connection.Send(new QueryResponse()
-                        {
-                            ReferenceId = mapping.Subscription.ReferenceId,
-                            Result = afterQueryPrefilter.Execute(result)
-                        });
-                    }
-                    else
-                    {
-                        SendDataToClient(currentCollectionSet.ToList(), modelType, db, mapping, changes);
-                    }
+                    currentCollectionSet = prefilter.Execute(currentCollectionSet);
                 }
-                finally
+
+                IAfterQueryPrefilter afterQueryPrefilter =
+                    mapping.Subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
+                if (afterQueryPrefilter != null)
                 {
-                    mapping.Subscription.Lock.Release();
+                    List<object> result = currentCollectionSet.Where(v =>
+                            modelType.CanQuery(mapping.Connection.Information, v, serviceProvider))
+                        .Select(v => v.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider))
+                        .ToList();
+
+                    _ = mapping.Connection.Send(new QueryResponse()
+                    {
+                        ReferenceId = mapping.Subscription.ReferenceId,
+                        Result = afterQueryPrefilter.Execute(result)
+                    });
                 }
-            });
+                else
+                {
+                    SendDataToClient(currentCollectionSet.ToList(), modelType, db, mapping, changes);
+                }
+            }
+            finally
+            {
+                mapping.Subscription.Lock.Release();
+            }
         }
 
         private void SendDataToClient(List<object> currentCollectionSetLoaded,
