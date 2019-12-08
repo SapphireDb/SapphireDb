@@ -184,7 +184,7 @@ namespace SapphireDb.Connection
             if (clientHasObject)
             {
                 ChangeResponse change = relevantChanges
-                    .FirstOrDefault(c => !c.PrimaryValues.Except(primaryValues).Any());
+                    .FirstOrDefault(c => c.State == ChangeResponse.ChangeState.Modified && !c.PrimaryValues.Except(primaryValues).Any());
 
                 if (change != null)
                 {

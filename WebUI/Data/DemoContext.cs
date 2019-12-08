@@ -19,5 +19,7 @@ namespace WebUI.Data
         public DbSet<Message> Messages { get; set; }
 
         public DbSet<Document> Documents { get; set; }
+
+        public DbSet<Pixel> Pixels { get; set; }
     }
 }
