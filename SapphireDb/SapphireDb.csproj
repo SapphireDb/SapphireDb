@@ -17,9 +17,9 @@
     <PackageTags>realtime, database, core, .net, entityframework, database, websocket, sse, polling, self-hosted, angular, firebase, signalr</PackageTags>
     <SignAssembly Condition="'$(OS)' == 'Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile>SapphireDatabaseCert.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 

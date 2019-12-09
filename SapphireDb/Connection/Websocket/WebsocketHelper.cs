@@ -14,13 +14,33 @@ namespace SapphireDb.Connection.Websocket
 
         public static async Task<string> Receive(this WebSocket socket)
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[4096]);
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+            int offset = 0;
+            int free = buffer.Length;
+            WebSocketReceiveResult result;
 
-            WebSocketReceiveResult received = await socket.ReceiveAsync(buffer, token);
-
-            if (!received.CloseStatus.HasValue && received.MessageType == WebSocketMessageType.Text)
+            while (true)
             {
-                return Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count).Replace("\0", "");
+                result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, free), token);
+                offset += result.Count;
+                free -= result.Count;
+
+                if (result.EndOfMessage) break;
+
+                if (free == 0)
+                {
+                    int newSize = buffer.Length + bufferSize;
+                    byte[] newBuffer = new byte[newSize];
+                    Array.Copy(buffer, 0, newBuffer, 0, offset);
+                    buffer = newBuffer;
+                    free = buffer.Length - offset;
+                }
+            }
+
+            if (!result.CloseStatus.HasValue && result.MessageType == WebSocketMessageType.Text)
+            {
+                return Encoding.UTF8.GetString(buffer).Replace("\0", "");
             }
 
             return "";

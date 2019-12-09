@@ -81,23 +81,26 @@ namespace SapphireDb.Connection
 
                         foreach (SubscriptionConnectionMapping mapping in connectionGrouping)
                         {
-                            try
+                            Task.Run(() =>
                             {
-                                HandleSubscription(mapping, changesForConnection, db, property.Key, collectionSet);
-                            }
-                            catch (Exception ex)
-                            {
-                                SubscribeCommand tempErrorCommand = new SubscribeCommand()
+                                try
                                 {
-                                    CollectionName = subscriptionGrouping.Key,
-                                    ReferenceId = mapping.Subscription.ReferenceId,
-                                    Prefilters = mapping.Subscription.Prefilters
-                                };
+                                    HandleSubscription(mapping, changesForConnection, db, property.Key, collectionSet);
+                                }
+                                catch (Exception ex)
+                                {
+                                    SubscribeCommand tempErrorCommand = new SubscribeCommand()
+                                    {
+                                        CollectionName = subscriptionGrouping.Key,
+                                        ReferenceId = mapping.Subscription.ReferenceId,
+                                        Prefilters = mapping.Subscription.Prefilters
+                                    };
 
-                                _ = mapping.Connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
-                                logger.LogError($"Error handling subscription '{mapping.Subscription.ReferenceId}' of {subscriptionGrouping.Key}");
-                                logger.LogError(ex.Message);
-                            }
+                                    _ = mapping.Connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
+                                    logger.LogError($"Error handling subscription '{mapping.Subscription.ReferenceId}' of {subscriptionGrouping.Key}");
+                                    logger.LogError(ex.Message);
+                                }
+                            });
                         }
                     });
                 }
