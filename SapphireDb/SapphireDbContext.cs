@@ -11,15 +11,10 @@ namespace SapphireDb
     public class SapphireDbContext : DbContext
     {
         private readonly SapphireDatabaseNotifier notifier;
-        public readonly Dictionary<Type, string> sets;
 
         public SapphireDbContext(DbContextOptions options, SapphireDatabaseNotifier notifier) : base(options)
         {
             this.notifier = notifier;
-
-            sets = GetType().GetProperties()
-                .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
-                .ToDictionary(p => p.PropertyType.GenericTypeArguments.FirstOrDefault(), p => p.Name);
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)

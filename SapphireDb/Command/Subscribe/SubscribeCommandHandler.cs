@@ -31,13 +31,7 @@ namespace SapphireDb.Command.Subscribe
 
             await Connection.AddSubscription(collectionSubscription);
 
-            ResponseBase response = MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider, out List<object[]> transmittedData);
-
-            await collectionSubscription.Lock.WaitAsync();
-            collectionSubscription.TransmittedData = transmittedData;
-            collectionSubscription.Lock.Release();
-
-            return response;
+            return MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
         }
     }
 }

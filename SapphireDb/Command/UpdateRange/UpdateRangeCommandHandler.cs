@@ -24,7 +24,7 @@ namespace SapphireDb.Command.UpdateRange
         public Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command)
         {
             SapphireDbContext db = GetContext(command.ContextName);
-            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
+            KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key != null)
             {

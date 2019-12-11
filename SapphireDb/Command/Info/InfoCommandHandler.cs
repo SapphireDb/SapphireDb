@@ -20,7 +20,7 @@ namespace SapphireDb.Command.Info
         {
             SapphireDbContext db = GetContext(command.ContextName);
 
-            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
+            KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key != null)
             {

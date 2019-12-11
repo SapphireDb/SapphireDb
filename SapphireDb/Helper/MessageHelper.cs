@@ -112,10 +112,9 @@ namespace SapphireDb.Helper
         }
 
         public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
-            HttpInformation information, IServiceProvider serviceProvider, out List<object[]> transmittedData)
+            HttpInformation information, IServiceProvider serviceProvider)
         {
-            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => string.Equals(v.Value, command.CollectionName, StringComparison.InvariantCultureIgnoreCase));
-            transmittedData = new List<object[]>();
+            KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key != null)
             {
@@ -136,7 +135,6 @@ namespace SapphireDb.Helper
                 {
                     List<object> result = collectionSetList.ToList();
                     queryResponse.Result = result.Select(v => v.GetAuthenticatedQueryModel(information, serviceProvider));
-                    transmittedData = result.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
                 }
 
                 return queryResponse;

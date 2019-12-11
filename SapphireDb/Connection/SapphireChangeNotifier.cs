@@ -14,6 +14,7 @@ using SapphireDb.Connection.Websocket;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
+using SapphireDb.Models;
 
 namespace SapphireDb.Connection
 {
@@ -41,148 +42,192 @@ namespace SapphireDb.Connection
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
-            IEnumerable<SubscriptionConnectionMapping> subscriptions = connectionManager.connections
-                .SelectMany(c => c.Subscriptions.Select(s => new SubscriptionConnectionMapping() { Subscription = s, Connection = c}));
-
             string contextName = contextTypeContainer.GetName(dbContextType);
 
-            IEnumerable<IGrouping<string, SubscriptionConnectionMapping>> subscriptionGroupings =
-                subscriptions
-                    .Where(s => s.Subscription.ContextName == contextName)
-                    .GroupBy(s => s.Subscription.CollectionName);
-
-            foreach (IGrouping<string, SubscriptionConnectionMapping> subscriptionGrouping in subscriptionGroupings)
+            foreach (ConnectionBase connection in connectionManager.connections)
             {
-                List<ChangeResponse> subscriptionChanges = changes.Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
+                IServiceProvider requestServiceProvider = null;
 
-                if (!subscriptionChanges.Any())
+                try
                 {
-                    continue;
+                    requestServiceProvider = connection.HttpContext?.RequestServices;
+                }
+                catch (ObjectDisposedException)
+                {
+                    connectionManager.RemoveConnection(connection);
+                    return;
                 }
 
-                foreach (IGrouping<ConnectionBase, SubscriptionConnectionMapping> connectionGrouping in subscriptionGrouping.GroupBy(s => s.Connection))
+                requestServiceProvider ??= serviceProvider;
+
+                IEnumerable<IGrouping<string, CollectionSubscription>> subscriptionGroupings = connection.Subscriptions
+                    .Where(s => s.ContextName == contextName).GroupBy(s => s.CollectionName);
+
+                foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in subscriptionGroupings)
                 {
-                    foreach (SubscriptionConnectionMapping mapping in connectionGrouping)
+                    KeyValuePair<Type, string> property = dbContextType.GetDbSetType(subscriptionGrouping.Key);
+
+                    List<ChangeResponse> subscriptionChanges = changes
+                        .Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
+
+                    QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+                    if (queryFunctionAttribute != null)
                     {
-                        Task.Run(() =>
+                        var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+
+                        if (queryFunctionInfo != null)
                         {
-                            IServiceProvider requestServiceProvider = null;
+                            object[] methodParameters = queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
+                            dynamic queryFunctionExpression = ((dynamic)queryFunctionInfo.Invoke(null, methodParameters)).Compile();
 
-                            try
-                            {
-                                requestServiceProvider = connectionGrouping.Key.HttpContext?.RequestServices;
-                            }
-                            catch (ObjectDisposedException)
-                            {
-                                connectionManager.RemoveConnection(connectionGrouping.Key);
-                                return;
-                            }
+                            subscriptionChanges = subscriptionChanges.Where(change => queryFunctionExpression(change.Value)).ToList();
+                        }
+                    }
 
-                            SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider ?? serviceProvider);
-                            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => String.Equals(v.Value, subscriptionGrouping.Key, StringComparison.InvariantCultureIgnoreCase));
+                    if (!subscriptionChanges.Any())
+                    {
+                        continue;
+                    }
 
-                            try
+                    foreach (CollectionSubscription subscription in subscriptionGrouping)
+                    {
+                        try
+                        {
+                            if (subscription.Prefilters.Any(prefilter => prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
                             {
-                                HandleSubscription(mapping, subscriptionChanges, db, property, requestServiceProvider ?? serviceProvider);
-                            }
-                            catch (Exception ex)
-                            {
-                                SubscribeCommand tempErrorCommand = new SubscribeCommand()
+                                SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
+
+                                IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider, connection.Information, property,
+                                    subscription.Prefilters);
+
+                                IAfterQueryPrefilter afterQueryPrefilter =
+                                    subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
+                                if (afterQueryPrefilter != null)
                                 {
-                                    CollectionName = subscriptionGrouping.Key,
-                                    ReferenceId = mapping.Subscription.ReferenceId,
-                                    Prefilters = mapping.Subscription.Prefilters
-                                };
-
-                                _ = mapping.Connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
-                                logger.LogError($"Error handling subscription '{mapping.Subscription.ReferenceId}' of {subscriptionGrouping.Key}");
-                                logger.LogError(ex.Message);
+                                    _ = connection.Send(new QueryResponse()
+                                    {
+                                        ReferenceId = subscription.ReferenceId,
+                                        Result = afterQueryPrefilter.Execute(collectionValues)
+                                    });
+                                }
+                                else
+                                {
+                                    _ = connection.Send(new QueryResponse()
+                                    {
+                                        ReferenceId = subscription.ReferenceId,
+                                        Result = collectionValues.ToList().Select(v => v.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider))
+                                    });
+                                }
                             }
-                        });
+                            else
+                            {
+                                changes.ForEach(change =>
+                                {
+                                    object value = change.Value.GetAuthenticatedQueryModel(connection.Information, serviceProvider);
+                                    _ = connection.Send(change.CreateResponse(subscription.ReferenceId, value));
+                                });
+
+                                //SendDataToClient(collection.ToList(), property.Key, db, mapping, changes);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            SubscribeCommand tempErrorCommand = new SubscribeCommand()
+                            {
+                                CollectionName = subscriptionGrouping.Key,
+                                ReferenceId = subscription.ReferenceId,
+                                Prefilters = subscription.Prefilters
+                            };
+
+                            _ = connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
+                            logger.LogError($"Error handling subscription '{subscription.ReferenceId}' of {subscriptionGrouping.Key}");
+                            logger.LogError(ex.Message);
+                        }
                     }
                 }
             }
         }
 
-        private void HandleSubscription(SubscriptionConnectionMapping mapping, List<ChangeResponse> changes, 
-            SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serverProvider)
-        {
-            mapping.Subscription.Lock.Wait();
+        //private void HandleSubscription(SubscriptionConnectionMapping mapping, List<ChangeResponse> changes, 
+        //    SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serverProvider)
+        //{
+        //    mapping.Subscription.Lock.Wait();
 
-            try
-            {
-                IQueryable<object> collection = db.GetCollectionValues(serverProvider, mapping.Connection.Information,
-                    property, mapping.Subscription.Prefilters);
+        //    try
+        //    {
+        //        IQueryable<object> collection = db.GetCollectionValues(serverProvider, mapping.Connection.Information,
+        //            property, mapping.Subscription.Prefilters);
 
-                IAfterQueryPrefilter afterQueryPrefilter =
-                    mapping.Subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+        //        IAfterQueryPrefilter afterQueryPrefilter =
+        //            subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
 
-                if (afterQueryPrefilter != null)
-                {
-                    _ = mapping.Connection.Send(new QueryResponse()
-                    {
-                        ReferenceId = mapping.Subscription.ReferenceId,
-                        Result = afterQueryPrefilter.Execute(collection)
-                    });
-                }
-                else
-                {
-                    SendDataToClient(collection.ToList(), property.Key, db, mapping, changes);
-                }
-            }
-            finally
-            {
-                mapping.Subscription.Lock.Release();
-            }
-        }
+        //        if (afterQueryPrefilter != null)
+        //        {
+        //            _ = mapping.Connection.Send(new QueryResponse()
+        //            {
+        //                ReferenceId = mapping.Subscription.ReferenceId,
+        //                Result = afterQueryPrefilter.Execute(collection)
+        //            });
+        //        }
+        //        else
+        //        {
+        //            SendDataToClient(collection.ToList(), property.Key, db, mapping, changes);
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        mapping.Subscription.Lock.Release();
+        //    }
+        //}
 
-        private void SendDataToClient(List<object> collectionValues,
-            Type modelType, SapphireDbContext db, SubscriptionConnectionMapping mapping, List<ChangeResponse> changes)
-        {
-            List<object[]> currentCollectionPrimaryValues = collectionValues.Select((value) => SendRelevantFilesToClient(modelType, db, value, mapping, changes)).ToList();
+        //private void SendDataToClient(List<object> collectionValues,
+        //    Type modelType, SapphireDbContext db, SubscriptionConnectionMapping mapping, List<ChangeResponse> changes)
+        //{
+        //    List<object[]> currentCollectionPrimaryValues = collectionValues.Select((value) => SendRelevantFilesToClient(modelType, db, value, mapping, changes)).ToList();
 
-            foreach (object[] transmittedObject in mapping.Subscription.TransmittedData)
-            {
-                if (currentCollectionPrimaryValues.All(pks => pks.Except(transmittedObject).Any()))
-                {
-                    _ = mapping.Connection.Send(new UnloadResponse
-                    {
-                        PrimaryValues = transmittedObject,
-                        ReferenceId = mapping.Subscription.ReferenceId
-                    });
-                }
-            }
+        //    foreach (object[] transmittedObject in mapping.Subscription.TransmittedData)
+        //    {
+        //        if (currentCollectionPrimaryValues.All(pks => pks.Except(transmittedObject).Any()))
+        //        {
+        //            _ = mapping.Connection.Send(new UnloadResponse
+        //            {
+        //                PrimaryValues = transmittedObject,
+        //                ReferenceId = mapping.Subscription.ReferenceId
+        //            });
+        //        }
+        //    }
 
-            mapping.Subscription.TransmittedData = currentCollectionPrimaryValues;
-        }
+        //    mapping.Subscription.TransmittedData = currentCollectionPrimaryValues;
+        //}
 
-        private object[] SendRelevantFilesToClient(Type modelType, SapphireDbContext db, object obj, SubscriptionConnectionMapping mapping, List<ChangeResponse> relevantChanges)
-        {
-            object[] primaryValues = modelType.GetPrimaryKeyValues(db, obj);
+        //private object[] SendRelevantFilesToClient(Type modelType, SapphireDbContext db, object obj, SubscriptionConnectionMapping mapping, List<ChangeResponse> relevantChanges)
+        //{
+        //    object[] primaryValues = modelType.GetPrimaryKeyValues(db, obj);
 
-            bool clientHasObject = mapping.Subscription.TransmittedData.Any(pks => !pks.Except(primaryValues).Any());
+        //    bool clientHasObject = mapping.Subscription.TransmittedData.Any(pks => !pks.Except(primaryValues).Any());
 
-            if (clientHasObject)
-            {
-                ChangeResponse change = relevantChanges
-                    .FirstOrDefault(c => c.State == ChangeResponse.ChangeState.Modified && !c.PrimaryValues.Except(primaryValues).Any());
+        //    if (clientHasObject)
+        //    {
+        //        ChangeResponse change = relevantChanges
+        //            .FirstOrDefault(c => c.State == ChangeResponse.ChangeState.Modified && !c.PrimaryValues.Except(primaryValues).Any());
 
-                if (change != null)
-                {
-                    object value = change.Value.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider);
-                    _ = mapping.Connection.Send(change.CreateResponse(mapping.Subscription.ReferenceId, value));
-                }
-            }
-            else
-            {
-                _ = mapping.Connection.Send(new LoadResponse
-                {
-                    NewObject = obj.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider),
-                    ReferenceId = mapping.Subscription.ReferenceId
-                });
-            }
+        //        if (change != null)
+        //        {
+        //            object value = change.Value.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider);
+        //            _ = mapping.Connection.Send(change.CreateResponse(mapping.Subscription.ReferenceId, value));
+        //        }
+        //    }
+        //    else
+        //    {
+        //        _ = mapping.Connection.Send(new LoadResponse
+        //        {
+        //            NewObject = obj.GetAuthenticatedQueryModel(mapping.Connection.Information, serviceProvider),
+        //            ReferenceId = mapping.Subscription.ReferenceId
+        //        });
+        //    }
 
-            return primaryValues;
-        }
+        //    return primaryValues;
+        //}
     }
 }

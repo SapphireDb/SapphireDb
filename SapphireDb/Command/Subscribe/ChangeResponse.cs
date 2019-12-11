@@ -11,7 +11,7 @@ namespace SapphireDb.Command.Subscribe
             Value = change.Entity;
             PrimaryValues = Value.GetType().GetPrimaryKeyValues(db, Value);
 
-            CollectionName = ((SapphireDbContext)change.Context).sets[change.Metadata.ClrType].ToLowerInvariant();
+            CollectionName = ((SapphireDbContext)change.Context).GetType().GetDbSetTypes()[change.Metadata.ClrType].ToLowerInvariant();
 
             switch (change.State)
             {
