@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SapphireDb.Internal.Prefilter
 {
     public interface IPrefilter : IPrefilterBase
     {
-        IEnumerable<object> Execute(IEnumerable<object> array);
+        IQueryable<object> Execute(IQueryable<object> array);
     }
 }

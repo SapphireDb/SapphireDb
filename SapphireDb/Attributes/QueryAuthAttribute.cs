@@ -2,7 +2,7 @@
 
 namespace SapphireDb.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property)]
     public class QueryAuthAttribute : AuthAttributeBase
     {
         public QueryAuthAttribute()

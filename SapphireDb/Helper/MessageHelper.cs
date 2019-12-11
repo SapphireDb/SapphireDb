@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SapphireDb.Attributes;
@@ -113,35 +114,34 @@ namespace SapphireDb.Helper
         public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
             HttpInformation information, IServiceProvider serviceProvider, out List<object[]> transmittedData)
         {
-            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => v.Value.ToLowerInvariant() == command.CollectionName.ToLowerInvariant());
+            KeyValuePair<Type, string> property = db.sets.FirstOrDefault(v => string.Equals(v.Value, command.CollectionName, StringComparison.InvariantCultureIgnoreCase));
+            transmittedData = new List<object[]>();
 
             if (property.Key != null)
             {
-                IEnumerable<object> collectionSet = db.GetValues(property, serviceProvider, information);
-
-                foreach (IPrefilter prefilter in command.Prefilters.OfType<IPrefilter>())
-                {
-                    collectionSet = prefilter.Execute(collectionSet);
-                }
-
-                List<object> collectionSetList = collectionSet.ToList();
-
-                List<object> result = collectionSetList.Where(cs => property.Key.CanQuery(information, cs, serviceProvider))
-                    .Select(cs => cs.GetAuthenticatedQueryModel(information, serviceProvider)).ToList();
-
-                IAfterQueryPrefilter afterQueryPrefilter = command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+                IQueryable<object> collectionSetList = db.GetCollectionValues(serviceProvider, information, property, command.Prefilters);
 
                 QueryResponse queryResponse = new QueryResponse()
                 {
-                    Result = afterQueryPrefilter != null ? afterQueryPrefilter.Execute(result) : result,
                     ReferenceId = command.ReferenceId,
                 };
+                
+                IAfterQueryPrefilter afterQueryPrefilter = command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
 
-                transmittedData = collectionSetList.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+                if (afterQueryPrefilter != null)
+                {
+                    queryResponse.Result = afterQueryPrefilter.Execute(collectionSetList);
+                }
+                else
+                {
+                    List<object> result = collectionSetList.ToList();
+                    queryResponse.Result = result.Select(v => v.GetAuthenticatedQueryModel(information, serviceProvider));
+                    transmittedData = result.Select(c => property.Key.GetPrimaryKeyValues(db, c)).ToList();
+                }
+
                 return queryResponse;
             }
 
-            transmittedData = new List<object[]>();
             return command.CreateExceptionResponse<QueryResponse>("No set for collection was found.");
         }
     }

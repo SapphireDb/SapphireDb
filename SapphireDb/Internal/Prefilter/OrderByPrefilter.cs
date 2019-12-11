@@ -25,17 +25,17 @@ namespace SapphireDb.Internal.Prefilter
 
         private Func<object, IComparable> keySelector;
 
-        public IEnumerable<object> Execute(IEnumerable<object> array)
+        public IQueryable<object> Execute(IQueryable<object> array)
         {
-            if (array.Any())
-            {
-                if (keySelector == null)
-                {
-                    keySelector = SelectFunctionString.CreatePredicateFunction(ContextData, engine);
-                }
+            //if (array.Any())
+            //{
+            //    if (keySelector == null)
+            //    {
+            //        keySelector = SelectFunctionString.CreatePredicateFunction(ContextData, engine);
+            //    }
 
-                return Descending ? array.OrderByDescending(keySelector) : array.OrderBy(keySelector);
-            }
+            //    return Descending ? array.OrderByDescending(keySelector) : array.OrderBy(keySelector);
+            //}
 
             return array;
         }

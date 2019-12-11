@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Internal;
+using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 using SapphireDb.Models.Auth;
 
@@ -150,48 +151,40 @@ namespace SapphireDb.Helper
             return db.Roles.ToList().Select(r => GenerateRoleData(r, userRoles));
         }
 
-        public static IEnumerable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpInformation httpInformation)
+        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpInformation httpInformation)
         {
-            IEnumerable<object> values = (IEnumerable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
+            IQueryable<object> values = (IQueryable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
 
             QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
             if (queryFunctionAttribute != null)
             {
-                var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function);
+                var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Static);
 
                 if (queryFunctionInfo != null)
                 {
                     object[] methodParameters = queryFunctionInfo.CreateParameters(httpInformation, serviceProvider);
-                    object queryFunctionRaw = queryFunctionInfo.Invoke(null, methodParameters);
-                    MethodInfo invokeMethod = queryFunctionRaw.GetType().GetMethod("Invoke");
+                    Expression queryFunctionExpression = (Expression)queryFunctionInfo.Invoke(null, methodParameters);
 
-                    if (invokeMethod != null)
-                    {
-                        ParameterExpression valueParameter = Expression.Parameter(typeof(object));
-                        Func<object, bool> queryFunction = Expression.Lambda<Func<object, bool>>(
-                            Expression.Call(
-                                Expression.Constant(queryFunctionRaw),
-                                invokeMethod,
-                                Expression.Convert(valueParameter, property.Key)
-                            ),
-                            valueParameter).Compile();
+                    MethodInfo whereMethodInfo = typeof(Queryable).GetMethods(BindingFlags.Static|BindingFlags.Public).FirstOrDefault(mi => mi.Name == "Where");
+                    whereMethodInfo = whereMethodInfo?.MakeGenericMethod(property.Key);
 
-                        values = values?.Where(queryFunction);
-                    }
+                    values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
                 }
             }
 
-            IProperty[] primaryProperties = property.Key.GetPrimaryKeys(db);
+            return values;
+        }
 
-            for (int i = 0; i < primaryProperties.Length; i++)
+        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, HttpInformation information, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
+        {
+            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider, information);
+
+            foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
-                PropertyInfo pi = primaryProperties[i].PropertyInfo;
-
-                values = i == 0 ? values?.OrderBy(o => pi.GetValue(o))
-                    : ((IOrderedEnumerable<object>)values)?.ThenBy(o => pi.GetValue(o));
+                collectionSet = prefilter.Execute(collectionSet);
             }
 
-            return values;
+            return collectionSet;
         }
 
         public static void ExecuteHookMethod<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
@@ -203,7 +196,7 @@ namespace SapphireDb.Helper
             {
                 string methodName = methodSelector(attribute);
 
-                if (!string.IsNullOrEmpty(methodName))
+                if (!String.IsNullOrEmpty(methodName))
                 {
                     MethodInfo methodInfo = modelType.GetMethod(methodName,
                         BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

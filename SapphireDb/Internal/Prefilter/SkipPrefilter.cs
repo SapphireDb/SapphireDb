@@ -7,7 +7,7 @@ namespace SapphireDb.Internal.Prefilter
     {
         public int Number { get; set; }
 
-        public IEnumerable<object> Execute(IEnumerable<object> array)
+        public IQueryable<object> Execute(IQueryable<object> array)
         {
             return array.Skip(Number);
         }

@@ -6,7 +6,7 @@ namespace SapphireDb.Internal.Prefilter
 {
     public class FirstPrefilter : IAfterQueryPrefilter
     {
-        public object Execute(IEnumerable<object> array)
+        public object Execute(IQueryable<object> array)
         {
             return array.FirstOrDefault();
         }

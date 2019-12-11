@@ -24,7 +24,7 @@ namespace SapphireDb.Internal.Prefilter
 
         private Func<object, object> keySelector;
 
-        public object Execute(IEnumerable<object> array)
+        public object Execute(IQueryable<object> array)
         {
             if (array.Any())
             {

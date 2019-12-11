@@ -94,7 +94,7 @@ namespace SapphireDb.Command.Execute
             if (result != null)
             {
                 try { result = await (dynamic)result; }
-                catch { /* Do nothing because result is not an awaitable and already contains the expected result */ }
+                catch (RuntimeBinderException) { /* Do nothing because result is not an awaitable and already contains the expected result */ }
             }
 
             logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);

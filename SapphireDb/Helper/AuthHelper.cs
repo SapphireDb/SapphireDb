@@ -19,12 +19,6 @@ namespace SapphireDb.Helper
             return !options.ApiConfigurations.Any() || options.ApiConfigurations.Any((config) => config.Key == key && config.Secret == secret.ComputeHash());
         }
 
-        public static bool CanQuery(this Type t, HttpInformation httpInformation, object entityObject,
-            IServiceProvider serviceProvider)
-        {
-            return t.HandleAuthAttribute<QueryAuthAttribute>(httpInformation, entityObject, serviceProvider);
-        }
-
         public static bool CanQuery(this AuthPropertyInfo pi, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {

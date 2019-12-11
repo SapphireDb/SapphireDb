@@ -23,17 +23,17 @@ namespace SapphireDb.Internal.Prefilter
 
         private Func<object, bool> predicate;
 
-        public IEnumerable<object> Execute(IEnumerable<object> array)
+        public IQueryable<object> Execute(IQueryable<object> array)
         {
-            if (array.Any())
-            {
-                if (predicate == null)
-                {
-                    predicate = CompareFunctionString.CreateBoolFunction(ContextData, engine);
-                }
+            //if (array.Any())
+            //{
+            //    if (predicate == null)
+            //    {
+            //        predicate = CompareFunctionString.CreateBoolFunction(ContextData, engine);
+            //    }
 
-                return array.Where(predicate);
-            }
+            //    return array.Where(predicate);
+            //}
 
             return array;
         }

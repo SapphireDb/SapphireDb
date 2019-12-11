@@ -6,7 +6,6 @@ using SapphireDb.Models;
 
 namespace WebUI.Data.Models
 {
-    [QueryAuth("Auth")]
     [CreateEvent("BeforeCreate")]
     [UpdateEvent("BeforeUpdate")]
     [QueryFunction("QueryFunction")]
@@ -27,12 +26,6 @@ namespace WebUI.Data.Models
             }
 
             return (m) => m.UserId == userId || m.ToId == userId;
-        }
-
-        public bool Auth(HttpInformation context)
-        {
-            string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
-            return !string.IsNullOrEmpty(userId) && (UserId == userId || ToId == userId);
         }
 
         public void BeforeCreate(HttpInformation context)
