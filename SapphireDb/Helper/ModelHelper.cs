@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -35,42 +36,34 @@ namespace SapphireDb.Helper
             return type.GetPrimaryKeys(db).Select(p => p.Name.ToCamelCase()).ToArray();
         }
 
-        private static readonly object PrimaryKeyLock = new object();
-        private static readonly Dictionary<Type, IProperty[]> PrimaryKeyDictionary = new Dictionary<Type, IProperty[]>();
+        private static readonly ConcurrentDictionary<Type, IProperty[]> PrimaryKeyDictionary = new ConcurrentDictionary<Type, IProperty[]>();
 
         public static IProperty[] GetPrimaryKeys(this Type type, SapphireDbContext db)
         {
-            lock (PrimaryKeyLock)
+            if (PrimaryKeyDictionary.TryGetValue(type, out IProperty[] primaryKeys))
             {
-                if (PrimaryKeyDictionary.TryGetValue(type, out IProperty[] primaryKeys))
-                {
-                    return primaryKeys;
-                }
-
-                primaryKeys = db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
-                PrimaryKeyDictionary.Add(type, primaryKeys);
-
                 return primaryKeys;
             }
+
+            primaryKeys = db.Model.FindEntityType(type.FullName).FindPrimaryKey().Properties.ToArray();
+            PrimaryKeyDictionary.TryAdd(type, primaryKeys);
+
+            return primaryKeys;
         }
 
-        private static readonly object PropertyInfosLock = new object();
-        private static readonly Dictionary<Type, AuthPropertyInfo[]> PropertyInfosDictionary = new Dictionary<Type, AuthPropertyInfo[]>();
+        private static readonly ConcurrentDictionary<Type, AuthPropertyInfo[]> PropertyInfosDictionary = new ConcurrentDictionary<Type, AuthPropertyInfo[]>();
 
         public static AuthPropertyInfo[] GetAuthPropertyInfos(this Type entityType)
         {
-            lock (PropertyInfosLock)
+            if (PropertyInfosDictionary.TryGetValue(entityType, out AuthPropertyInfo[] propertyInfos))
             {
-                if (PropertyInfosDictionary.TryGetValue(entityType, out AuthPropertyInfo[] propertyInfos))
-                {
-                    return propertyInfos;
-                }
-
-                propertyInfos = entityType.GetProperties().Select(p => new AuthPropertyInfo(p)).ToArray();
-                PropertyInfosDictionary.Add(entityType, propertyInfos);
-
                 return propertyInfos;
             }
+
+            propertyInfos = entityType.GetProperties().Select(p => new AuthPropertyInfo(p)).ToArray();
+            PropertyInfosDictionary.TryAdd(entityType, propertyInfos);
+
+            return propertyInfos;
         }
 
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
@@ -119,8 +112,7 @@ namespace SapphireDb.Helper
             return userData;
         }
 
-        public static IEnumerable<Dictionary<string, object>> GetUsers(ISapphireAuthContext db,
-            AuthDbContextTypeContainer typeContainer, object usermanager)
+        public static IEnumerable<Dictionary<string, object>> GetUsers(AuthDbContextTypeContainer typeContainer, object usermanager)
         {
             IEnumerable<IdentityUser> users = (IQueryable<IdentityUser>)typeContainer
                 .UserManagerType.GetProperty("Users").GetValue(usermanager);
@@ -181,6 +173,11 @@ namespace SapphireDb.Helper
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
+                if (!prefilter.Initialized)
+                {
+                    prefilter.Initialize(property.Key);
+                }
+
                 collectionSet = prefilter.Execute(collectionSet);
             }
 

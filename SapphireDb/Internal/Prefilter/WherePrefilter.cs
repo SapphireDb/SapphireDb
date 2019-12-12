@@ -15,6 +15,10 @@ namespace SapphireDb.Internal.Prefilter
             engine = JsEngineSwitcher.Current.CreateDefaultEngine();
         }
 
+        public bool Initialized { get; set; } = true;
+
+        public void Initialize(Type modelType) { }
+
         private readonly IJsEngine engine;
 
         public string CompareFunctionString { get; set; }

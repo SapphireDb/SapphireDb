@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using JavaScriptEngineSwitcher.Core;
 using SapphireDb.Helper;
 
@@ -10,39 +12,41 @@ namespace SapphireDb.Internal.Prefilter
 {
     public class OrderByPrefilter : IPrefilter
     {
-        public OrderByPrefilter()
-        {
-            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
-        }
+        public string Property { get; set; }
 
-        private readonly IJsEngine engine;
-
-        public string SelectFunctionString { get; set; }
-
-        public object[] ContextData { get; set; }
+        protected Expression<Func<object, object>> PropertySelectExpression { get; set; }
 
         public bool Descending { get; set; }
 
-        private Func<object, IComparable> keySelector;
+
+        public bool Initialized { get; set; }
+
+        public void Initialize(Type modelType)
+        {
+            Initialized = true;
+
+            string propertyName = modelType.GetProperty(Property, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance)?.Name;
+
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ParameterExpression parameter = Expression.Parameter(typeof(object), "x");
+                UnaryExpression convertExpression = Expression.Convert(parameter, modelType);
+                
+                MemberExpression body = Expression.PropertyOrField(convertExpression, propertyName);
+                PropertySelectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
+            }
+        }
 
         public IQueryable<object> Execute(IQueryable<object> array)
         {
-            //if (array.Any())
-            //{
-            //    if (keySelector == null)
-            //    {
-            //        keySelector = SelectFunctionString.CreatePredicateFunction(ContextData, engine);
-            //    }
-
-            //    return Descending ? array.OrderByDescending(keySelector) : array.OrderBy(keySelector);
-            //}
-
-            return array;
+            return Descending
+                ? array.OrderByDescending(PropertySelectExpression)
+                : array.OrderBy(PropertySelectExpression);
         }
 
         public void Dispose()
         {
-            engine.Dispose();
+            
         }
     }
 }

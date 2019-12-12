@@ -85,7 +85,7 @@ namespace SapphireDb.Helper
         public static void SendUsersUpdate(ISapphireAuthContext db, AuthDbContextTypeContainer typeContainer, object usermanager,
             ConnectionManager connectionManager)
         {
-            List<Dictionary<string, object>> users = ModelHelper.GetUsers(db, typeContainer, usermanager).ToList();
+            List<Dictionary<string, object>> users = ModelHelper.GetUsers(typeContainer, usermanager).ToList();
 
             foreach (ConnectionBase connection in connectionManager.connections.Where(wsc => !string.IsNullOrEmpty(wsc.UsersSubscription)))
             {

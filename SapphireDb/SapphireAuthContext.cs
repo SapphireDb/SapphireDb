@@ -5,7 +5,7 @@ using SapphireDb.Models.Auth;
 
 namespace SapphireDb
 {
-    public class SapphireAuthContext<UserType> : IdentityDbContext<UserType>, ISapphireAuthContext where UserType : IdentityUser
+    public class SapphireAuthContext<TUserType> : IdentityDbContext<TUserType>, ISapphireAuthContext where TUserType : IdentityUser
     {
         public SapphireAuthContext(DbContextOptions options) : base(options)
         {

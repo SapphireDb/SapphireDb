@@ -28,7 +28,7 @@ namespace SapphireDb.Command.SubscribeUsers
             return new SubscribeUsersResponse()
             {
                 ReferenceId = command.ReferenceId,
-                Users = ModelHelper.GetUsers(GetContext(), contextTypeContainer, usermanager).ToList()
+                Users = ModelHelper.GetUsers(contextTypeContainer, usermanager).ToList()
             };
         }
     }
