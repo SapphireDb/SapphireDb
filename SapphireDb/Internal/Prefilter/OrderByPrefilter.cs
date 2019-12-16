@@ -18,12 +18,23 @@ namespace SapphireDb.Internal.Prefilter
 
         public bool Descending { get; set; }
 
+        public virtual IQueryable<object> Execute(IQueryable<object> array)
+        {
+            return Descending
+                ? array.OrderByDescending(PropertySelectExpression)
+                : array.OrderBy(PropertySelectExpression);
+        }
 
-        public bool Initialized { get; set; }
+        private bool initialized = false;
 
         public void Initialize(Type modelType)
         {
-            Initialized = true;
+            if (initialized)
+            {
+                return;
+            }
+
+            initialized = true;
 
             string propertyName = modelType.GetProperty(Property, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.Instance)?.Name;
 
@@ -31,17 +42,11 @@ namespace SapphireDb.Internal.Prefilter
             {
                 ParameterExpression parameter = Expression.Parameter(typeof(object), "x");
                 UnaryExpression convertExpression = Expression.Convert(parameter, modelType);
-                
-                MemberExpression body = Expression.PropertyOrField(convertExpression, propertyName);
-                PropertySelectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
-            }
-        }
 
-        public IQueryable<object> Execute(IQueryable<object> array)
-        {
-            return Descending
-                ? array.OrderByDescending(PropertySelectExpression)
-                : array.OrderBy(PropertySelectExpression);
+                MemberExpression body = Expression.PropertyOrField(convertExpression, propertyName);
+                UnaryExpression bodyConverted = Expression.Convert(body, typeof(object));
+                PropertySelectExpression = Expression.Lambda<Func<object, object>>(bodyConverted, parameter);
+            }
         }
 
         public void Dispose()

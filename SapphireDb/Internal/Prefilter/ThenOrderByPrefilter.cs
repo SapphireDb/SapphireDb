@@ -10,11 +10,11 @@ namespace SapphireDb.Internal.Prefilter
 {
     public class ThenOrderByPrefilter : OrderByPrefilter
     {
-        public IQueryable<object> Execute(IOrderedQueryable<object> array)
+        public override IQueryable<object> Execute(IQueryable<object> array)
         {
             return Descending
-                ? array.ThenByDescending(PropertySelectExpression)
-                : array.ThenBy(PropertySelectExpression);
+                ? ((IOrderedQueryable<object>)array).ThenByDescending(PropertySelectExpression)
+                : ((IOrderedQueryable<object>)array).ThenBy(PropertySelectExpression);
         }
     }
 }

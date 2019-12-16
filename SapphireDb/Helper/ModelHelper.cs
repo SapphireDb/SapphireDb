@@ -173,11 +173,7 @@ namespace SapphireDb.Helper
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
-                if (!prefilter.Initialized)
-                {
-                    prefilter.Initialize(property.Key);
-                }
-
+                prefilter.Initialize(property.Key);
                 collectionSet = prefilter.Execute(collectionSet);
             }
 

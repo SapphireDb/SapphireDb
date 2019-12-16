@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JavaScriptEngineSwitcher.Core;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Helper;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -10,22 +11,7 @@ namespace SapphireDb.Internal.Prefilter
 {
     public class WherePrefilter : IPrefilter
     {
-        public WherePrefilter()
-        {
-            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
-        }
-
-        public bool Initialized { get; set; } = true;
-
-        public void Initialize(Type modelType) { }
-
-        private readonly IJsEngine engine;
-
-        public string CompareFunctionString { get; set; }
-
-        public object[] ContextData { get; set; }
-
-        private Func<object, bool> predicate;
+        public List<JToken> Conditions { get; set; }
 
         public IQueryable<object> Execute(IQueryable<object> array)
         {
@@ -42,9 +28,21 @@ namespace SapphireDb.Internal.Prefilter
             return array;
         }
 
+        private bool initialized = false;
+
+        public void Initialize(Type modelType)
+        {
+            if (initialized)
+            {
+                return;
+            }
+
+            initialized = true;
+        }
+
         public void Dispose()
         {
-            engine.Dispose();
+            
         }
     }
 }

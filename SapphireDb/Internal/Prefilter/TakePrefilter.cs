@@ -8,14 +8,12 @@ namespace SapphireDb.Internal.Prefilter
     {
         public int Number { get; set; }
 
-        public bool Initialized { get; set; } = true;
-
-        public void Initialize(Type modelType) { }
-
         public IQueryable<object> Execute(IQueryable<object> array)
         {
             return array.Take(Number);
         }
+
+        public void Initialize(Type modelType) { }
 
         public void Dispose()
         {
