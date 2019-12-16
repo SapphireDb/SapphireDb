@@ -143,6 +143,15 @@ namespace SapphireDb.Connection
                 }
                 else
                 {
+                    IEnumerable<WherePrefilter> wherePrefilters = subscription.Prefilters.OfType<WherePrefilter>();
+
+                    foreach (WherePrefilter wherePrefilter in wherePrefilters)
+                    {
+                        wherePrefilter.Initialize(property.Key);
+                        Func<object, bool> whereFunction = wherePrefilter.WhereExpression.Compile();
+                        collectionChanges = collectionChanges.Where((change) => whereFunction(change.Value)).ToList();
+                    }
+
                     collectionChanges.ForEach(change =>
                     {
                         object value = change.Value.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider);

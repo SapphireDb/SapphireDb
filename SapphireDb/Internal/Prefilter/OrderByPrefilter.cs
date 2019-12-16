@@ -40,7 +40,7 @@ namespace SapphireDb.Internal.Prefilter
 
             if (!string.IsNullOrEmpty(propertyName))
             {
-                ParameterExpression parameter = Expression.Parameter(typeof(object), "x");
+                ParameterExpression parameter = Expression.Parameter(typeof(object));
                 UnaryExpression convertExpression = Expression.Convert(parameter, modelType);
 
                 MemberExpression body = Expression.PropertyOrField(convertExpression, propertyName);
