@@ -12,11 +12,11 @@ namespace SapphireDb.Internal.Prefilter
     {
         public List<string> Properties { get; set; }
 
-        private Expression<Func<object, object>> SelectExpression;
+        private Expression<Func<object, object>> selectExpression;
 
         public object Execute(IQueryable<object> array)
         {
-            return array.Select(SelectExpression);
+            return array.Select(selectExpression);
         }
 
         private bool initialized;
@@ -52,10 +52,21 @@ namespace SapphireDb.Internal.Prefilter
             }
             else
             {
-                body = Expression.Constant(null);
+                IEnumerable<UnaryExpression> propertyExpressions = Properties
+                    .Select(propertyName => modelType.GetProperty(propertyName,
+                        BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase |
+                        BindingFlags.Instance))
+                    .Where(property => property != null)
+                    .Select((property, index) =>
+                    {
+                        MemberExpression propertyExpression = Expression.PropertyOrField(modelExpression, property.Name);
+                        return Expression.Convert(propertyExpression, typeof(object));
+                    });
+
+                body = Expression.NewArrayInit(typeof(object), propertyExpressions);
             }
 
-            SelectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
+            selectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
         }
 
         public void Dispose()
