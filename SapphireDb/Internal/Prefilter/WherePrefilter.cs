@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json.Linq;
+using SapphireDb.Helper;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using JavaScriptEngineSwitcher.Core;
-using Newtonsoft.Json.Linq;
-using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -33,56 +30,9 @@ namespace SapphireDb.Internal.Prefilter
 
             ParameterExpression parameter = Expression.Parameter(typeof(object));
             UnaryExpression modelExpression = Expression.Convert(parameter, modelType);
+            Expression whereConditionBody = ExpressionHelper.ConvertConditionParts(modelType, Conditions, modelExpression);
 
-            //Expression t = ExpressionHelper.CreateCompareExpression(modelType, Conditions.First().Value<JArray>(), modelExpression);
-            Expression t = ConvertConditionParts(modelType, Conditions, modelExpression);
-
-            WhereExpression = Expression.Lambda<Func<object, bool>>(t, parameter);
-        }
-
-        private Expression ConvertConditionParts(Type modelType, JToken conditionParts, Expression modelExpression)
-        {
-            if (conditionParts.Type == JTokenType.Array)
-            {
-                if (conditionParts.First().Type == JTokenType.Array)
-                {
-                    Expression completeExpression = null;
-                    Expression prevExpression = null;
-
-                    foreach (JToken combineOperator in conditionParts.Where(t => t.Type == JTokenType.String))
-                    {
-                        if (prevExpression == null)
-                        {
-                            prevExpression = ConvertConditionParts(modelType, combineOperator.Previous, modelExpression);
-                        }
-                        else
-                        {
-                            prevExpression = completeExpression;
-                        }
-
-                        Expression nextExpression = ConvertConditionParts(modelType, combineOperator.Next, modelExpression);
-
-                        string operatorValue = combineOperator.Value<string>();
-
-                        if (operatorValue == "and")
-                        {
-                            completeExpression = Expression.AndAlso(prevExpression, nextExpression);
-                        }
-                        else
-                        {
-                            completeExpression = Expression.OrElse(prevExpression, nextExpression);
-                        }
-                    }
-
-                    return completeExpression;
-                }
-                else
-                {
-                    return ExpressionHelper.CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression);
-                }
-            }
-
-            throw new Exception("Wrong order of conditions");
+            WhereExpression = Expression.Lambda<Func<object, bool>>(whereConditionBody, parameter);
         }
 
         public void Dispose()

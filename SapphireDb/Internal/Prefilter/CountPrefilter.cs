@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 
@@ -15,5 +16,7 @@ namespace SapphireDb.Internal.Prefilter
         {
             
         }
+
+        public void Initialize(Type modelType) { }
     }
 }

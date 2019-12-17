@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 
@@ -12,6 +13,11 @@ namespace SapphireDb.Internal.Prefilter
         }
 
         public void Dispose()
+        {
+            
+        }
+
+        public void Initialize(Type modelType)
         {
             
         }

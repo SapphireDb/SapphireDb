@@ -1,59 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JavaScriptEngineSwitcher.Core;
+using System.Linq.Expressions;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Helper;
-
-// ReSharper disable PossibleMultipleEnumeration
 
 namespace SapphireDb.Internal.Prefilter
 {
     public class SelectPrefilter : IAfterQueryPrefilter
     {
-        public SelectPrefilter()
-        {
-            engine = JsEngineSwitcher.Current.CreateDefaultEngine();
-        }
+        public List<string> Properties { get; set; }
 
-        private readonly IJsEngine engine;
-
-        public string SelectFunctionString { get; set; }
-
-        public object[] ContextData { get; set; }
-
-        private Func<object, object> keySelector;
+        private Expression<Func<object, object>> SelectExpression;
 
         public object Execute(IQueryable<object> array)
         {
-            if (array.Any())
+            return array.Select(SelectExpression);
+        }
+
+        private bool initialized;
+
+        public void Initialize(Type modelType)
+        {
+            if (initialized)
             {
-                if (keySelector == null)
-                {
-                    keySelector = x =>
-                    {
-                        string result = SelectFunctionString.CreatePredicateFunction(ContextData, engine)(x);
-
-                        try
-                        {
-                            return JToken.Parse(result);
-                        }
-                        catch
-                        {
-                            return result;
-                        }
-                    };
-                }
-
-                return array.Select(keySelector);
+                return;
             }
 
-            return array;
+            initialized = true;
+
+            ParameterExpression parameter = Expression.Parameter(typeof(object));
+            UnaryExpression modelExpression = Expression.Convert(parameter, modelType);
+
+            Expression body;
+
+            if (Properties.Count == 1)
+            {
+                string propertyName = modelType.GetProperty(Properties[0],
+                    BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase |
+                    BindingFlags.Instance)?.Name;
+
+                if (string.IsNullOrEmpty(propertyName))
+                {
+                    body = Expression.Constant(null);
+                }
+                else
+                {
+                    body = Expression.PropertyOrField(modelExpression, propertyName);
+                }
+            }
+            else
+            {
+                body = Expression.Constant(null);
+            }
+
+            SelectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
         }
 
         public void Dispose()
         {
-            engine.Dispose();
+            
         }
     }
 }

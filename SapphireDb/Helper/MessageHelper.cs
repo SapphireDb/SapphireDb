@@ -129,6 +129,7 @@ namespace SapphireDb.Helper
 
                 if (afterQueryPrefilter != null)
                 {
+                    afterQueryPrefilter.Initialize(property.Key);
                     queryResponse.Result = afterQueryPrefilter.Execute(collectionSetList);
                 }
                 else
