@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Jint;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Command.Delete;

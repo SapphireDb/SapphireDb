@@ -9,7 +9,7 @@ namespace SapphireDb.Internal.Prefilter
     {
         public object Execute(IQueryable<object> array)
         {
-            return array.LastOrDefault();
+            return array.AsEnumerable().LastOrDefault();
         }
 
         public void Dispose()

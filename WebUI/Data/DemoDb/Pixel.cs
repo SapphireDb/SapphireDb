@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using Esprima.Ast;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SapphireDb.Attributes;
-using SapphireDb.Models;
-using Expression = System.Linq.Expressions.Expression;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace WebUI.Data.DemoDb
 {

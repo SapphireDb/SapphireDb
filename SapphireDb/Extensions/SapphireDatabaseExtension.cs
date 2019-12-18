@@ -12,8 +12,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using JavaScriptEngineSwitcher.Extensions.MsDependencyInjection;
-using JavaScriptEngineSwitcher.Jint;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using SapphireDb.Connection;
 using SapphireDb.Connection.SSE;
@@ -113,9 +111,6 @@ namespace SapphireDb.Extensions
             {
                 services.AddTransient(handler.Value);
             }
-
-            services.AddJsEngineSwitcher(jsOptions => jsOptions.DefaultEngineName = JintJsEngine.EngineName)
-                .AddJint();
 
             return new SapphireDatabaseBuilder(services);
         }
