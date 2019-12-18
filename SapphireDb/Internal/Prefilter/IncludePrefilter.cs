@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -11,7 +13,7 @@ namespace SapphireDb.Internal.Prefilter
     {
         public string Include { get; set; }
 
-        public List<Type> AffectedModelTypes { get; set; } = new List<Type>();
+        public List<string> AffectedCollectionNames { get; set; }
 
         public void Dispose()
         {
@@ -29,24 +31,29 @@ namespace SapphireDb.Internal.Prefilter
 
             initialized = true;
 
+            List<Type> affectedTypes = new List<Type>();
+
             Type propertyType = modelType;
 
             foreach (string includePart in Include.Split('.'))
             {
-                PropertyInfo propertyInfo = propertyType.GetProperty(includePart);
+                PropertyInfo propertyInfo = propertyType.GetProperties().FirstOrDefault(p => p.Name.Equals(includePart, StringComparison.InvariantCultureIgnoreCase));
 
                 if (propertyInfo == null)
                 {
                     break;
                 }
 
-                propertyType = propertyInfo.PropertyType;
 
-                if (!AffectedModelTypes.Contains(propertyType) && propertyType != modelType)
+                propertyType = typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType) ? propertyInfo.PropertyType.GenericTypeArguments[0] : propertyInfo.PropertyType;
+
+                if (!affectedTypes.Contains(propertyType) && propertyType != modelType)
                 {
-                    AffectedModelTypes.Add(propertyType);
+                    affectedTypes.Add(propertyType);
                 }
             }
+
+            AffectedCollectionNames = affectedTypes.Select(collectionType => collectionType.GetCollectionName().Value).ToList();
         }
 
         public IQueryable<object> Execute(IQueryable<object> array)

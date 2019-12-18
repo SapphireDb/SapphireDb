@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SapphireDb.Attributes;
 
 namespace WebUI.Data.DemoDb
 {
@@ -17,5 +18,8 @@ namespace WebUI.Data.DemoDb
         public Guid UserId { get; set; }
 
         public DemoUser User { get; set; }
+
+        [Updatable]
+        public string Content { get; set; }
     }
 }

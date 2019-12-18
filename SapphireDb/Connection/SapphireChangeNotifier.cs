@@ -70,7 +70,8 @@ namespace SapphireDb.Connection
         public void HandleCollections(ConnectionBase connection, string contextName, Type dbContextType, List<ChangeResponse> changes, IServiceProvider requestServiceProvider)
         {
             IEnumerable<IGrouping<string, CollectionSubscription>> subscriptionGroupings = connection.Subscriptions
-                        .Where(s => s.ContextName == contextName).GroupBy(s => s.CollectionName);
+                        .Where(s => s.ContextName == contextName)
+                        .GroupBy(s => s.CollectionName);
 
             foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in subscriptionGroupings)
             {
@@ -79,50 +80,45 @@ namespace SapphireDb.Connection
                 List<ChangeResponse> collectionChanges = changes
                     .Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
 
-                if (!collectionChanges.Any())
+                if (collectionChanges.Any())
                 {
-                    continue;
-                }
-
-                QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
-                if (queryFunctionAttribute != null)
-                {
-                    var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-
-                    if (queryFunctionInfo != null)
+                    QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+                    if (queryFunctionAttribute != null)
                     {
-                        object[] methodParameters = queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
-                        dynamic queryFunctionExpression = ((dynamic)queryFunctionInfo.Invoke(null, methodParameters)).Compile();
+                        var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 
-                        collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value)).ToList();
+                        if (queryFunctionInfo != null)
+                        {
+                            object[] methodParameters = queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
+                            dynamic queryFunctionExpression = ((dynamic)queryFunctionInfo.Invoke(null, methodParameters)).Compile();
+
+                            collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value)).ToList();
+                        }
                     }
-                }
-
-                if (!collectionChanges.Any())
-                {
-                    continue;
                 }
 
                 foreach (CollectionSubscription subscription in subscriptionGrouping)
                 {
                     Task.Run(() =>
                     {
-                        HandleSubscription(subscription, dbContextType, requestServiceProvider, connection, property, collectionChanges);
+                        HandleSubscription(subscription, dbContextType, requestServiceProvider, connection, property, collectionChanges, changes);
                     });
                 }
             }
         }
 
-        public void HandleSubscription(CollectionSubscription subscription, Type dbContextType, IServiceProvider requestServiceProvider, ConnectionBase connection, KeyValuePair<Type, string> property, List<ChangeResponse> collectionChanges)
+        public void HandleSubscription(CollectionSubscription subscription, Type dbContextType, IServiceProvider requestServiceProvider, ConnectionBase connection, KeyValuePair<Type, string> property, List<ChangeResponse> collectionChanges, List<ChangeResponse> allChanges)
         {
             try
             {
-                if (subscription.Prefilters.Any(prefilter => prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
+                bool anyCollectionChanges = collectionChanges.Any();
+
+                if ((anyCollectionChanges && subscription.Prefilters.Any(prefilter => prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
+                    || HasIncludePrefilterWithChange(subscription, allChanges))
                 {
                     SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
 
-                    IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider, connection.Information, property,
-                        subscription.Prefilters);
+                    IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider, connection.Information, property, subscription.Prefilters);
 
                     IAfterQueryPrefilter afterQueryPrefilter =
                         subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
@@ -146,7 +142,7 @@ namespace SapphireDb.Connection
                         });
                     }
                 }
-                else
+                else if (anyCollectionChanges)
                 {
                     IEnumerable<WherePrefilter> wherePrefilters = subscription.Prefilters.OfType<WherePrefilter>();
 
@@ -177,6 +173,20 @@ namespace SapphireDb.Connection
                 logger.LogError($"Error handling subscription '{subscription.ReferenceId}' of {subscription.CollectionName}");
                 logger.LogError(ex.Message);
             }
+        }
+
+        private bool HasIncludePrefilterWithChange(CollectionSubscription subscription, List<ChangeResponse> allChanges)
+        {
+            IPrefilterBase includePrefilter = subscription.Prefilters.FirstOrDefault(prefilter => prefilter is IncludePrefilter);
+
+            if (includePrefilter == null)
+            {
+                return false;
+            }
+
+            List<string> affectedCollections = ((IncludePrefilter)includePrefilter).AffectedCollectionNames;
+            return allChanges.Any(change => change.CollectionName.Equals(subscription.CollectionName, StringComparison.InvariantCultureIgnoreCase)) ||
+                   affectedCollections.Any(collectionName => allChanges.Any(change => change.CollectionName.Equals(collectionName, StringComparison.InvariantCultureIgnoreCase)));
         }
     }
 }

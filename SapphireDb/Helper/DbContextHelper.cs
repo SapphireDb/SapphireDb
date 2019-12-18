@@ -29,5 +29,11 @@ namespace SapphireDb.Helper
         {
             return dbContextType.GetDbSetTypes().FirstOrDefault(v => string.Equals(v.Value, collectionName, StringComparison.InvariantCultureIgnoreCase));
         }
+
+        public static KeyValuePair<Type, string> GetCollectionName(this Type modelType)
+        {
+            return DbContextSets.FirstOrDefault(dbSet => dbSet.Value.ContainsKey(modelType)).Value
+                .FirstOrDefault(collection => collection.Key == modelType);
+        }
     }
 }
