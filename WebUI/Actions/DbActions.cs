@@ -6,6 +6,7 @@ using FileContextCore;
 using Microsoft.EntityFrameworkCore;
 using SapphireDb.Actions;
 using WebUI.Data;
+using WebUI.Data.DemoDb;
 using WebUI.Data.Models;
 
 namespace WebUI.Actions
@@ -15,10 +16,12 @@ namespace WebUI.Actions
         public static string DbName;
 
         private readonly RealtimeContext db;
+        private readonly DemoContext demoDb;
 
-        public DbActions(RealtimeContext db)
+        public DbActions(RealtimeContext db, DemoContext demoDb)
         {
             this.db = db;
+            this.demoDb = demoDb;
         }
 
         public bool testConnection(string key)
@@ -51,6 +54,19 @@ namespace WebUI.Actions
             db.SaveChanges();
 
             DbName = key;
+        }
+
+        public void Create()
+        {
+            DemoUser u = new DemoUser();
+            demoDb.Users.Add(u);
+            demoDb.UserEntries.Add(new UserEntry() {UserId = u.Id});
+            demoDb.SaveChanges();
+        }
+
+        public void IncludeTest()
+        {
+            var t = demoDb.Users.Include("Entries");
         }
     }
 }

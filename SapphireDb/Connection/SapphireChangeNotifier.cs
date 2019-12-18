@@ -105,7 +105,10 @@ namespace SapphireDb.Connection
 
                 foreach (CollectionSubscription subscription in subscriptionGrouping)
                 {
-                    HandleSubscription(subscription, dbContextType, requestServiceProvider, connection, property, collectionChanges);
+                    Task.Run(() =>
+                    {
+                        HandleSubscription(subscription, dbContextType, requestServiceProvider, connection, property, collectionChanges);
+                    });
                 }
             }
         }

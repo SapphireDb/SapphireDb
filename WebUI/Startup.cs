@@ -52,6 +52,7 @@ namespace WebUI
             SapphireDatabaseBuilder realtimeBuilder = services.AddSapphireDb(options)
                 .AddContext<RealtimeContext>(
                     cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
+                //.AddContext<DemoContext>(cfg => cfg.UseFileContextDatabase(), "demo");
                 //.AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
                 .AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;"), "demo");
 

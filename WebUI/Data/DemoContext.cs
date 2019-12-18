@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -21,5 +22,8 @@ namespace WebUI.Data
         public DbSet<Document> Documents { get; set; }
 
         public DbSet<Pixel> Pixels { get; set; }
+
+        public DbSet<DemoUser> Users { get; set; }
+        public DbSet<UserEntry> UserEntries { get; set; }
     }
 }
