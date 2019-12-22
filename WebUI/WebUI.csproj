@@ -19,6 +19,10 @@
     <ProjectReference Include="..\SapphireDb\SapphireDb.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles" />
+  </ItemGroup>
+
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build -- --prod --output-path=$(PublishDir)dist" />
   </Target>
