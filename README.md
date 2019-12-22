@@ -27,6 +27,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 - :floppy_disk: Easy CRUD operations
 - :key: Authentication/Authorization included
 - :heavy_check_mark: Database support
+- :open_file_folder: Supports includes/joins
 - :electric_plug: Actions
 - :globe_with_meridians: NLB support
 

@@ -16,6 +16,7 @@ namespace SapphireDb.Models.Auth
 
         public UpdatableAttribute UpdatableAttribute { get; set; }
 
+        public NonCreatableAttribute NonCreatableAttribute { get; set; }
 
         public AuthPropertyInfo(PropertyInfo propertyInfo)
         {
@@ -23,6 +24,7 @@ namespace SapphireDb.Models.Auth
             QueryAuthAttribute = PropertyInfo.GetCustomAttribute<QueryAuthAttribute>();
             UpdateAuthAttribute = PropertyInfo.GetCustomAttribute<UpdateAuthAttribute>();
             UpdatableAttribute = PropertyInfo.GetCustomAttribute<UpdatableAttribute>();
+            NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>();
         }
     }
 }

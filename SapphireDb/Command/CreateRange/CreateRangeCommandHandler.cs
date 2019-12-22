@@ -72,24 +72,25 @@ namespace SapphireDb.Command.CreateRange
 
         private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context)
         {
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newValue, context, serviceProvider);
-
-            if (!ValidationHelper.ValidateModel(newValue, serviceProvider, out Dictionary<string, List<string>> validationResults))
+            object newEntityObject = property.Key.SetFields(newValue, db);
+            
+            if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
                 return new CreateResponse()
                 {
-                    NewObject = newValue,
+                    NewObject = newEntityObject,
                     ValidationResults = validationResults
                 };
             }
 
-            db.Add(newValue);
+            db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newValue, context, serviceProvider);
-
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
+            
             return new CreateResponse()
             {
-                NewObject = newValue
+                NewObject = newEntityObject,
             };
         }
     }

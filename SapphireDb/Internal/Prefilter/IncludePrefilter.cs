@@ -13,6 +13,8 @@ namespace SapphireDb.Internal.Prefilter
     {
         public string Include { get; set; }
 
+        private string includeConverted;
+        
         public List<string> AffectedCollectionNames { get; set; }
 
         public void Dispose()
@@ -32,7 +34,8 @@ namespace SapphireDb.Internal.Prefilter
             initialized = true;
 
             List<Type> affectedTypes = new List<Type>();
-
+            List<string> navigationPropertyNames = new List<string>();
+            
             Type propertyType = modelType;
 
             foreach (string includePart in Include.Split('.'))
@@ -41,10 +44,11 @@ namespace SapphireDb.Internal.Prefilter
 
                 if (propertyInfo == null)
                 {
-                    break;
+                    throw new Exception("Navigation property not found");
                 }
 
-
+                navigationPropertyNames.Add(propertyInfo.Name);
+                
                 propertyType = typeof(IEnumerable).IsAssignableFrom(propertyInfo.PropertyType) ? propertyInfo.PropertyType.GenericTypeArguments[0] : propertyInfo.PropertyType;
 
                 if (!affectedTypes.Contains(propertyType) && propertyType != modelType)
@@ -53,12 +57,13 @@ namespace SapphireDb.Internal.Prefilter
                 }
             }
 
+            includeConverted = string.Join('.', navigationPropertyNames);
             AffectedCollectionNames = affectedTypes.Select(collectionType => collectionType.GetCollectionName().Value).ToList();
         }
 
         public IQueryable<object> Execute(IQueryable<object> array)
         {
-            return array.Include(Include);
+            return array.Include(includeConverted);
         }
     }
 }

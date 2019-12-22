@@ -66,6 +66,22 @@ namespace SapphireDb.Helper
             return propertyInfos;
         }
 
+        public static object SetFields(this Type entityType, object newValues, SapphireDbContext db)
+        {
+            object newEntityObject = Activator.CreateInstance(entityType);
+            string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
+
+            foreach (AuthPropertyInfo pi in entityType.GetAuthPropertyInfos())
+            {
+                if (pi.NonCreatableAttribute == null && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
+                {
+                    pi.PropertyInfo.SetValue(newEntityObject, pi.PropertyInfo.GetValue(newValues));
+                }
+            }
+
+            return newEntityObject;
+        }
+        
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
             SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {

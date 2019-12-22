@@ -114,7 +114,8 @@ namespace SapphireDb.Helper
         public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
             HttpInformation information, IServiceProvider serviceProvider)
         {
-            KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
+            Type dbContextType = db.GetType();
+            KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
 
             if (property.Key != null)
             {

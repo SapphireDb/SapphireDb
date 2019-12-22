@@ -35,5 +35,10 @@ namespace SapphireDb.Helper
             return DbContextSets.FirstOrDefault(dbSet => dbSet.Value.ContainsKey(modelType)).Value
                 .FirstOrDefault(collection => collection.Key == modelType);
         }
+
+        public static bool IsCollectionType(this Type dbContextType, Type modelType)
+        {
+            return dbContextType.GetDbSetTypes().ContainsKey(modelType);
+        }
     }
 }

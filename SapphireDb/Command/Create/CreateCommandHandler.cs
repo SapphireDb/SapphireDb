@@ -55,29 +55,30 @@ namespace SapphireDb.Command.Create
         private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context,
             CreateCommand command)
         {
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newValue, context, serviceProvider);
+            object newEntityObject = property.Key.SetFields(newValue, db);
 
-            if (!ValidationHelper.ValidateModel(newValue, serviceProvider, out Dictionary<string, List<string>> validationResults))
+            if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
                 return new CreateResponse()
                 {
-                    NewObject = newValue,
+                    NewObject = newEntityObject,
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
                 };
             }
 
-            db.Add(newValue);
+            db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newValue, context, serviceProvider);
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
 
             db.SaveChanges();
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.After, newValue, context, serviceProvider);
+            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.After, newEntityObject, context, serviceProvider);
 
             return new CreateResponse()
             {
-                NewObject = newValue,
+                NewObject = newEntityObject,
                 ReferenceId = command.ReferenceId
             };
         }

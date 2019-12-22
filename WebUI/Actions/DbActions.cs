@@ -24,16 +24,6 @@ namespace WebUI.Actions
             this.demoDb = demoDb;
         }
 
-        public bool testConnection(string key)
-        {
-            DbContextOptions<SecondRealtimeContext> options = new DbContextOptionsBuilder<SecondRealtimeContext>()
-                .UseFileContextDatabase(databaseName: key)
-                .Options as DbContextOptions<SecondRealtimeContext>;
-
-            SecondRealtimeContext testDb = new SecondRealtimeContext(options, null);
-            return testDb.Database.CanConnect();
-        }
-
         public void updateSettings(string key)
         {
             Config c = db.Configs.FirstOrDefault(cfg => cfg.Key == "DbName");
@@ -54,19 +44,6 @@ namespace WebUI.Actions
             db.SaveChanges();
 
             DbName = key;
-        }
-
-        public void Create()
-        {
-            DemoUser u = new DemoUser();
-            demoDb.Users.Add(u);
-            demoDb.UserEntries.Add(new UserEntry() {UserId = u.Id});
-            demoDb.SaveChanges();
-        }
-
-        public void IncludeTest()
-        {
-            var t = demoDb.Users.Include("Entries");
         }
     }
 }

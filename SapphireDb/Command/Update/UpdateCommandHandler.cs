@@ -63,9 +63,9 @@ namespace SapphireDb.Command.Update
         private ResponseBase SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
             SapphireDbContext db, HttpInformation context, UpdateCommand command)
         {
-            property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
-
             property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.Before, value, context, serviceProvider);
+            
+            property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
             if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {

@@ -48,41 +48,28 @@ namespace WebUI
             options.IsAllowedForTopicSubscribe = (context, topic) => true;
             options.IsAllowedToSendMessages = (context) => true;
 
+            bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
+            
             //Register services
             SapphireDatabaseBuilder realtimeBuilder = services.AddSapphireDb(options)
-                .AddContext<RealtimeContext>(
-                    cfg => cfg.UseFileContextDatabase(databaseName: "realtime") /*cfg.UseInMemoryDatabase("realtime")*/)
-                //.AddContext<DemoContext>(cfg => cfg.UseFileContextDatabase(), "demo");
-                //.AddContext<DemoContext>(cfg => cfg.UseInMemoryDatabase("demoCtx"), "demo");
-                .AddContext<DemoContext>(cfg => cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;"), "demo");
-
-            RealtimeContext db = services.BuildServiceProvider().GetService<RealtimeContext>();
-
-            if (db != null)
-            {
-                Config dbName = db.Configs.FirstOrDefault(cfg => cfg.Key == "DbName");
-                DbActions.DbName = dbName?.Value;
-            }
-
-            realtimeBuilder.AddContext<SecondRealtimeContext>(cfg =>
+                .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime"))
+                .AddContext<DemoContext>(cfg =>
                 {
-                    //if (string.IsNullOrEmpty(DbActions.DbName))
-                    //{
-                    //    throw new Exception("DbName not configured");
-                    //}
-
-                    cfg.UseFileContextDatabase(databaseName: DbActions.DbName ?? "test"); /*cfg.UseInMemoryDatabase("second")*/
-                }, "second");
+                    if (usePostgres)
+                    {
+                        cfg.UseNpgsql("User ID=realtime;Password=pw1234;Host=localhost;Port=5432;Database=realtime;");
+                    }
+                    else
+                    {
+                        cfg.UseInMemoryDatabase("demoCtx");
+                    }
+                }, "demo");
 
             services.AddSapphireAuth<SapphireAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
-                cfg => /*cfg.UseInMemoryDatabase()*/cfg.UseFileContextDatabase(databaseName: "auth"));
+                cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
 
 
-            services.AddMvc().AddJsonOptions(cfg =>
-            {
-                //cfg.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                //cfg.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
-            });
+            services.AddMvc();
 
             services.AddSpaStaticFiles(configuration =>
             {
@@ -114,7 +101,7 @@ namespace WebUI
 
             app.UseSpa(spa =>
             {
-                if (env.IsDevelopment())
+                if (env.IsDevelopment() || env.EnvironmentName == "pg")
                 {
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
                 }

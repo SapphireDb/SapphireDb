@@ -23,7 +23,8 @@ namespace WebUI.Data
 
         public DbSet<Pixel> Pixels { get; set; }
 
-        public DbSet<DemoUser> Users { get; set; }
-        public DbSet<UserEntry> UserEntries { get; set; }
+        public DbSet<IncludeDemoUser> Users { get; set; }
+        
+        public DbSet<IncludeDemoUserEntry> UserEntries { get; set; }
     }
 }
