@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -177,14 +178,18 @@ namespace SapphireDb.Connection
 
         private bool HasIncludePrefilterWithChange(CollectionSubscription subscription, List<ChangeResponse> allChanges)
         {
-            IPrefilterBase includePrefilter = subscription.Prefilters.FirstOrDefault(prefilter => prefilter is IncludePrefilter);
+            List<IncludePrefilter> includePrefilters = subscription.Prefilters.OfType<IncludePrefilter>().ToList();
 
-            if (includePrefilter == null)
+            if (!includePrefilters.Any())
             {
                 return false;
             }
+            
+            List<string> affectedCollections = includePrefilters
+                .SelectMany(prefilter => prefilter.AffectedCollectionNames)
+                .Distinct()
+                .ToList();
 
-            List<string> affectedCollections = ((IncludePrefilter)includePrefilter).AffectedCollectionNames;
             return allChanges.Any(change => change.CollectionName.Equals(subscription.CollectionName, StringComparison.InvariantCultureIgnoreCase)) ||
                    affectedCollections.Any(collectionName => allChanges.Any(change => change.CollectionName.Equals(collectionName, StringComparison.InvariantCultureIgnoreCase)));
         }

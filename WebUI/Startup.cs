@@ -42,11 +42,6 @@ namespace WebUI
             services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
 
             SapphireDatabaseOptions options = new SapphireDatabaseOptions(Configuration.GetSection("Sapphire"));
-            Func<CommandBase, HttpInformation, bool> oldFunc = options.CanExecuteCommand;
-            options.CanExecuteCommand = (command, context) => true || command is ExecuteCommand || oldFunc(command, context);
-            options.IsAllowedForTopicPublish = (context, topic) => true;
-            options.IsAllowedForTopicSubscribe = (context, topic) => true;
-            options.IsAllowedToSendMessages = (context) => true;
 
             bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
             

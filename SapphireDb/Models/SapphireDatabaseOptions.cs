@@ -14,20 +14,30 @@ namespace SapphireDb.Models
 {
     public class SapphireDatabaseOptions
     {
-        public SapphireDatabaseOptions()
+        public SapphireDatabaseOptions(bool strict = false)
         {
-            CanExecuteCommand = (command, context) =>
-                command is LoginCommand || command is RenewCommand || context.User.Identity.IsAuthenticated;
             AuthInfoAllowFunction = (context) => context.User.IsInRole("admin");
             AuthAllowFunction = (context) => context.User.IsInRole("admin");
-            IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
-            IsAllowedForTopicSubscribe = (context, topic) => context.User.Identity.IsAuthenticated;
-            IsAllowedForTopicPublish = (context, topic) => context.User.Identity.IsAuthenticated;
             IsAllowedForConnectionManagement = (context) => context.User.IsInRole("admin");
 
+            if (strict)
+            {
+                CanExecuteCommand = (command, context) =>
+                    command is LoginCommand || command is RenewCommand || context.User.Identity.IsAuthenticated;
+                IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
+                IsAllowedForTopicSubscribe = (context, topic) => context.User.Identity.IsAuthenticated;
+                IsAllowedForTopicPublish = (context, topic) => context.User.Identity.IsAuthenticated;
+            }
+            else
+            {
+                CanExecuteCommand = (command, context) => true;
+                IsAllowedToSendMessages = (context) => true;
+                IsAllowedForTopicSubscribe = (context, topic) => true;
+                IsAllowedForTopicPublish = (context, topic) => true;
+            }
         }
 
-        public SapphireDatabaseOptions(IConfigurationSection configuration) : this()
+        public SapphireDatabaseOptions(IConfigurationSection configuration, bool strict = false) : this(strict)
         {
             Nlb = new NlbConfiguration(configuration.GetSection(nameof(Nlb)));
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
