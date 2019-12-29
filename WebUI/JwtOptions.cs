@@ -4,7 +4,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SapphireDb.Models.Auth
+namespace WebUI
 {
     public class JwtOptions
     {

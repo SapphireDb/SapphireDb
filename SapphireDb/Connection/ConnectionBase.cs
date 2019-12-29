@@ -2,15 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Primitives;
 using SapphireDb.Command.SubscribeMessage;
-using SapphireDb.Command.SubscribeRoles;
-using SapphireDb.Command.SubscribeUsers;
 using SapphireDb.Command.Unsubscribe;
 using SapphireDb.Command.UnsubscribeMessage;
 using SapphireDb.Models;
@@ -43,10 +38,6 @@ namespace SapphireDb.Connection
         public List<CollectionSubscription> Subscriptions { get; set; }
 
         public Dictionary<string, string> MessageSubscriptions { get; set; }
-
-        public string UsersSubscription { get; set; }
-
-        public string RolesSubscription { get; set; }
 
         public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
 
@@ -116,62 +107,6 @@ namespace SapphireDb.Connection
             try
             {
                 MessageSubscriptions.Remove(command.ReferenceId);
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
-        public async Task AddRolesSubscription(SubscribeRolesCommand command)
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                RolesSubscription = command.ReferenceId;
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
-        public async Task RemoveRolesSubscription()
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                RolesSubscription = null;
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
-        public async Task AddUsersSubscription(SubscribeUsersCommand command)
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                UsersSubscription = command.ReferenceId;
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
-        public async Task RemoveUsersSubscription()
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                UsersSubscription = null;
             }
             finally
             {

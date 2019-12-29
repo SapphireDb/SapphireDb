@@ -19,8 +19,8 @@ namespace WebUI.Data.Models
 
         [Required]
         [MinLength(3)]
-        [QueryAuth("Test2")]
-        [UpdateAuth("Test")]
+        [QueryAuth(functionName: "Test2")]
+        [UpdateAuth(functionName: "Test")]
         [Updatable]
         public string FirstName { get; set; }
 

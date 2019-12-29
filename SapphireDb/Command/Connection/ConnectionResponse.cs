@@ -6,6 +6,6 @@ namespace SapphireDb.Command.Connection
     {
         public Guid ConnectionId { get; set; }
 
-        public bool BearerValid { get; set; }
+        public bool AuthTokenValid { get; set; }
     }
 }

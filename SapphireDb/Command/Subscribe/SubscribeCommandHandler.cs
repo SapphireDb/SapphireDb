@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SapphireDb.Connection;
@@ -21,17 +22,22 @@ namespace SapphireDb.Command.Subscribe
 
         public async Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command)
         {
-            CollectionSubscription collectionSubscription = new CollectionSubscription()
+            ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
+
+            if (response.Error == null)
             {
-                CollectionName = command.CollectionName.ToLowerInvariant(),
-                ContextName = command.ContextName.ToLowerInvariant(),
-                ReferenceId = command.ReferenceId,
-                Prefilters = command.Prefilters
-            };
+                CollectionSubscription collectionSubscription = new CollectionSubscription()
+                {
+                    CollectionName = command.CollectionName.ToLowerInvariant(),
+                    ContextName = command.ContextName.ToLowerInvariant(),
+                    ReferenceId = command.ReferenceId,
+                    Prefilters = command.Prefilters
+                };
 
-            await Connection.AddSubscription(collectionSubscription);
+                await Connection.AddSubscription(collectionSubscription);   
+            }
 
-            return MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
+            return response;
         }
     }
 }

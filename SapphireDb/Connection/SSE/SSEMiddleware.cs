@@ -49,7 +49,7 @@ namespace SapphireDb.Connection.SSE
                     await connection.Send(new ConnectionResponse()
                     {
                         ConnectionId = connection.Id,
-                        BearerValid = context.User.Identity.IsAuthenticated
+                        AuthTokenValid = context.User.Identity.IsAuthenticated
                     });
 
                     context.RequestAborted.WaitHandle.WaitOne();

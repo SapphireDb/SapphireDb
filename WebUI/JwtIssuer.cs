@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using SapphireDb.Attributes;
-using SapphireDb.Models.Auth;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
@@ -9,29 +6,27 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using WebUI.Data.Authentication;
 
-namespace SapphireDb.Internal
+namespace WebUI
 {
-    class JwtIssuer
+    public class JwtIssuer
     {
         private readonly JwtOptions jwtOptions;
-        private readonly IServiceProvider serviceProvider;
-        private readonly AuthDbContextTypeContainer authDbContextTypeContainer;
+        private readonly UserManager<AppUser> userManager;
 
-        public JwtIssuer(JwtOptions jwtOptions, IServiceProvider serviceProvider, AuthDbContextTypeContainer authDbContextTypeContainer)
+        public JwtIssuer(JwtOptions jwtOptions, UserManager<AppUser> userManager)
         {
             this.jwtOptions = jwtOptions;
-            this.serviceProvider = serviceProvider;
-            this.authDbContextTypeContainer = authDbContextTypeContainer;
+            this.userManager = userManager;
         }
 
-        public async Task<string> GenerateEncodedToken(IdentityUser identityUser)
+        public async Task<string> GenerateEncodedToken(AppUser user)
         {
-            List<Claim> claims = await CreateClaims(identityUser);
+            List<Claim> claims = await CreateClaims(user);
 
-            object userManager = serviceProvider.GetService(authDbContextTypeContainer.UserManagerType);
-            IList<string> roles = 
-                await (Task<IList<string>>)authDbContextTypeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(userManager, new object[] { identityUser });
+            IList<string> roles = await userManager.GetRolesAsync(user);
 
             foreach (string role in roles)
             {
@@ -61,19 +56,7 @@ namespace SapphireDb.Internal
                 new Claim(ClaimTypes.Name, identityUser.UserName),
                 new Claim(ClaimTypes.Email, identityUser.Email)
             };
-
-            Type type = identityUser.GetType();
-
-            foreach (PropertyInfo property in type.GetProperties().Where(p => p.GetCustomAttribute<AuthClaimInformationAttribute>() != null))
-            {
-				object value = property.GetValue(identityUser);
-
-                if (value != null)
-                {
-                    claims.Add(new Claim("SapphireAuth." + property.Name, value.ToString()));
-                }
-            }
-
+            
             return claims;
         }
     }

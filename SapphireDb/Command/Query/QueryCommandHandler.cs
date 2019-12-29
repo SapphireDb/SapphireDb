@@ -18,7 +18,7 @@ namespace SapphireDb.Command.Query
 
         public Task<ResponseBase> Handle(HttpInformation context, QueryCommand command)
         {
-            return Task.FromResult(MessageHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider));
+            return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider));
         }
     }
 }

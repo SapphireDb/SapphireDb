@@ -24,8 +24,12 @@ namespace SapphireDb.Command.Info
 
             if (property.Key != null)
             {
-                InfoResponse infoResponse = property.Key.GetInfoResponse(db);
-                infoResponse.ReferenceId = command.ReferenceId;
+                InfoResponse infoResponse = new InfoResponse
+                {
+                    PrimaryKeys = property.Key.GetPrimaryKeyNames(db),
+                    ReferenceId = command.ReferenceId
+                };
+
                 return Task.FromResult<ResponseBase>(infoResponse);
             }
 

@@ -16,13 +16,15 @@ namespace WebUI.Actions
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly RealtimeContext db;
         private readonly TestContext testdb;
+        private readonly JwtIssuer issuer;
 
-        public UserActions(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, RealtimeContext db, TestContext testdb)
+        public UserActions(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, RealtimeContext db, TestContext testdb, JwtIssuer issuer)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
             this.db = db;
             this.testdb = testdb;
+            this.issuer = issuer;
         }
 
         public async Task CreateUser(NewAppUserViewModel model, string test)
@@ -56,6 +58,21 @@ namespace WebUI.Actions
             }
         }
 
+        public async Task<string> Login(string username, string password)
+        {
+            AppUser user = await userManager.FindByNameAsync(username);
+
+            if (user != null)
+            {
+                if (await userManager.CheckPasswordAsync(user, password))
+                {
+                    return await issuer.GenerateEncodedToken(user);
+                }
+            }
+
+            return null;
+        }
+        
         public List<AppUser> GetUsers()
         {
             return userManager.Users.ToList();

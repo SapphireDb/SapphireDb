@@ -5,19 +5,8 @@ namespace SapphireDb.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public class RemoveAuthAttribute : AuthAttributeBase
     {
-        public RemoveAuthAttribute()
+        public RemoveAuthAttribute(string policies = null, string functionName = null) : base(policies, functionName)
         {
-
-        }
-
-        public RemoveAuthAttribute(string[] roles)
-        {
-            Roles = roles;
-        }
-
-        public RemoveAuthAttribute(string function)
-        {
-            FunctionName = function;
         }
     }
 }

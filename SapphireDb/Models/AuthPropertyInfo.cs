@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 using SapphireDb.Attributes;
 
-namespace SapphireDb.Models.Auth
+namespace SapphireDb.Models
 {
     public class AuthPropertyInfo
     {

@@ -1,22 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using SapphireDb.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using SapphireDb.Command;
-using SapphireDb.Command.CloseConnection;
 using SapphireDb.Command.Execute;
-using SapphireDb.Command.Login;
-using SapphireDb.Command.QueryConnections;
-using SapphireDb.Command.Renew;
-using SapphireDb.Command.SubscribeRoles;
-using SapphireDb.Command.SubscribeUsers;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
+using SapphireDb.Models;
 
 namespace SapphireDb.Internal
 {
@@ -24,39 +16,19 @@ namespace SapphireDb.Internal
     {
         private readonly SapphireDatabaseOptions options;
         public readonly Dictionary<string, Type> commandHandlerTypes;
-        public readonly Dictionary<string, Type> authCommandHandlerTypes;
 
         public CommandExecutor(SapphireDatabaseOptions options)
         {
             this.options = options;
 
             commandHandlerTypes = GetHandlerTypes(typeof(CommandHandlerBase));
-            authCommandHandlerTypes = GetHandlerTypes(typeof(AuthCommandHandlerBase));
         }
 
         public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider, HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
         {
             string commandTypeName = command.GetType().Name;
-
-            Type handlerType = null;
-
-            if (commandHandlerTypes.ContainsKey(commandTypeName))
-            {
-                handlerType = commandHandlerTypes[commandTypeName];
-            }
-            else if (authCommandHandlerTypes.ContainsKey(commandTypeName))
-            {
-                handlerType = authCommandHandlerTypes[commandTypeName];
-
-                ResponseBase authResponse = CreateAuthResponseOrNull(handlerType, information, command);
-
-                if (authResponse != null)
-                {
-                    return authResponse;
-                }
-            }
-
-            if (handlerType != null)
+            
+            if (commandHandlerTypes.TryGetValue(commandTypeName, out Type handlerType))
             {
                 ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, information, command);
 
@@ -131,30 +103,6 @@ namespace SapphireDb.Internal
             if (!options.CanExecuteCommand(command, information))
             {
                 return command.CreateExceptionResponse<ResponseBase>("You are not allowed to execute this command");
-            }
-
-            return null;
-        }
-
-        private ResponseBase CreateAuthResponseOrNull(Type handlerType, HttpInformation information, CommandBase command)
-        {
-            if (options.EnableAuthCommands && handlerType != typeof(LoginCommandHandler) && handlerType != typeof(RenewCommandHandler))
-            {
-                if (!information.User.Identity.IsAuthenticated)
-                {
-                    return command.CreateExceptionResponse<ResponseBase>("User needs authentication to execute auth commands.");
-                } 
-
-                if ((handlerType == typeof(SubscribeUsersCommandHandler) || handlerType == typeof(SubscribeRolesCommandHandler) || handlerType == typeof(QueryConnectionsCommandHandler) || handlerType == typeof(CloseConnectionCommandHandler)) 
-                    && !options.AuthInfoAllowFunction(information))
-                {
-                    return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth info commands.");
-                }
-
-                if (!options.AuthAllowFunction(information))
-                {
-                    return command.CreateExceptionResponse<ResponseBase>("User is not allowed to execute auth commands.");
-                }
             }
 
             return null;

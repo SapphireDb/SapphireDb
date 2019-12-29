@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using FileContextCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +20,6 @@ using SapphireDb.Command;
 using SapphireDb.Command.Execute;
 using SapphireDb.Extensions;
 using SapphireDb.Models;
-using SapphireDb.Models.Auth;
 using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.Authentication;
@@ -46,7 +49,7 @@ namespace WebUI
             bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
             
             //Register services
-            SapphireDatabaseBuilder realtimeBuilder = services.AddSapphireDb(options)
+            services.AddSapphireDb(options)
                 .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime"))
                 .AddContext<DemoContext>(cfg =>
                 {
@@ -59,16 +62,60 @@ namespace WebUI
                         cfg.UseInMemoryDatabase("demoCtx");
                     }
                 }, "demo");
-
-            services.AddSapphireAuth<SapphireAuthContext<AppUser>, AppUser>(new JwtOptions(Configuration.GetSection(nameof(JwtOptions))),
-                cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
-
-
+            
             services.AddMvc();
 
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "dist";
+            });
+            
+            /* Auth Demo */
+            services.AddDbContext<IdentityDbContext<AppUser>>(cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
+
+            services.AddIdentity<AppUser, IdentityRole>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 0;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            }).AddEntityFrameworkStores<IdentityDbContext<AppUser>>();
+            
+            JwtOptions jwtOptions = new JwtOptions(Configuration.GetSection(nameof(JwtOptions)));
+            services.AddSingleton(jwtOptions);
+            services.AddTransient<JwtIssuer>();
+
+            services.AddAuthentication(cfg => {
+                cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(cfg => {
+                cfg.TokenValidationParameters = jwtOptions.TokenValidationParameters;
+                cfg.Events = new JwtBearerEvents()
+                {
+                    OnAuthenticationFailed = ctx =>
+                    {
+                        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            
+                        return Task.CompletedTask;
+                    },
+                    OnMessageReceived = ctx =>
+                    {
+                        string authorizationToken = ctx.Request.Query["authorization"];
+                        if (!string.IsNullOrEmpty(authorizationToken))
+                        {
+                            ctx.Token = authorizationToken;
+                        }
+            
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+            services.AddAuthorization(config =>
+            {
+                
             });
         }
 
@@ -86,6 +133,10 @@ namespace WebUI
                 app.UseHsts();
             }
 
+            /* Auth Demo */
+            app.UseAuthentication();
+            // app.UseAuthorization();
+
             //Add Middleware
             app.UseSapphireDb();
 
@@ -93,7 +144,7 @@ namespace WebUI
             app.UseSpaStaticFiles();
 
             //app.UseMvcWithDefaultRoute();
-
+            
             app.UseSpa(spa =>
             {
                 if (env.IsDevelopment() || env.EnvironmentName == "pg")

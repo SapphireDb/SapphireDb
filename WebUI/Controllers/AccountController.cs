@@ -12,38 +12,56 @@ namespace WebUI.Controllers
     {
         private readonly UserManager<AppUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly JwtIssuer issuer;
 
-        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, JwtIssuer issuer)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
+            this.issuer = issuer;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]NewAppUserViewModel model)
+        public async Task<IActionResult> Login([FromBody]LoginViewModel model)
         {
-            if (!ModelState.IsValid)
+            AppUser user = await userManager.FindByNameAsync(model.Username);
+
+            if (user != null)
             {
-                return BadRequest(ModelState);
+                if (await userManager.CheckPasswordAsync(user, model.Password))
+                {
+                    return Ok(await issuer.GenerateEncodedToken(user));
+                }
             }
 
-            AppUser userIdentity = new AppUser()
-            {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                Email = model.Email,
-                UserName = model.Email
-            };
-
-            IdentityResult result = await userManager.CreateAsync(userIdentity, model.Password);
-
-            if (!result.Succeeded)
-            {
-                return new BadRequestObjectResult(result.Errors);
-            }
-
-            return Ok();
+            return BadRequest();
         }
+        
+        // [HttpPost("test")]
+        // public async Task<IActionResult> Post([FromBody]NewAppUserViewModel model)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return BadRequest(ModelState);
+        //     }
+        //
+        //     AppUser userIdentity = new AppUser()
+        //     {
+        //         FirstName = model.FirstName,
+        //         LastName = model.LastName,
+        //         Email = model.Email,
+        //         UserName = model.Email
+        //     };
+        //
+        //     IdentityResult result = await userManager.CreateAsync(userIdentity, model.Password);
+        //
+        //     if (!result.Succeeded)
+        //     {
+        //         return new BadRequestObjectResult(result.Errors);
+        //     }
+        //
+        //     return Ok();
+        // }
 
         //[HttpPost("claim")]
         //public async Task<IActionResult> AddClaim(string username, string type, string claim)

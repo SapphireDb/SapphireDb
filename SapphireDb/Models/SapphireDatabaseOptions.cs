@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using SapphireDb.Models.Auth;
 using Microsoft.Extensions.Configuration;
 using SapphireDb.Command;
-using SapphireDb.Command.Login;
-using SapphireDb.Command.Renew;
 
 namespace SapphireDb.Models
 {
@@ -16,14 +10,9 @@ namespace SapphireDb.Models
     {
         public SapphireDatabaseOptions(bool strict = false)
         {
-            AuthInfoAllowFunction = (context) => context.User.IsInRole("admin");
-            AuthAllowFunction = (context) => context.User.IsInRole("admin");
-            IsAllowedForConnectionManagement = (context) => context.User.IsInRole("admin");
-
             if (strict)
             {
-                CanExecuteCommand = (command, context) =>
-                    command is LoginCommand || command is RenewCommand || context.User.Identity.IsAuthenticated;
+                CanExecuteCommand = (command, context) => context.User.Identity.IsAuthenticated;
                 IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
                 IsAllowedForTopicSubscribe = (context, topic) => context.User.Identity.IsAuthenticated;
                 IsAllowedForTopicPublish = (context, topic) => context.User.Identity.IsAuthenticated;
@@ -41,7 +30,6 @@ namespace SapphireDb.Models
         {
             Nlb = new NlbConfiguration(configuration.GetSection(nameof(Nlb)));
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
-            EnableAuthCommands = configuration[nameof(EnableAuthCommands)]?.ToLowerInvariant() != "false";
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
             PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
@@ -50,25 +38,13 @@ namespace SapphireDb.Models
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
 
-        internal bool EnableBuiltinAuth { get; set; }
-
-        public bool EnableAuthCommands { get; set; } = true;
-
-
         public Func<CommandBase, HttpInformation, bool> CanExecuteCommand { get; set; }
-
-        public Func<HttpInformation, bool> AuthInfoAllowFunction { get; set; }
-
-        public Func<HttpInformation, bool> AuthAllowFunction { get; set; }
 
         public Func<HttpInformation, bool> IsAllowedToSendMessages { get; set; }
 
         public Func<HttpInformation, string, bool> IsAllowedForTopicSubscribe { get; set; }
 
         public Func<HttpInformation, string, bool> IsAllowedForTopicPublish { get; set; }
-
-        public Func<HttpInformation, bool> IsAllowedForConnectionManagement { get; set; }
-
 
         public bool ServerSentEventsInterface { get; set; } = true;
 

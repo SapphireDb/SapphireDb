@@ -5,16 +5,7 @@ namespace SapphireDb.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public class CreateAuthAttribute : AuthAttributeBase
     {
-        public CreateAuthAttribute()
-        {
-
-        }
-
-        public CreateAuthAttribute(string[] roles) : base(roles)
-        {
-        }
-
-        public CreateAuthAttribute(string function) : base(function)
+        public CreateAuthAttribute(string policies = null, string functionName = null) : base(policies, functionName)
         {
         }
     }

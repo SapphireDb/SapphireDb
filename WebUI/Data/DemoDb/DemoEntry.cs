@@ -14,7 +14,7 @@ namespace WebUI.Data.DemoDb
     {
         [Key]
         public Guid Id { get; set; }
-
+        
         public string Content { get; set; }
     }
 }

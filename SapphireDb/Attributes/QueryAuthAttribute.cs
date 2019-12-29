@@ -2,19 +2,10 @@
 
 namespace SapphireDb.Attributes
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Property)]
     public class QueryAuthAttribute : AuthAttributeBase
     {
-        public QueryAuthAttribute()
-        {
-
-        }
-
-        public QueryAuthAttribute(string[] roles) : base(roles)
-        {
-        }
-
-        public QueryAuthAttribute(string function) : base(function)
+        public QueryAuthAttribute(string policies = null, string functionName = null) : base(policies, functionName)
         {
         }
     }

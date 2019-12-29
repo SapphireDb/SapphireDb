@@ -4,23 +4,18 @@ namespace SapphireDb.Attributes
 {
     public class AuthAttributeBase : Attribute
     {
-        public string[] Roles { get; set; }
+        public string[] Policies { get; } = new string[0];
 
-        public string FunctionName { get; set; }
+        public string FunctionName { get; }
 
-        public AuthAttributeBase()
+        public AuthAttributeBase(string policies = null, string functionName = null)
         {
+            if (!string.IsNullOrEmpty(policies))
+            {
+                Policies = policies.Split(',');
+            }
 
-        }
-
-        public AuthAttributeBase(string[] roles)
-        {
-            Roles = roles;
-        }
-
-        public AuthAttributeBase(string function)
-        {
-            FunctionName = function;
+            FunctionName = functionName;
         }
     }
 }

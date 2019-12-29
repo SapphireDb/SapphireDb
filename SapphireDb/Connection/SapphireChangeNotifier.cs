@@ -79,7 +79,8 @@ namespace SapphireDb.Connection
                 KeyValuePair<Type, string> property = dbContextType.GetDbSetType(subscriptionGrouping.Key);
 
                 List<ChangeResponse> collectionChanges = changes
-                    .Where(c => c.CollectionName == subscriptionGrouping.Key).ToList();
+                    .Where(c => c.CollectionName == subscriptionGrouping.Key)
+                    .ToList();
 
                 if (collectionChanges.Any())
                 {
@@ -139,7 +140,10 @@ namespace SapphireDb.Connection
                         _ = connection.Send(new QueryResponse()
                         {
                             ReferenceId = subscription.ReferenceId,
-                            Result = collectionValues.ToList().Select(v => v.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider))
+                            Result = collectionValues
+                                .AsEnumerable()
+                                .Select(v => v.GetAuthenticatedQueryModel(connection.Information, serviceProvider))
+                                .ToList()
                         });
                     }
                 }

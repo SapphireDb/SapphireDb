@@ -13,7 +13,6 @@ using SapphireDb.Attributes;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
-using SapphireDb.Models.Auth;
 
 namespace SapphireDb.Helper
 {
@@ -51,6 +50,21 @@ namespace SapphireDb.Helper
             return primaryKeys;
         }
 
+        private static readonly ConcurrentDictionary<Type, AuthModelInfo> AuthModelInfosDictionary = new ConcurrentDictionary<Type, AuthModelInfo>();
+
+        public static AuthModelInfo GetAuthModelInfos(this Type entityType)
+        {
+            if (AuthModelInfosDictionary.TryGetValue(entityType, out AuthModelInfo authModelInfo))
+            {
+                return authModelInfo;
+            }
+
+            authModelInfo = new AuthModelInfo(entityType);
+            AuthModelInfosDictionary.TryAdd(entityType, authModelInfo);
+
+            return authModelInfo;
+        }
+        
         private static readonly ConcurrentDictionary<Type, AuthPropertyInfo[]> PropertyInfosDictionary = new ConcurrentDictionary<Type, AuthPropertyInfo[]>();
 
         public static AuthPropertyInfo[] GetAuthPropertyInfos(this Type entityType)
@@ -98,65 +112,6 @@ namespace SapphireDb.Helper
                     }
                 }
             }
-        }
-
-        public static async Task<Dictionary<string, object>> GenerateUserData(IdentityUser identityUser, AuthDbContextTypeContainer typeContainer, object usermanager)
-        {
-            Dictionary<string, object> userData = new Dictionary<string, object>();
-            Type t = identityUser.GetType();
-
-            IEnumerable<PropertyInfo> properties =
-                t.GetProperties().Where(p => p.GetCustomAttribute<AuthUserInformationAttribute>() != null
-                || p.Name == "Id" || p.Name == "UserName" || p.Name == "Email");
-
-            foreach (PropertyInfo property in properties)
-            {
-                if (property.Name == "Roles")
-                {
-                    userData["_Roles"] = property.GetValue(identityUser);
-                }
-                else
-                {
-                    userData[property.Name] = property.GetValue(identityUser);
-                    
-                }
-            }
-
-            userData["Roles"] =
-                await(dynamic)typeContainer.UserManagerType.GetMethod("GetRolesAsync").Invoke(usermanager, new object[] { identityUser });
-
-            return userData;
-        }
-
-        public static IEnumerable<Dictionary<string, object>> GetUsers(AuthDbContextTypeContainer typeContainer, object usermanager)
-        {
-            IEnumerable<IdentityUser> users = (IQueryable<IdentityUser>)typeContainer
-                .UserManagerType.GetProperty("Users").GetValue(usermanager);
-
-            
-            IEnumerable<Dictionary<string, object>> usersConverted = users
-                .Select(u => GenerateUserData(u, typeContainer, usermanager).Result);
-
-            return usersConverted;
-        }
-
-        public static Dictionary<string, object> GenerateRoleData(IdentityRole identityRole, 
-            IEnumerable<IdentityUserRole<string>> userRoles = null)
-        {
-            return new Dictionary<string, object>
-            {
-                ["Id"] = identityRole.Id,
-                ["Name"] = identityRole.Name,
-                ["NormalizedName"] = identityRole.NormalizedName,
-                ["UserIds"] = userRoles?.Where(ur => ur.RoleId == identityRole.Id).Select(ur => ur.UserId)
-            };
-        }
-
-        public static IEnumerable<Dictionary<string, object>> GetRoles(ISapphireAuthContext db)
-        {
-            IEnumerable<IdentityUserRole<string>> userRoles = db.UserRoles;
-
-            return db.Roles.ToList().Select(r => GenerateRoleData(r, userRoles));
         }
 
         public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpInformation httpInformation)
