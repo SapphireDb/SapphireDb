@@ -5,8 +5,11 @@ namespace SapphireDb.Attributes
     [AttributeUsage(AttributeTargets.Class|AttributeTargets.Property)]
     public class QueryAuthAttribute : AuthAttributeBase
     {
-        public QueryAuthAttribute(string policies = null, string functionName = null) : base(policies, functionName)
+        public bool PerEntry { get; }
+        
+        public QueryAuthAttribute(string policies = null, string functionName = null, bool perEntry = false) : base(policies, functionName)
         {
+            PerEntry = perEntry;
         }
     }
 }

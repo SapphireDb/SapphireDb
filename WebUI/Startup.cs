@@ -22,6 +22,7 @@ using SapphireDb.Extensions;
 using SapphireDb.Models;
 using WebUI.Actions;
 using WebUI.Data;
+using WebUI.Data.AuthDemo;
 using WebUI.Data.Authentication;
 using WebUI.Data.Models;
 
@@ -41,13 +42,10 @@ namespace WebUI
 
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddDbContext<TestContext>(cfg => cfg.UseInMemoryDatabase("test"));
-
             SapphireDatabaseOptions options = new SapphireDatabaseOptions(Configuration.GetSection("Sapphire"));
 
             bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
-            
+
             //Register services
             services.AddSapphireDb(options)
                 .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime"))
@@ -61,43 +59,43 @@ namespace WebUI
                     {
                         cfg.UseInMemoryDatabase("demoCtx");
                     }
-                }, "demo");
-            
+                }, "demo")
+                .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo");
+
             services.AddMvc();
 
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "dist";
-            });
-            
+            services.AddSpaStaticFiles(configuration => { configuration.RootPath = "dist"; });
+
             /* Auth Demo */
             services.AddDbContext<IdentityDbContext<AppUser>>(cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
 
             services.AddIdentity<AppUser, IdentityRole>(options =>
             {
                 options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
+                options.Password.RequiredLength = 2;
                 options.Password.RequiredUniqueChars = 0;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
             }).AddEntityFrameworkStores<IdentityDbContext<AppUser>>();
-            
+
             JwtOptions jwtOptions = new JwtOptions(Configuration.GetSection(nameof(JwtOptions)));
             services.AddSingleton(jwtOptions);
             services.AddTransient<JwtIssuer>();
 
-            services.AddAuthentication(cfg => {
+            services.AddAuthentication(cfg =>
+            {
                 cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(cfg => {
+            }).AddJwtBearer(cfg =>
+            {
                 cfg.TokenValidationParameters = jwtOptions.TokenValidationParameters;
                 cfg.Events = new JwtBearerEvents()
                 {
                     OnAuthenticationFailed = ctx =>
                     {
                         ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            
+
                         return Task.CompletedTask;
                     },
                     OnMessageReceived = ctx =>
@@ -107,7 +105,7 @@ namespace WebUI
                         {
                             ctx.Token = authorizationToken;
                         }
-            
+
                         return Task.CompletedTask;
                     }
                 };
@@ -115,13 +113,111 @@ namespace WebUI
 
             services.AddAuthorization(config =>
             {
-                
+                config.AddPolicy("requireAdmin", b => b.RequireRole("admin"));
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RealtimeContext db, DemoContext demoContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DemoContext demoContext,
+            UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, AuthDemoContext authDemoContext)
         {
+            // Generation for Demo
             demoContext.Database.EnsureCreated();
+
+            if (!userManager.Users.Any())
+            {
+                roleManager.CreateAsync(new IdentityRole()
+                {
+                    Name = "admin"
+                }).Wait();
+
+                roleManager.CreateAsync(new IdentityRole()
+                {
+                    Name = "user"
+                }).Wait();
+
+                AppUser adminUser = new AppUser()
+                {
+                    Email = "admin@dev.de",
+                    UserName = "admin",
+                    FirstName = "Admin",
+                    LastName = "User"
+                };
+
+                userManager.CreateAsync(adminUser, "admin").Wait();
+                userManager.AddToRolesAsync(adminUser, new[] {"admin", "user"}).Wait();
+
+                AppUser normalUser = new AppUser()
+                {
+                    Email = "user@dev.de",
+                    UserName = "user",
+                    FirstName = "Normal",
+                    LastName = "User"
+                };
+
+                userManager.CreateAsync(normalUser, "user").Wait();
+                userManager.AddToRolesAsync(normalUser, new[] {"user"}).Wait();
+            }
+
+            authDemoContext.RequiresAuthForQueryDemos.AddRange(
+                new RequiresAuthForQuery()
+                {
+                    Content = "Test 1"
+                },
+                new RequiresAuthForQuery()
+                {
+                    Content = "Test 2"
+                }
+            );
+            
+            authDemoContext.RequiresAdminForQueryDemos.AddRange(
+                new RequiresAdminForQuery()
+                {
+                    Content = "Test 1"
+                },
+                new RequiresAdminForQuery()
+                {
+                    Content = "Test 2"
+                }
+            );
+            
+            authDemoContext.CustomFunctionForQueryDemos.AddRange(
+                new CustomFunctionForQuery()
+                {
+                    Content = "Test 1"
+                },
+                new CustomFunctionForQuery()
+                {
+                    Content = "Test 2"
+                }
+            );
+
+            authDemoContext.CustomFunctionPerEntryForQueryDemos.AddRange(
+                new CustomFunctionPerEntryForQuery()
+                {
+                    Content = "Test 1"
+                },
+                new CustomFunctionPerEntryForQuery()
+                {
+                    Content = "Test 2"
+                }
+            );
+            
+            authDemoContext.QueryFieldDemos.AddRange(
+                new QueryFields()
+                {
+                    Content = "Test 1",
+                    Content2 = "Content 2.1",
+                    Content3 = "Content 3.1"
+                },
+                new QueryFields()
+                {
+                    Content = "Test 2",
+                    Content2 = "Content 2.2",
+                    Content3 = "Content 3.2"
+                }
+            );
+            
+            authDemoContext.SaveChanges();
 
             if (env.IsDevelopment())
             {
@@ -133,6 +229,8 @@ namespace WebUI
                 app.UseHsts();
             }
 
+            app.UseCors(cfg => cfg.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+            
             /* Auth Demo */
             app.UseAuthentication();
             // app.UseAuthorization();
@@ -144,7 +242,7 @@ namespace WebUI
             app.UseSpaStaticFiles();
 
             //app.UseMvcWithDefaultRoute();
-            
+
             app.UseSpa(spa =>
             {
                 if (env.IsDevelopment() || env.EnvironmentName == "pg")

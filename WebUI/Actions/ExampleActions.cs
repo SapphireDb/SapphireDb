@@ -10,11 +10,9 @@ namespace WebUI.Actions
 {
     public class ExampleActions : ActionHandlerBase
     {
-        private readonly RealtimeContext db;
-
-        public ExampleActions(RealtimeContext db)
+        public ExampleActions()
         {
-            this.db = db;
+
         }
 
         public async Task<int> GenerateRandomNumber()
@@ -27,7 +25,7 @@ namespace WebUI.Actions
 
             await Task.Delay(1000);
 
-            return db.Users.Count();
+            return 15;
         }
 
         public async Task<string> AsyncDelay()

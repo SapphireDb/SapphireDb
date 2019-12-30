@@ -68,33 +68,67 @@ namespace SapphireDb.Connection
             }
         }
 
-        public void HandleCollections(ConnectionBase connection, string contextName, Type dbContextType, List<ChangeResponse> changes, IServiceProvider requestServiceProvider)
+        public void HandleCollections(ConnectionBase connection, string contextName, Type dbContextType,
+            List<ChangeResponse> changes, IServiceProvider requestServiceProvider)
         {
             IEnumerable<IGrouping<string, CollectionSubscription>> subscriptionGroupings = connection.Subscriptions
-                        .Where(s => s.ContextName == contextName)
-                        .GroupBy(s => s.CollectionName);
+                .Where(s => s.ContextName == contextName)
+                .GroupBy(s => s.CollectionName);
 
             foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in subscriptionGroupings)
             {
                 KeyValuePair<Type, string> property = dbContextType.GetDbSetType(subscriptionGrouping.Key);
 
-                List<ChangeResponse> collectionChanges = changes
+                List<ChangeResponse> changesForCollection = changes
                     .Where(c => c.CollectionName == subscriptionGrouping.Key)
                     .ToList();
 
+                AuthModelInfo modelInfo = property.Key.GetAuthModelInfos();
+
+                IEnumerable<ChangeResponse> authenticatedChanges = changesForCollection;
+
+                if (modelInfo.QueryAuthAttribute != null && modelInfo.QueryAuthAttribute.PerEntry)
+                {
+                    authenticatedChanges = changesForCollection
+                        .Where(change => change.State == ChangeResponse.ChangeState.Deleted ||
+                                         property.Key.CanQuery(connection.Information, requestServiceProvider,
+                                             change.Value));
+
+
+                    IEnumerable<ChangeResponse> oldLoadedNotAllowed = changesForCollection
+                        .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
+                                         !property.Key.CanQuery(connection.Information, requestServiceProvider,
+                                             change.Value))
+                        .Select(change =>
+                        {
+                            ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
+                            newChangeResponse.State = ChangeResponse.ChangeState.Deleted;
+                            return newChangeResponse;
+                        });
+
+                    authenticatedChanges = authenticatedChanges.Concat(oldLoadedNotAllowed);
+                }
+
+                List<ChangeResponse> collectionChanges = authenticatedChanges.ToList();
+
                 if (collectionChanges.Any())
                 {
-                    QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+                    QueryFunctionAttribute queryFunctionAttribute =
+                        property.Key.GetCustomAttribute<QueryFunctionAttribute>();
                     if (queryFunctionAttribute != null)
                     {
-                        var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                        var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function,
+                            BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 
                         if (queryFunctionInfo != null)
                         {
-                            object[] methodParameters = queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
-                            dynamic queryFunctionExpression = ((dynamic)queryFunctionInfo.Invoke(null, methodParameters)).Compile();
+                            object[] methodParameters =
+                                queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
+                            dynamic queryFunctionExpression =
+                                ((dynamic) queryFunctionInfo.Invoke(null, methodParameters)).Compile();
 
-                            collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value)).ToList();
+                            collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
+                                .ToList();
                         }
                     }
                 }
@@ -103,24 +137,29 @@ namespace SapphireDb.Connection
                 {
                     Task.Run(() =>
                     {
-                        HandleSubscription(subscription, dbContextType, requestServiceProvider, connection, property, collectionChanges, changes);
+                        HandleSubscription(subscription, dbContextType, requestServiceProvider, connection,
+                            property, collectionChanges, changes);
                     });
                 }
             }
         }
 
-        public void HandleSubscription(CollectionSubscription subscription, Type dbContextType, IServiceProvider requestServiceProvider, ConnectionBase connection, KeyValuePair<Type, string> property, List<ChangeResponse> collectionChanges, List<ChangeResponse> allChanges)
+        public void HandleSubscription(CollectionSubscription subscription, Type dbContextType,
+            IServiceProvider requestServiceProvider, ConnectionBase connection, KeyValuePair<Type, string> property,
+            List<ChangeResponse> collectionChanges, List<ChangeResponse> allChanges)
         {
             try
             {
                 bool anyCollectionChanges = collectionChanges.Any();
 
-                if ((anyCollectionChanges && subscription.Prefilters.Any(prefilter => prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
+                if ((anyCollectionChanges && subscription.Prefilters.Any(prefilter =>
+                         prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
                     || HasIncludePrefilterWithChange(subscription, allChanges))
                 {
                     SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
 
-                    IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider, connection.Information, property, subscription.Prefilters);
+                    IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider,
+                        connection.Information, property, subscription.Prefilters);
 
                     IAfterQueryPrefilter afterQueryPrefilter =
                         subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
@@ -160,7 +199,8 @@ namespace SapphireDb.Connection
 
                     collectionChanges.ForEach(change =>
                     {
-                        object value = change.Value.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider);
+                        object value =
+                            change.Value.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider);
                         _ = connection.Send(change.CreateResponse(subscription.ReferenceId, value));
                     });
                 }
@@ -175,7 +215,8 @@ namespace SapphireDb.Connection
                 };
 
                 _ = connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
-                logger.LogError($"Error handling subscription '{subscription.ReferenceId}' of {subscription.CollectionName}");
+                logger.LogError(
+                    $"Error handling subscription '{subscription.ReferenceId}' of {subscription.CollectionName}");
                 logger.LogError(ex.Message);
             }
         }
@@ -188,14 +229,17 @@ namespace SapphireDb.Connection
             {
                 return false;
             }
-            
+
             List<string> affectedCollections = includePrefilters
                 .SelectMany(prefilter => prefilter.AffectedCollectionNames)
                 .Distinct()
                 .ToList();
 
-            return allChanges.Any(change => change.CollectionName.Equals(subscription.CollectionName, StringComparison.InvariantCultureIgnoreCase)) ||
-                   affectedCollections.Any(collectionName => allChanges.Any(change => change.CollectionName.Equals(collectionName, StringComparison.InvariantCultureIgnoreCase)));
+            return allChanges.Any(change =>
+                       change.CollectionName.Equals(subscription.CollectionName,
+                           StringComparison.InvariantCultureIgnoreCase)) ||
+                   affectedCollections.Any(collectionName => allChanges.Any(change =>
+                       change.CollectionName.Equals(collectionName, StringComparison.InvariantCultureIgnoreCase)));
         }
     }
 }

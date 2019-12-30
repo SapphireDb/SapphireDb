@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SapphireDb.Command;
@@ -40,10 +41,18 @@ namespace SapphireDb.Helper
                 }
                 else
                 {
-                    queryResponse.Result = collectionValues
-                        .AsEnumerable()
-                        .Select(v => v.GetAuthenticatedQueryModel(information, serviceProvider))
-                        .ToList();
+                    IEnumerable<object> values = collectionValues.AsEnumerable();
+
+                    AuthModelInfo authModelInfo = property.Key.GetAuthModelInfos();
+                    
+                    if (authModelInfo.QueryAuthAttribute != null && authModelInfo.QueryAuthAttribute.PerEntry)
+                    {
+                        values = values.Where(value => property.Key.CanQuery(information, serviceProvider, value));
+                    }
+
+                    values = values.Select(v => v.GetAuthenticatedQueryModel(information, serviceProvider));
+                    
+                    queryResponse.Result = values.ToList();
                 }
 
                 return queryResponse;
