@@ -19,5 +19,7 @@ namespace WebUI.Data
         public DbSet<CustomFunctionPerEntryForQuery> CustomFunctionPerEntryForQueryDemos { get; set; }
         
         public DbSet<QueryFields> QueryFieldDemos { get; set; }
+
+        public DbSet<UpdateExample> UpdateExamples { get; set; }
     }
 }

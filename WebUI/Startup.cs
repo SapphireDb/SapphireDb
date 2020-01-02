@@ -114,6 +114,7 @@ namespace WebUI
             services.AddAuthorization(config =>
             {
                 config.AddPolicy("requireAdmin", b => b.RequireRole("admin"));
+                config.AddPolicy("requireUser", b => b.RequireRole("user"));
             });
         }
 
