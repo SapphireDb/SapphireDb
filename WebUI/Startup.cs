@@ -14,7 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
-using Npgsql;
 using SapphireDb;
 using SapphireDb.Command;
 using SapphireDb.Command.Execute;

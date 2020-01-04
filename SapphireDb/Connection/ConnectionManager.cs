@@ -1,12 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading;
 using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.JsonWebTokens;
 using SapphireDb.Connection.Poll;
-using SapphireDb.Connection.Websocket;
 using SapphireDb.Models;
 
 namespace SapphireDb.Connection
@@ -59,14 +58,14 @@ namespace SapphireDb.Connection
                     // Compare user Information of the request and the found connection
                     if (connection.Information.User.Identity.IsAuthenticated)
                     {
-                        ClaimsPrincipal connectionUser = connection.Information.User;
+                        List<Claim> connectionClaims = connection.Information.User.Claims.ToList();
+                        List<Claim> requestClaims = context.User.Claims.ToList();
 
-                        if (connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value ||
-                            connectionUser.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iat)?.Value ||
-                            connectionUser.Claims.FirstOrDefault(c => c.Type == "Id")?.Value !=
-                            context.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value)
+                        if (connectionClaims.Any(connectionClaim =>
+                        {
+                            return !requestClaims.Any(claim =>
+                                claim.Type == connectionClaim.Type && claim.Value == connectionClaim.Value);
+                        }))
                         {
                             return null;
                         }
