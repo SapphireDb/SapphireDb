@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SapphireDb.Attributes;
 
 namespace WebUI.Data.AuthDemo
 {

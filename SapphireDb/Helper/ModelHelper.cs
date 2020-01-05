@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,18 +97,22 @@ namespace SapphireDb.Helper
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
             SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {
-            string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
-            bool isClassUpdateable = entityType.GetCustomAttribute<UpdatableAttribute>() != null;
-            
-            foreach (AuthPropertyInfo pi in entityType.GetAuthPropertyInfos())
-            {
-                if ((isClassUpdateable || pi.UpdatableAttribute != null) && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
+            List<AuthPropertyInfo> updatableProperties = entityType.GetAuthPropertyInfos()
+                .Where(info =>
                 {
-                    if (pi.CanUpdate(information, entityObject, serviceProvider))
+                    if (info.UpdatableAttribute != null ||
+                        info.PropertyInfo.DeclaringType?.GetCustomAttribute<UpdatableAttribute>() != null)
                     {
-                        pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
+                        return info.CanUpdate(information, entityObject, serviceProvider);
                     }
-                }
+
+                    return false;
+                })
+                .ToList();
+            
+            foreach (AuthPropertyInfo pi in updatableProperties)
+            {
+                pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
             }
         }
 
