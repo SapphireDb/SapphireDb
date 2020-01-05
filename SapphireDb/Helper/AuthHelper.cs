@@ -28,11 +28,18 @@ namespace SapphireDb.Helper
             return t.CallHandleAuthAttribute(SapphireAuthResource.OperationTypeEnum.Query, httpInformation,
                 entityObject, serviceProvider);
         }
+        
+        public static bool CanQueryEntry(this Type t, HttpInformation httpInformation, IServiceProvider serviceProvider,
+            object entityObject = null)
+        {
+            return HandleAuthAttributes(t, t.GetAuthModelInfos().QueryAuthPerEntryAttributes, httpInformation,
+                SapphireAuthResource.OperationTypeEnum.Query, entityObject, serviceProvider);
+        }
 
         public static bool CanQuery(this AuthPropertyInfo pi, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.QueryAuthAttribute, httpInformation,
+            return HandleAuthAttributes(pi.PropertyInfo.DeclaringType, pi.QueryAuthAttributes, httpInformation,
                 SapphireAuthResource.OperationTypeEnum.Query, entityObject, serviceProvider);
         }
 
@@ -60,7 +67,7 @@ namespace SapphireDb.Helper
         public static bool CanUpdate(this AuthPropertyInfo pi, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return HandleAuthAttribute(pi.PropertyInfo.DeclaringType, pi.UpdateAuthAttribute, httpInformation,
+            return HandleAuthAttributes(pi.PropertyInfo.DeclaringType, pi.UpdateAuthAttributes, httpInformation,
                 SapphireAuthResource.OperationTypeEnum.Update, entityObject, serviceProvider);
         }
 
@@ -69,7 +76,7 @@ namespace SapphireDb.Helper
         {
             AuthPropertyInfo[] propertyInfos = model.GetType().GetAuthPropertyInfos();
 
-            if (propertyInfos.All(pi => pi.QueryAuthAttribute == null))
+            if (propertyInfos.All(pi => !pi.QueryAuthAttributes.Any()))
             {
                 return model;
             }
@@ -90,16 +97,30 @@ namespace SapphireDb.Helper
         public static bool CanExecuteAction(this Type type, HttpInformation httpInformation,
             ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
-            return HandleAuthAttribute(type, type.GetCustomAttribute<ActionAuthAttribute>(), httpInformation,
+            return HandleAuthAttributes(type, type.GetCustomAttributes<ActionAuthAttribute>(false).ToList(), httpInformation,
                 SapphireAuthResource.OperationTypeEnum.Execute, actionHandler, serviceProvider);
         }
 
         public static bool CanExecuteAction(this MethodInfo methodInfo, HttpInformation httpInformation,
             ActionHandlerBase actionHandler, IServiceProvider serviceProvider)
         {
-            ActionAuthAttribute authAttribute = methodInfo.GetCustomAttribute<ActionAuthAttribute>();
-            return HandleAuthAttribute(methodInfo.DeclaringType, authAttribute, httpInformation,
+            List<ActionAuthAttribute> authAttributes = methodInfo.GetCustomAttributes<ActionAuthAttribute>(false).ToList();
+            return HandleAuthAttributes(methodInfo.DeclaringType, authAttributes, httpInformation,
                 SapphireAuthResource.OperationTypeEnum.Execute, actionHandler, serviceProvider);
+        }
+
+        private static bool HandleAuthAttributes<T>(Type t, List<T> authAttributes,
+            HttpInformation httpInformation,
+            SapphireAuthResource.OperationTypeEnum operationTypeEnum, object entityObject,
+            IServiceProvider serviceProvider) where T : AuthAttributeBase
+        {
+            if (!authAttributes.Any())
+            {
+                return true;
+            }
+
+            return authAttributes.Any(authAttribute => HandleAuthAttribute(t, authAttribute, httpInformation,
+                operationTypeEnum, entityObject, serviceProvider));
         }
 
         private static bool HandleAuthAttribute(Type t, AuthAttributeBase authAttribute,
@@ -151,34 +172,24 @@ namespace SapphireDb.Helper
             HttpInformation httpInformation, object entityObject, IServiceProvider serviceProvider)
         {
             AuthModelInfo authModelInfo = t.GetAuthModelInfos();
-
-            if (operationTypeEnum == SapphireAuthResource.OperationTypeEnum.Query
-                && authModelInfo.QueryAuthAttribute != null
-                && authModelInfo.QueryAuthAttribute.PerEntry
-                && entityObject == null)
-            {
-                return true;
-            }
-
-            AuthAttributeBase authAttribute;
+            
             switch (operationTypeEnum)
             {
                 case SapphireAuthResource.OperationTypeEnum.Create:
-                    authAttribute = authModelInfo.CreateAuthAttribute;
-                    break;
+                    return HandleAuthAttributes(t, authModelInfo.CreateAuthAttributes,
+                        httpInformation, operationTypeEnum, entityObject, serviceProvider);
                 case SapphireAuthResource.OperationTypeEnum.Remove:
-                    authAttribute = authModelInfo.RemoveAuthAttribute;
-                    break;
+                    return HandleAuthAttributes(t, authModelInfo.RemoveAuthAttributes,
+                        httpInformation, operationTypeEnum, entityObject, serviceProvider);
                 case SapphireAuthResource.OperationTypeEnum.Update:
-                    authAttribute = authModelInfo.UpdateAuthAttribute;
-                    break;
+                    return HandleAuthAttributes(t, authModelInfo.UpdateAuthAttributes,
+                        httpInformation, operationTypeEnum, entityObject, serviceProvider);
                 default:
-                    authAttribute = authModelInfo.QueryAuthAttribute;
-                    break;
+                    return HandleAuthAttributes(t, authModelInfo.QueryAuthAttributes,
+                        httpInformation, operationTypeEnum, entityObject, serviceProvider);
             }
 
-            return HandleAuthAttribute(t, authAttribute, httpInformation, operationTypeEnum, entityObject,
-                serviceProvider);
+            
         }
     }
 }

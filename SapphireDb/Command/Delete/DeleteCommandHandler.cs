@@ -39,15 +39,15 @@ namespace SapphireDb.Command.Delete
 
                     if (value != null)
                     {
-                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.Before, value, context, serviceProvider);
+                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.Before, value, context, serviceProvider);
 
                         db.Remove(value);
 
-                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
+                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
 
                         db.SaveChanges();
 
-                        property.Key.ExecuteHookMethod<RemoveEventAttribute>(v => v.After, value, context, serviceProvider);
+                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.After, value, context, serviceProvider);
 
                         return Task.FromResult<ResponseBase>(new DeleteResponse()
                         {

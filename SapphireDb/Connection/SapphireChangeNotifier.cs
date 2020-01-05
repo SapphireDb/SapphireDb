@@ -87,17 +87,17 @@ namespace SapphireDb.Connection
 
                 IEnumerable<ChangeResponse> authenticatedChanges = changesForCollection;
 
-                if (modelInfo.QueryAuthAttribute != null && modelInfo.QueryAuthAttribute.PerEntry)
+                if (modelInfo.QueryAuthPerEntryAttributes.Any())
                 {
                     authenticatedChanges = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Deleted ||
-                                         property.Key.CanQuery(connection.Information, requestServiceProvider,
+                                         property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
                                              change.Value));
 
 
                     IEnumerable<ChangeResponse> oldLoadedNotAllowed = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
-                                         !property.Key.CanQuery(connection.Information, requestServiceProvider,
+                                         !property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
                                              change.Value))
                         .Select(change =>
                         {
@@ -114,7 +114,7 @@ namespace SapphireDb.Connection
                 if (collectionChanges.Any())
                 {
                     QueryFunctionAttribute queryFunctionAttribute =
-                        property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+                        property.Key.GetCustomAttribute<QueryFunctionAttribute>(false);
                     if (queryFunctionAttribute != null)
                     {
                         var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function,

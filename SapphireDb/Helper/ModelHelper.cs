@@ -101,7 +101,7 @@ namespace SapphireDb.Helper
                 .Where(info =>
                 {
                     if (info.UpdatableAttribute != null ||
-                        info.PropertyInfo.DeclaringType?.GetCustomAttribute<UpdatableAttribute>() != null)
+                        info.PropertyInfo.DeclaringType?.GetCustomAttribute<UpdatableAttribute>(false) != null)
                     {
                         return info.CanUpdate(information, entityObject, serviceProvider);
                     }
@@ -120,7 +120,7 @@ namespace SapphireDb.Helper
         {
             IQueryable<object> values = (IQueryable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
 
-            QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>();
+            QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>(false);
             if (queryFunctionAttribute != null)
             {
                 var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Static);
@@ -153,12 +153,12 @@ namespace SapphireDb.Helper
             return collectionSet;
         }
 
-        public static void ExecuteHookMethod<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
+        public static void ExecuteHookMethods<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
             object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
         {
-            T attribute = modelType.GetCustomAttribute<T>();
+            List<T> attributes = modelType.GetCustomAttributes<T>().ToList();
 
-            if (attribute != null)
+            attributes.ForEach(attribute =>
             {
                 string methodName = methodSelector(attribute);
 
@@ -171,7 +171,7 @@ namespace SapphireDb.Helper
                         methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
                     }
                 }
-            }
+            });
         }
     }
 }

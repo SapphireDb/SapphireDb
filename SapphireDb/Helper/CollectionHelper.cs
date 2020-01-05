@@ -45,9 +45,9 @@ namespace SapphireDb.Helper
 
                     AuthModelInfo authModelInfo = property.Key.GetAuthModelInfos();
                     
-                    if (authModelInfo.QueryAuthAttribute != null && authModelInfo.QueryAuthAttribute.PerEntry)
+                    if (authModelInfo.QueryAuthPerEntryAttributes.Any())
                     {
-                        values = values.Where(value => property.Key.CanQuery(information, serviceProvider, value));
+                        values = values.Where(value => property.Key.CanQueryEntry(information, serviceProvider, value));
                     }
 
                     values = values.Select(v => v.GetAuthenticatedQueryModel(information, serviceProvider));

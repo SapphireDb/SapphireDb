@@ -4,7 +4,6 @@ using System.Text;
 
 namespace SapphireDb.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class)]
     public class ModelStoreEventAttributeBase : Attribute
     {
         public string Before { get; set; }

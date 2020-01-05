@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using SapphireDb.Attributes;
 
 namespace SapphireDb.Models
@@ -7,9 +9,9 @@ namespace SapphireDb.Models
     {
         public PropertyInfo PropertyInfo { get; set; }
 
-        public QueryAuthAttribute QueryAuthAttribute { get; set; }
+        public List<QueryAuthAttribute> QueryAuthAttributes { get; set; }
 
-        public UpdateAuthAttribute UpdateAuthAttribute { get; set; }
+        public List<UpdateAuthAttribute> UpdateAuthAttributes { get; set; }
 
         public UpdatableAttribute UpdatableAttribute { get; set; }
 
@@ -18,10 +20,10 @@ namespace SapphireDb.Models
         public AuthPropertyInfo(PropertyInfo propertyInfo)
         {
             PropertyInfo = propertyInfo;
-            QueryAuthAttribute = PropertyInfo.GetCustomAttribute<QueryAuthAttribute>();
-            UpdateAuthAttribute = PropertyInfo.GetCustomAttribute<UpdateAuthAttribute>();
-            UpdatableAttribute = PropertyInfo.GetCustomAttribute<UpdatableAttribute>();
-            NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>();
+            QueryAuthAttributes = PropertyInfo.GetCustomAttributes<QueryAuthAttribute>(false).ToList();
+            UpdateAuthAttributes = PropertyInfo.GetCustomAttributes<UpdateAuthAttribute>(false).ToList();
+            UpdatableAttribute = PropertyInfo.GetCustomAttribute<UpdatableAttribute>(false);
+            NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>(false);
         }
     }
 }

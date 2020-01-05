@@ -10,7 +10,7 @@ namespace WebUI.Data.AuthDemo
         {
             return Content == "Test 1";
         }
-        
+
         [Updatable]
         public string Content { get; set; }
     }

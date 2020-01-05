@@ -69,12 +69,12 @@ namespace SapphireDb.Command.Create
 
             db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
 
             db.SaveChanges();
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.After, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.After, newEntityObject, context, serviceProvider);
 
             return new CreateResponse()
             {

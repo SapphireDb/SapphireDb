@@ -2,7 +2,7 @@
 
 namespace SapphireDb.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Property, AllowMultiple = true)]
     public class QueryAuthAttribute : AuthAttributeBase
     {
         public bool PerEntry { get; }

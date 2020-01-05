@@ -64,7 +64,7 @@ namespace SapphireDb.Command.CreateRange
 
             foreach (object value in newValues)
             {
-                property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.After, value, context, serviceProvider);
+                property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.After, value, context, serviceProvider);
             }
 
             return response;
@@ -85,8 +85,8 @@ namespace SapphireDb.Command.CreateRange
 
             db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
-            property.Key.ExecuteHookMethod<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<CreateEventAttribute>(v => v.BeforeSave, newEntityObject, context, serviceProvider);
             
             return new CreateResponse()
             {

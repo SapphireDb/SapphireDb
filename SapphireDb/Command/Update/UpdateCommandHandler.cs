@@ -63,7 +63,7 @@ namespace SapphireDb.Command.Update
         private ResponseBase SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
             SapphireDbContext db, HttpInformation context, UpdateCommand command)
         {
-            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.Before, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.Before, value, context, serviceProvider);
             
             property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
@@ -77,11 +77,11 @@ namespace SapphireDb.Command.Update
                 };
             }
 
-            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
 
             db.SaveChanges();
 
-            property.Key.ExecuteHookMethod<UpdateEventAttribute>(v => v.After, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.After, value, context, serviceProvider);
 
             return new UpdateResponse()
             {
