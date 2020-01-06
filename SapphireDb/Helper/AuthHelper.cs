@@ -32,7 +32,7 @@ namespace SapphireDb.Helper
         public static bool CanQueryEntry(this Type t, HttpInformation httpInformation, IServiceProvider serviceProvider,
             object entityObject = null)
         {
-            return HandleAuthAttributes(t, t.GetAuthModelInfos().QueryAuthPerEntryAttributes, httpInformation,
+            return HandleAuthAttributes(t, t.GetAuthModelInfos().QueryEntryAuthAttributes, httpInformation,
                 SapphireAuthResource.OperationTypeEnum.Query, entityObject, serviceProvider);
         }
 

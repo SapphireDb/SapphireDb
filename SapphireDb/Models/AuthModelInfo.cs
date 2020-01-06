@@ -10,7 +10,7 @@ namespace SapphireDb.Models
     {
         public List<QueryAuthAttribute> QueryAuthAttributes { get; set; }
         
-        public List<QueryAuthAttribute> QueryAuthPerEntryAttributes { get; set; }
+        public List<QueryEntryAuthAttribute> QueryEntryAuthAttributes { get; set; }
 
         public List<UpdateAuthAttribute> UpdateAuthAttributes { get; set; }
         
@@ -20,11 +20,8 @@ namespace SapphireDb.Models
         
         public AuthModelInfo(Type modelType)
         {
-            QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType)
-                .Where(attribute => !attribute.PerEntry).ToList();
-            QueryAuthPerEntryAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType)
-                .Where(attribute => attribute.PerEntry).ToList();
-            
+            QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
+            QueryEntryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryEntryAuthAttribute>(modelType);
             UpdateAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<UpdateAuthAttribute>(modelType);
             RemoveAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<RemoveAuthAttribute>(modelType);
             CreateAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<CreateAuthAttribute>(modelType);

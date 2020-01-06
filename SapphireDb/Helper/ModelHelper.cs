@@ -156,22 +156,42 @@ namespace SapphireDb.Helper
         public static void ExecuteHookMethods<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
             object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
         {
-            List<T> attributes = modelType.GetCustomAttributes<T>().ToList();
+            Dictionary<Type, List<T>> hookAttributes = modelType.GetHookMethods<T>();
 
-            attributes.ForEach(attribute =>
+            foreach (KeyValuePair<Type, List<T>> hookAttributesForType in hookAttributes)
             {
-                string methodName = methodSelector(attribute);
-
-                if (!String.IsNullOrEmpty(methodName))
+                hookAttributesForType.Value.ForEach(attribute =>
                 {
-                    MethodInfo methodInfo = modelType.GetMethod(methodName,
-                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (methodInfo != null && methodInfo.ReturnType == typeof(void))
+                    string methodName = methodSelector(attribute);
+
+                    if (!String.IsNullOrEmpty(methodName))
                     {
-                        methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
+                        MethodInfo methodInfo = hookAttributesForType.Key.GetMethod(methodName,
+                            BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (methodInfo != null && methodInfo.ReturnType == typeof(void))
+                        {
+                            methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
+                        }
                     }
-                }
-            });
+                });   
+            }
+        }
+
+        private static Dictionary<Type, List<T>> GetHookMethods<T>(this Type modelType)
+            where T : ModelStoreEventAttributeBase
+        {
+            Dictionary<Type, List<T>> hookAttributes = new Dictionary<Type, List<T>>();
+
+            Type currentType = modelType;
+            
+            while (currentType != null && currentType != typeof(object))
+            {
+                hookAttributes.Add(currentType, currentType.GetCustomAttributes<T>(false).ToList());
+                
+                currentType = currentType.BaseType;
+            }
+
+            return hookAttributes;
         }
     }
 }

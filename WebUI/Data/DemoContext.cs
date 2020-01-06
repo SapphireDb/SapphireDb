@@ -26,5 +26,10 @@ namespace WebUI.Data
         public DbSet<IncludeDemoUser> Users { get; set; }
         
         public DbSet<IncludeDemoUserEntry> UserEntries { get; set; }
+
+        public DbSet<Log> Logs { get; set; }
+        
+        public DbSet<EventDemo> EventDemos { get; set; }
+        public DbSet<EventDemoDerived> EventDerivedDemos { get; set; }
     }
 }

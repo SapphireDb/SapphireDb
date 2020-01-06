@@ -87,7 +87,7 @@ namespace SapphireDb.Connection
 
                 IEnumerable<ChangeResponse> authenticatedChanges = changesForCollection;
 
-                if (modelInfo.QueryAuthPerEntryAttributes.Any())
+                if (modelInfo.QueryEntryAuthAttributes.Any())
                 {
                     authenticatedChanges = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Deleted ||
