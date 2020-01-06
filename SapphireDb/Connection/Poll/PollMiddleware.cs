@@ -53,8 +53,7 @@ namespace SapphireDb.Connection.Poll
 
                 await context.Response.WriteAsync(JsonHelper.Serialize(new ConnectionResponse()
                 {
-                    ConnectionId = connection.Id,
-                    AuthTokenValid = context.User.Identity.IsAuthenticated
+                    ConnectionId = connection.Id
                 }));
 
                 logger.LogInformation("Created new poll connection");

@@ -42,8 +42,7 @@ namespace SapphireDb.Connection.Websocket
 
                 connectionManager.AddConnection(connection);
                 await connection.Send(new ConnectionResponse() {
-                    ConnectionId = connection.Id,
-                    AuthTokenValid = context.User.Identity.IsAuthenticated
+                    ConnectionId = connection.Id
                 });
 
                 while (webSocket.State == WebSocketState.Open || webSocket.State == WebSocketState.Connecting)

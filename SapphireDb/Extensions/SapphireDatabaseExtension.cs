@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Connection;
 using SapphireDb.Connection.Poll;
@@ -49,6 +50,15 @@ namespace SapphireDb.Extensions
                 {
                     sapphireApp.Map("/nlb", (nlb) => { nlb.UseMiddleware<NlbMiddleware>(); });
                 }
+
+                sapphireApp.Map("/authToken", (authToken) =>
+                {
+                    authToken.Run(async (context) =>
+                    {
+                        bool authenticated = context.Request.Method == "POST" && context.User.Identity.IsAuthenticated;
+                        await context.Response.WriteAsync(authenticated.ToString().ToLowerInvariant());
+                    });
+                });
             });
 
             return builder;
