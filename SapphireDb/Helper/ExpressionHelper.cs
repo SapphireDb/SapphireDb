@@ -5,7 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SapphireDb.Helper
 {
@@ -50,15 +52,15 @@ namespace SapphireDb.Helper
             return EndsWith(ToLower(input), ToLower(checkString));
         }
 
-        public static MethodCallExpression ArrayContains(Expression input, Expression checkValue)
+        public static MethodCallExpression ArrayContains(Expression input, Expression checkValue, Type propertyType)
         {
-            MethodInfo method = typeof(IList).GetMethod(nameof(IList.Contains));
+            MethodInfo method = typeof(List<>).MakeGenericType(propertyType).GetMethod(nameof(Contains));
             return Expression.Call(input, method, checkValue);
         }
         
-        public static MethodCallExpression InArray(Expression input, Expression checkArray)
+        public static MethodCallExpression InArray(Expression input, Expression checkArray, Type propertyType)
         {
-            return ArrayContains(checkArray, input);
+            return ArrayContains(checkArray, input, propertyType);
         }
         
         public static Expression CreateCompareExpression(Type modelType, JArray compareParts, Expression modelExpression)
@@ -75,26 +77,28 @@ namespace SapphireDb.Helper
             MemberExpression propertyExpression = Expression.PropertyOrField(modelExpression, compareProperty.Name);
 
             string compareOperation = compareParts.Skip(1).First().Value<string>();
+
             object compareValue;
-            
+
             if (compareOperation == "InArray")
             {
-                object compareValues = (IEnumerable)typeof(JContainer).GetMethods()
-                    .FirstOrDefault(m => m.Name == nameof(JContainer.Values))?
-                    .MakeGenericMethod(compareProperty.PropertyType)
-                    .Invoke(compareParts.Last(), new object[] { });
+                IEnumerable<string> compareValueStrings = compareParts.Last.Values<string>();
+                IList compareValuesRaw = compareValueStrings.Select(v => v.ConvertToTargetType(compareProperty.PropertyType)).ToList();
 
-                compareValue = typeof(Enumerable)
+                object compareValues = typeof(Enumerable)?
+                    .GetMethod(nameof(Enumerable.Cast))?
+                    .MakeGenericMethod(compareProperty.PropertyType)
+                    .Invoke(null, new object[] {compareValuesRaw});
+
+                compareValue = typeof(Enumerable)?
                     .GetMethod(nameof(Enumerable.ToList))?
                     .MakeGenericMethod(compareProperty.PropertyType)
-                    .Invoke(null, new object[] { compareValues });
+                    .Invoke(null, new [] {compareValues});
             }
             else
             {
-                compareValue = typeof(Newtonsoft.Json.Linq.Extensions).GetMethods()
-                    .FirstOrDefault(m => m.Name == "Value")?
-                    .MakeGenericMethod(compareProperty.PropertyType)
-                    .Invoke(null, new object[] { compareParts.Last() });   
+                string compareValueString = compareParts.Last.Value<string>();
+                compareValue = compareValueString.ConvertToTargetType(compareProperty.PropertyType);
             }
 
             Expression compareValueExpression = Expression.Constant(compareValue);
@@ -114,9 +118,9 @@ namespace SapphireDb.Helper
                 case "EndsWithCaseInsensitive":
                     return EndsWithCaseInsensitive(propertyExpression, compareValueExpression);
                 case "ArrayContains":
-                    return ArrayContains(propertyExpression, compareValueExpression);
+                    return ArrayContains(propertyExpression, compareValueExpression, compareProperty.PropertyType);
                 case "InArray":
-                    return InArray(propertyExpression, compareValueExpression);
+                    return InArray(propertyExpression, compareValueExpression, compareProperty.PropertyType);
                 case "NotEqualIgnoreCase":
                     return Expression.NotEqual(ToLower(propertyExpression), ToLower(compareValueExpression));
                 case "EqualIgnoreCase":
@@ -178,10 +182,8 @@ namespace SapphireDb.Helper
 
                     return completeExpression;
                 }
-                else
-                {
-                    return ExpressionHelper.CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression);
-                }
+                
+                return CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression);
             }
 
             throw new Exception("Wrong order of conditions");
