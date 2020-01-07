@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SapphireDb.Attributes;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -54,6 +55,7 @@ namespace SapphireDb.Command.Update
 
             if (value != null)
             {
+                db.Entry(value).State = EntityState.Detached;
                 return SaveChangesToDb(property, value, updateValue, db, context, command);
             }
 
@@ -76,6 +78,8 @@ namespace SapphireDb.Command.Update
                     ValidationResults = validationResults
                 };
             }
+
+            db.Update(value);
 
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
 

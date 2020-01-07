@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Command.Update;
@@ -59,9 +60,10 @@ namespace SapphireDb.Command.UpdateRange
 
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);
                     object value = db.Find(property.Key, primaryKeys);
-
+                    
                     if (value != null)
                     {
+                        db.Entry(value).State = EntityState.Detached;
                         return ApplyChangesToDb(property, value, updateValue, db, context);
                     }
 
@@ -94,9 +96,11 @@ namespace SapphireDb.Command.UpdateRange
                     ValidationResults = validationResults
                 };
             }
+            
+            db.Update(value);
 
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
-
+            
             return new UpdateResponse()
             {
                 UpdatedObject = value
