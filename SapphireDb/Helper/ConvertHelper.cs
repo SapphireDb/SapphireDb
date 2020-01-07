@@ -11,9 +11,14 @@ namespace SapphireDb.Helper
 
             if (string.IsNullOrEmpty(input))
             {
-                return Activator.CreateInstance(type);
+                if (type == typeof(string))
+                {
+                    return input;
+                }
+                
+                return type.IsValueType ? Activator.CreateInstance(type) : null;
             }
-
+            
             if (type == typeof(DateTimeOffset))
             {
                 return DateTimeOffset.Parse(input, CultureInfo.InvariantCulture);
