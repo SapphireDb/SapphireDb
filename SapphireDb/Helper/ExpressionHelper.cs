@@ -78,29 +78,14 @@ namespace SapphireDb.Helper
 
             string compareOperation = compareParts.Skip(1).First().Value<string>();
 
-            object compareValue;
-
+            Type targetType = compareProperty.PropertyType;
+            
             if (compareOperation == "InArray")
             {
-                IEnumerable<string> compareValueStrings = compareParts.Last.Values<string>();
-                IList compareValuesRaw = compareValueStrings.Select(v => v.ConvertToTargetType(compareProperty.PropertyType)).ToList();
-
-                object compareValues = typeof(Enumerable)?
-                    .GetMethod(nameof(Enumerable.Cast))?
-                    .MakeGenericMethod(compareProperty.PropertyType)
-                    .Invoke(null, new object[] {compareValuesRaw});
-
-                compareValue = typeof(Enumerable)?
-                    .GetMethod(nameof(Enumerable.ToList))?
-                    .MakeGenericMethod(compareProperty.PropertyType)
-                    .Invoke(null, new [] {compareValues});
-            }
-            else
-            {
-                string compareValueString = compareParts.Last.Value<string>();
-                compareValue = compareValueString.ConvertToTargetType(compareProperty.PropertyType);
+                targetType = typeof(List<>).MakeGenericType(targetType);
             }
 
+            object compareValue = compareParts.Last.ToObject(targetType);
             Expression compareValueExpression = Expression.Constant(compareValue);
 
             switch (compareOperation)
