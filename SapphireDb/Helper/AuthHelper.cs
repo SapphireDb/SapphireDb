@@ -154,14 +154,10 @@ namespace SapphireDb.Helper
                 }
             }
 
-            if (!string.IsNullOrEmpty(authAttribute.FunctionName))
+            if (authAttribute.FunctionInfo != null)
             {
-                MethodInfo mi = t.GetMethod(authAttribute.FunctionName,
-                    BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                if (mi != null && mi.ReturnType == typeof(bool))
-                {
-                    return (bool) mi.Invoke(entityObject, mi.CreateParameters(httpInformation, serviceProvider));
-                }
+                return (bool) authAttribute.FunctionInfo.Invoke(entityObject,
+                    authAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider));
             }
 
             return user.Identity.IsAuthenticated;

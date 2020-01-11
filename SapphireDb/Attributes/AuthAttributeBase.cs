@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace SapphireDb.Attributes
 {
@@ -6,7 +7,9 @@ namespace SapphireDb.Attributes
     {
         public string[] Policies { get; } = new string[0];
 
-        public string FunctionName { get; }
+        private string FunctionName { get; }
+
+        public MethodInfo FunctionInfo { get; set; }
 
         public AuthAttributeBase(string policies = null, string functionName = null)
         {
@@ -16,6 +19,22 @@ namespace SapphireDb.Attributes
             }
 
             FunctionName = functionName;
+        }
+
+        public void Compile(Type targetType)
+        {
+            if (string.IsNullOrEmpty(FunctionName))
+            {
+                return;
+            }
+            
+            FunctionInfo = targetType.GetMethod(FunctionName,
+                BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+            if (FunctionInfo == null || FunctionInfo.ReturnType != typeof(bool))
+            {
+                throw new Exception("No suiting method was found");
+            }
         }
     }
 }

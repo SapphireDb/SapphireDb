@@ -38,6 +38,11 @@ namespace SapphireDb.Models
                 currentModelType = currentModelType.BaseType;
             } while (!attributes.Any() && currentModelType != null && currentModelType != typeof(object));
 
+            attributes.ForEach(attribute =>
+            {
+                attribute.Compile(modelType);
+            });
+            
             return attributes;
         }
     }
