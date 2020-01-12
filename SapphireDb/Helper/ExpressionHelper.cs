@@ -15,14 +15,12 @@ namespace SapphireDb.Helper
     {
         public static MethodCallExpression ToLower(Expression input)
         {
-            MethodInfo method = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { });
-            return Expression.Call(input, method);
+            return Expression.Call(input, ReflectionMethodHelper.StringToLower);
         }
         
         public static MethodCallExpression Contains(Expression input, Expression checkString)
         {
-            MethodInfo method = typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) });
-            return Expression.Call(input, method, checkString);
+            return Expression.Call(input, ReflectionMethodHelper.StringContains, checkString);
         }
         
         public static MethodCallExpression ContainsCaseInsensitive(Expression input, Expression checkString)
@@ -32,8 +30,7 @@ namespace SapphireDb.Helper
 
         public static MethodCallExpression StartsWith(Expression input, Expression checkString)
         {
-            MethodInfo method = typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) });
-            return Expression.Call(input, method, checkString);
+            return Expression.Call(input, ReflectionMethodHelper.StringStartsWith, checkString);
         }
 
         public static MethodCallExpression StartsWithCaseInsensitive(Expression input, Expression checkString)
@@ -43,8 +40,7 @@ namespace SapphireDb.Helper
         
         public static MethodCallExpression EndsWith(Expression input, Expression checkString)
         {
-            MethodInfo method = typeof(string).GetMethod(nameof(string.EndsWith), new[] { typeof(string) });
-            return Expression.Call(input, method, checkString);
+            return Expression.Call(input, ReflectionMethodHelper.StringEndsWith, checkString);
         }
         
         public static MethodCallExpression EndsWithCaseInsensitive(Expression input, Expression checkString)

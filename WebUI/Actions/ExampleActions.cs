@@ -8,6 +8,7 @@ using WebUI.Data;
 
 namespace WebUI.Actions
 {
+    [ActionAuth(functionName: "Test")]
     public class ExampleActions : ActionHandlerBase
     {
         public ExampleActions()
@@ -28,6 +29,7 @@ namespace WebUI.Actions
             return 15;
         }
 
+        [ActionAuth(functionName: "Test")]
         public async Task<string> AsyncDelay()
         {
             for (int i = 0; i <= 100; i++)
@@ -39,11 +41,11 @@ namespace WebUI.Actions
             return "complete";
         }
 
-        //public bool test(WebsocketConnection connection)
-        //{
-        //    return DateTime.UtcNow.Second % 2 == 0;
-        //}
-
+        public bool Test()
+        {
+            return true;
+        }
+        
         public string TestWithParams(string param1, string param2)
         {
             return param1 + param2;

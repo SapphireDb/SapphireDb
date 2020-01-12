@@ -48,32 +48,32 @@ namespace SapphireDb.Helper
             return primaryKeys;
         }
 
-        private static readonly ConcurrentDictionary<Type, AuthModelInfo> AuthModelInfosDictionary = new ConcurrentDictionary<Type, AuthModelInfo>();
+        private static readonly ConcurrentDictionary<Type, ModelAttributesInfo> ModelAttributesInfos = new ConcurrentDictionary<Type, ModelAttributesInfo>();
 
-        public static AuthModelInfo GetAuthModelInfos(this Type entityType)
+        public static ModelAttributesInfo GetModelAttributesInfo(this Type entityType)
         {
-            if (AuthModelInfosDictionary.TryGetValue(entityType, out AuthModelInfo authModelInfo))
+            if (ModelAttributesInfos.TryGetValue(entityType, out ModelAttributesInfo authModelInfo))
             {
                 return authModelInfo;
             }
 
-            authModelInfo = new AuthModelInfo(entityType);
-            AuthModelInfosDictionary.TryAdd(entityType, authModelInfo);
+            authModelInfo = new ModelAttributesInfo(entityType);
+            ModelAttributesInfos.TryAdd(entityType, authModelInfo);
 
             return authModelInfo;
         }
-        
-        private static readonly ConcurrentDictionary<Type, AuthPropertyInfo[]> PropertyInfosDictionary = new ConcurrentDictionary<Type, AuthPropertyInfo[]>();
 
-        public static AuthPropertyInfo[] GetAuthPropertyInfos(this Type entityType)
+        private static readonly ConcurrentDictionary<Type, PropertyAttributesInfo[]> PropertyAttributesInfos = new ConcurrentDictionary<Type, PropertyAttributesInfo[]>();
+
+        public static PropertyAttributesInfo[] GetPropertyAttributesInfos(this Type entityType)
         {
-            if (PropertyInfosDictionary.TryGetValue(entityType, out AuthPropertyInfo[] propertyInfos))
+            if (PropertyAttributesInfos.TryGetValue(entityType, out PropertyAttributesInfo[] propertyInfos))
             {
                 return propertyInfos;
             }
 
-            propertyInfos = entityType.GetProperties().Select(p => new AuthPropertyInfo(p)).ToArray();
-            PropertyInfosDictionary.TryAdd(entityType, propertyInfos);
+            propertyInfos = entityType.GetProperties().Select(p => new PropertyAttributesInfo(p)).ToArray();
+            PropertyAttributesInfos.TryAdd(entityType, propertyInfos);
 
             return propertyInfos;
         }
@@ -83,7 +83,7 @@ namespace SapphireDb.Helper
             object newEntityObject = Activator.CreateInstance(entityType);
             string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
 
-            foreach (AuthPropertyInfo pi in entityType.GetAuthPropertyInfos())
+            foreach (PropertyAttributesInfo pi in entityType.GetPropertyAttributesInfos())
             {
                 if (pi.NonCreatableAttribute == null && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
                 {
@@ -97,7 +97,7 @@ namespace SapphireDb.Helper
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
             SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {
-            List<AuthPropertyInfo> updatableProperties = entityType.GetAuthPropertyInfos()
+            List<PropertyAttributesInfo> updatableProperties = entityType.GetPropertyAttributesInfos()
                 .Where(info =>
                 {
                     if (info.UpdatableAttribute != null ||
@@ -110,7 +110,7 @@ namespace SapphireDb.Helper
                 })
                 .ToList();
             
-            foreach (AuthPropertyInfo pi in updatableProperties)
+            foreach (PropertyAttributesInfo pi in updatableProperties)
             {
                 pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
             }
@@ -120,78 +120,54 @@ namespace SapphireDb.Helper
         {
             IQueryable<object> values = (IQueryable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
 
-            QueryFunctionAttribute queryFunctionAttribute = property.Key.GetCustomAttribute<QueryFunctionAttribute>(false);
-            if (queryFunctionAttribute != null)
+            QueryFunctionAttribute queryFunctionAttribute =
+                property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
+            if (queryFunctionAttribute != null && queryFunctionAttribute.FunctionInfo != null)
             {
-                var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function, BindingFlags.Default|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Static);
-
-                if (queryFunctionInfo != null)
-                {
-                    object[] methodParameters = queryFunctionInfo.CreateParameters(httpInformation, serviceProvider);
-                    Expression queryFunctionExpression = (Expression)queryFunctionInfo.Invoke(null, methodParameters);
-
-                    MethodInfo whereMethodInfo = typeof(Queryable).GetMethods(BindingFlags.Static|BindingFlags.Public).FirstOrDefault(mi => mi.Name == "Where");
-                    whereMethodInfo = whereMethodInfo?.MakeGenericMethod(property.Key);
-
-                    values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
-                }
+                object[] methodParameters = queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
+                Expression queryFunctionExpression = (Expression)queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
+                
+                MethodInfo whereMethodInfo = ReflectionMethodHelper.GetGenericWhere(property.Key);
+                values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
             }
 
             return values;
         }
 
-        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, HttpInformation information, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
-        {
-            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider, information);
-
-            foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
-            {
-                prefilter.Initialize(property.Key);
-                collectionSet = prefilter.Execute(collectionSet);
-            }
-
-            return collectionSet;
-        }
-
-        public static void ExecuteHookMethods<T>(this Type modelType, Func<ModelStoreEventAttributeBase, string> methodSelector,
+        public static void ExecuteHookMethods<T>(this Type modelType, Func<ModelStoreEventAttributeBase, MethodInfo> methodSelector,
             object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
         {
-            Dictionary<Type, List<T>> hookAttributes = modelType.GetHookMethods<T>();
+            ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
 
-            foreach (KeyValuePair<Type, List<T>> hookAttributesForType in hookAttributes)
-            {
-                hookAttributesForType.Value.ForEach(attribute =>
-                {
-                    string methodName = methodSelector(attribute);
-
-                    if (!String.IsNullOrEmpty(methodName))
-                    {
-                        MethodInfo methodInfo = hookAttributesForType.Key.GetMethod(methodName,
-                            BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        if (methodInfo != null && methodInfo.ReturnType == typeof(void))
-                        {
-                            methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
-                        }
-                    }
-                });   
-            }
-        }
-
-        private static Dictionary<Type, List<T>> GetHookMethods<T>(this Type modelType)
-            where T : ModelStoreEventAttributeBase
-        {
-            Dictionary<Type, List<T>> hookAttributes = new Dictionary<Type, List<T>>();
-
-            Type currentType = modelType;
+            List<T> eventAttributes = null;
             
-            while (currentType != null && currentType != typeof(object))
+            if (typeof(T) == typeof(CreateEventAttribute))
             {
-                hookAttributes.Add(currentType, currentType.GetCustomAttributes<T>(false).ToList());
-                
-                currentType = currentType.BaseType;
+                eventAttributes = modelAttributesInfo.CreateEventAttributes.Cast<T>().ToList();
+            }
+            else if (typeof(T) == typeof(UpdateEventAttribute))
+            {
+                eventAttributes = modelAttributesInfo.UpdateEventAttributes.Cast<T>().ToList();
+            }
+            else if (typeof(T) == typeof(RemoveEventAttribute))
+            {
+                eventAttributes = modelAttributesInfo.RemoveEventAttributes.Cast<T>().ToList();
             }
 
-            return hookAttributes;
+            if (eventAttributes == null)
+            {
+                return;
+            }
+
+            foreach (T attribute in eventAttributes)
+            {
+                MethodInfo methodInfo = methodSelector(attribute);
+
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
+                }
+            }
         }
     }
 }

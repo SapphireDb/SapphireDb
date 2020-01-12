@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace SapphireDb.Internal
 
         public MethodInfo GetAction(ExecuteCommand executeCommand, Type actionHandlerType)
         {
-            return actionHandlerType.GetMethods().FirstOrDefault(m => m.Name.ToCamelCase() == executeCommand.ActionName.ToCamelCase());
+            return actionHandlerType.GetMethod(executeCommand.ActionName, BindingFlags.Instance|BindingFlags.Public|BindingFlags.Static|BindingFlags.IgnoreCase);
         }
     }
 }

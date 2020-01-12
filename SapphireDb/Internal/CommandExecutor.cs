@@ -72,8 +72,9 @@ namespace SapphireDb.Internal
                             return command.CreateExceptionResponse<ResponseBase>("Cannot handle this command without realtime connection");
                         }
                     }
-
-                    ResponseBase response = await (dynamic)handlerType.GetMethod("Handle").Invoke(handler, new object[] { information, command });
+                    
+                    ResponseBase response = await (dynamic)handlerType.GetHandlerHandleMethod()
+                        .Invoke(handler, new object[] { information, command });
 
                     logger.LogInformation("Handled " + command.GetType().Name);
 

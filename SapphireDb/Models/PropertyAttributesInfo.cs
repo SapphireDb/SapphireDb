@@ -5,7 +5,7 @@ using SapphireDb.Attributes;
 
 namespace SapphireDb.Models
 {
-    public class AuthPropertyInfo
+    public class PropertyAttributesInfo
     {
         public PropertyInfo PropertyInfo { get; set; }
 
@@ -17,7 +17,7 @@ namespace SapphireDb.Models
 
         public NonCreatableAttribute NonCreatableAttribute { get; set; }
 
-        public AuthPropertyInfo(PropertyInfo propertyInfo)
+        public PropertyAttributesInfo(PropertyInfo propertyInfo)
         {
             PropertyInfo = propertyInfo;
             QueryAuthAttributes = GetCustomAttributes<QueryAuthAttribute>();

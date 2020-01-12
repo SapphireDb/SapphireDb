@@ -11,6 +11,19 @@ namespace SapphireDb.Helper
 {
     static class CollectionHelper
     {
+        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, HttpInformation information, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
+        {
+            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider, information);
+
+            foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
+            {
+                prefilter.Initialize(property.Key);
+                collectionSet = prefilter.Execute(collectionSet);
+            }
+
+            return collectionSet;
+        }
+        
         public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
             HttpInformation information, IServiceProvider serviceProvider)
         {
@@ -43,9 +56,9 @@ namespace SapphireDb.Helper
                 {
                     IEnumerable<object> values = collectionValues.AsEnumerable();
 
-                    AuthModelInfo authModelInfo = property.Key.GetAuthModelInfos();
+                    ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
                     
-                    if (authModelInfo.QueryEntryAuthAttributes.Any())
+                    if (modelAttributesInfo.QueryEntryAuthAttributes.Any())
                     {
                         values = values.Where(value => property.Key.CanQueryEntry(information, serviceProvider, value));
                     }

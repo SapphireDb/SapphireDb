@@ -83,11 +83,11 @@ namespace SapphireDb.Connection
                     .Where(c => c.CollectionName == subscriptionGrouping.Key)
                     .ToList();
 
-                AuthModelInfo modelInfo = property.Key.GetAuthModelInfos();
+                ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
 
                 IEnumerable<ChangeResponse> authenticatedChanges = changesForCollection;
 
-                if (modelInfo.QueryEntryAuthAttributes.Any())
+                if (modelAttributesInfo.QueryEntryAuthAttributes.Any())
                 {
                     authenticatedChanges = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Deleted ||
@@ -113,23 +113,16 @@ namespace SapphireDb.Connection
 
                 if (collectionChanges.Any())
                 {
-                    QueryFunctionAttribute queryFunctionAttribute =
-                        property.Key.GetCustomAttribute<QueryFunctionAttribute>(false);
-                    if (queryFunctionAttribute != null)
+                    if (modelAttributesInfo.QueryFunctionAttribute != null &&
+                        modelAttributesInfo.QueryFunctionAttribute.FunctionInfo != null)
                     {
-                        var queryFunctionInfo = property.Key.GetMethod(queryFunctionAttribute.Function,
-                            BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                        object[] methodParameters =
+                            modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.CreateParameters(connection.Information, serviceProvider);
+                        dynamic queryFunctionExpression =
+                            ((dynamic) modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters)).Compile();
 
-                        if (queryFunctionInfo != null)
-                        {
-                            object[] methodParameters =
-                                queryFunctionInfo.CreateParameters(connection.Information, serviceProvider);
-                            dynamic queryFunctionExpression =
-                                ((dynamic) queryFunctionInfo.Invoke(null, methodParameters)).Compile();
-
-                            collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
-                                .ToList();
-                        }
+                        collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
+                            .ToList();
                     }
                 }
 

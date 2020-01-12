@@ -76,7 +76,7 @@ namespace SapphireDb.Command.UpdateRange
 
             foreach (object value in updateValues)
             {
-                property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.After, value, context, serviceProvider);
+                property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.AfterFunction, value, context, serviceProvider);
             }
 
             return response;
@@ -84,7 +84,7 @@ namespace SapphireDb.Command.UpdateRange
 
         private ResponseBase ApplyChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue, SapphireDbContext db, HttpInformation context)
         {
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.Before, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeFunction, value, context, serviceProvider);
             
             property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
 
@@ -99,7 +99,7 @@ namespace SapphireDb.Command.UpdateRange
             
             db.Update(value);
 
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeSave, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(v => v.BeforeSaveFunction, value, context, serviceProvider);
             
             return new UpdateResponse()
             {
