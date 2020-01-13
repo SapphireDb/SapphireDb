@@ -48,11 +48,11 @@ namespace SapphireDb.Command.DeleteRange
 
                             if (value != null)
                             {
-                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.BeforeFunction, value, context, serviceProvider);
+                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
 
                                 db.Remove(value);
 
-                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.BeforeSaveFunction, value, context, serviceProvider);
+                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, value, context, serviceProvider);
 
                                 removedValues.Add(value);
 
@@ -70,7 +70,7 @@ namespace SapphireDb.Command.DeleteRange
 
                     foreach (object value in removedValues)
                     {
-                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(v => v.AfterFunction, value, context, serviceProvider);
+                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
                     }
 
                     return Task.FromResult<ResponseBase>(response);

@@ -113,16 +113,24 @@ namespace SapphireDb.Connection
 
                 if (collectionChanges.Any())
                 {
-                    if (modelAttributesInfo.QueryFunctionAttribute != null &&
-                        modelAttributesInfo.QueryFunctionAttribute.FunctionInfo != null)
+                    if (modelAttributesInfo.QueryFunctionAttribute != null)
                     {
-                        object[] methodParameters =
-                            modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.CreateParameters(connection.Information, serviceProvider);
-                        dynamic queryFunctionExpression =
-                            ((dynamic) modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters)).Compile();
+                        if (modelAttributesInfo.QueryFunctionAttribute.FunctionBuilder != null)
+                        {
+                            Func<object, bool> expression =
+                                modelAttributesInfo.QueryFunctionAttribute.GetLambda(connection.Information, property.Key).Compile();
+                            collectionChanges = collectionChanges.Where(change => expression(change.Value)).ToList();
+                        }
+                        else if (modelAttributesInfo.QueryFunctionAttribute.FunctionInfo != null)
+                        {
+                            object[] methodParameters =
+                                modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.CreateParameters(connection.Information, serviceProvider);
+                            dynamic queryFunctionExpression =
+                                ((dynamic) modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters)).Compile();
 
-                        collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
-                            .ToList();
+                            collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
+                                .ToList();
+                        }
                     }
                 }
 

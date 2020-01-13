@@ -122,12 +122,11 @@ namespace SapphireDb.Helper
 
             QueryFunctionAttribute queryFunctionAttribute =
                 property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
-            if (queryFunctionAttribute != null && queryFunctionAttribute.FunctionInfo != null)
+            if (queryFunctionAttribute != null)
             {
                 if (queryFunctionAttribute.FunctionBuilder != null)
                 {
-                    Expression<Func<dynamic, bool>> queryFunctionExpression = queryFunctionAttribute.FunctionBuilder(httpInformation);
-                    values = values?.Where(queryFunctionExpression);
+                    values = values?.Where(queryFunctionAttribute.GetLambda(httpInformation, property.Key));
                 }
                 else if (queryFunctionAttribute.FunctionInfo != null)
                 {
@@ -143,7 +142,7 @@ namespace SapphireDb.Helper
             return values;
         }
 
-        public static void ExecuteHookMethods<T>(this Type modelType, Func<ModelStoreEventAttributeBase, MethodInfo> methodSelector,
+        public static void ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
             object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
@@ -170,11 +169,38 @@ namespace SapphireDb.Helper
 
             foreach (T attribute in eventAttributes)
             {
-                MethodInfo methodInfo = methodSelector(attribute);
-
-                if (methodInfo != null)
+                if (eventType == ModelStoreEventAttributeBase.EventType.Before)
                 {
-                    methodInfo.Invoke(newValue, methodInfo.CreateParameters(httpInformation, serviceProvider));
+                    if (attribute.BeforeLambda != null)
+                    {
+                        attribute.BeforeLambda(newValue, httpInformation);
+                    }
+                    else if (attribute.BeforeFunction != null)
+                    {
+                        attribute.BeforeFunction.Invoke(newValue, attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider));
+                    }
+                }
+                else if (eventType == ModelStoreEventAttributeBase.EventType.BeforeSave)
+                {
+                    if (attribute.BeforeSaveLambda != null)
+                    {
+                        attribute.BeforeSaveLambda(newValue, httpInformation);
+                    }
+                    else if (attribute.BeforeSaveFunction != null)
+                    {
+                        attribute.BeforeSaveFunction.Invoke(newValue, attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider));
+                    }
+                }
+                else if (eventType == ModelStoreEventAttributeBase.EventType.After)
+                {
+                    if (attribute.AfterLambda != null)
+                    {
+                        attribute.AfterLambda(newValue, httpInformation);
+                    }
+                    else if (attribute.AfterFunction != null)
+                    {
+                        attribute.AfterFunction.Invoke(newValue, attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider));
+                    }
                 }
             }
         }

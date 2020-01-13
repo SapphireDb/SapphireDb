@@ -20,8 +20,7 @@ namespace SapphireDb.Extensions
 
         public SapphireDatabaseBuilder AddContext<TContextType>(
             Action<DbContextOptionsBuilder> dbContextOptions = null,
-            string contextName = "Default",
-            Action<SapphireContextBuilder> contextBuilder = null)
+            string contextName = "Default")
             where TContextType : SapphireDbContext
         {
             DbContextTypeContainer contextTypes = (DbContextTypeContainer)serviceCollection
@@ -32,8 +31,18 @@ namespace SapphireDb.Extensions
 
             serviceCollection.AddDbContext<TContextType>(dbContextOptions, ServiceLifetime.Transient);
 
-            contextBuilder?.Invoke(new SapphireContextBuilder(serviceCollection));
-
+            return this;
+        }
+        
+        public SapphireDatabaseBuilder AddActionHandlerConfiguration<T>() where T : class, ISapphireActionConfiguration
+        {
+            serviceCollection.AddTransient<ISapphireActionConfiguration, T>();
+            return this;
+        }
+        
+        public SapphireDatabaseBuilder AddModelConfiguration<T>() where T : class, ISapphireModelConfiguration
+        {
+            serviceCollection.AddTransient<ISapphireModelConfiguration, T>();
             return this;
         }
     }

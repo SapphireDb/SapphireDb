@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
 {
@@ -11,13 +12,19 @@ namespace SapphireDb.Attributes
 
         public MethodInfo BeforeFunction { get; set; }
         
+        public Action<object, HttpInformation> BeforeLambda { get; set; }
+        
         public string BeforeSave { get; set; }
 
         public MethodInfo BeforeSaveFunction { get; set; }
         
+        public Action<object, HttpInformation> BeforeSaveLambda { get; set; }
+        
         public string After { get; set; }
         
         public MethodInfo AfterFunction { get; set; }
+        
+        public Action<object, HttpInformation> AfterLambda { get; set; }
 
         public ModelStoreEventAttributeBase(string before = null, string beforeSave = null, string after = null)
         {
@@ -49,6 +56,11 @@ namespace SapphireDb.Attributes
             }
 
             return methodInfo;
+        }
+
+        public enum EventType
+        {
+            Before, BeforeSave, After
         }
     }
 }

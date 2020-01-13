@@ -129,6 +129,21 @@ namespace SapphireDb.Extensions
 
                 configureMethod?.Invoke(sapphireModelConfiguration, new object[] { modelBuilder });
             }
+            
+            IEnumerable<ISapphireActionConfiguration> sapphireActionConfigurations = serviceProvider.GetServices<ISapphireActionConfiguration>();
+
+            foreach (ISapphireActionConfiguration sapphireActionConfiguration in sapphireActionConfigurations)
+            {
+                Type actionConfigurationType = sapphireActionConfiguration.GetType();
+
+                MethodInfo configureMethod = actionConfigurationType.GetMethod("Configure",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                Type actionHandlerBuilderType = configureMethod?.GetParameters()[0].ParameterType;
+                object actionHandlerBuilder = Activator.CreateInstance(actionHandlerBuilderType);
+
+                configureMethod?.Invoke(sapphireActionConfiguration, new object[] { actionHandlerBuilder });
+            }
         }
     }
 }

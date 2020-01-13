@@ -148,6 +148,11 @@ namespace SapphireDb.Helper
                 }
             }
 
+            if (authAttribute.FunctionLambda != null)
+            {
+                return authAttribute.FunctionLambda(httpInformation, entityObject);
+            }
+            
             if (authAttribute.FunctionInfo != null)
             {
                 return (bool) authAttribute.FunctionInfo.Invoke(entityObject,

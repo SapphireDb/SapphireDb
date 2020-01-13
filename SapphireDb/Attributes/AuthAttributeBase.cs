@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
+using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
 {
@@ -10,6 +12,8 @@ namespace SapphireDb.Attributes
         private string FunctionName { get; }
 
         public MethodInfo FunctionInfo { get; set; }
+        
+        public Func<HttpInformation, dynamic, bool> FunctionLambda { get; set; }
 
         public AuthAttributeBase(string policies = null, string functionName = null)
         {

@@ -59,11 +59,10 @@ namespace WebUI
                     {
                         cfg.UseInMemoryDatabase("demoCtx");
                     }
-                }, "demo", builder =>
-                {
-                    builder.AddModelConfiguration<MessageConfiguration>();
-                })
-                .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo");
+                }, "demo")
+                .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
+                .AddActionHandlerConfiguration<UserActionsConfiguration>()
+                .AddModelConfiguration<MessageConfiguration>();
 
             services.AddMvc();
 
@@ -119,110 +118,14 @@ namespace WebUI
                 config.AddPolicy("requireAdmin", b => b.RequireRole("admin"));
                 config.AddPolicy("requireUser", b => b.RequireRole("user"));
             });
+
+            services.AddTransient<Seeder>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DemoContext demoContext,
-            UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, AuthDemoContext authDemoContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Seeder seeder)
         {
-            // Generation for Demo
-            demoContext.Database.EnsureCreated();
-
-            if (!userManager.Users.Any())
-            {
-                roleManager.CreateAsync(new IdentityRole()
-                {
-                    Name = "admin"
-                }).Wait();
-
-                roleManager.CreateAsync(new IdentityRole()
-                {
-                    Name = "user"
-                }).Wait();
-
-                AppUser adminUser = new AppUser()
-                {
-                    Email = "admin@dev.de",
-                    UserName = "admin",
-                    FirstName = "Admin",
-                    LastName = "User"
-                };
-
-                userManager.CreateAsync(adminUser, "admin").Wait();
-                userManager.AddToRolesAsync(adminUser, new[] {"admin", "user"}).Wait();
-
-                AppUser normalUser = new AppUser()
-                {
-                    Email = "user@dev.de",
-                    UserName = "user",
-                    FirstName = "Normal",
-                    LastName = "User"
-                };
-
-                userManager.CreateAsync(normalUser, "user").Wait();
-                userManager.AddToRolesAsync(normalUser, new[] {"user"}).Wait();
-            }
-
-            authDemoContext.RequiresAuthForQueryDemos.AddRange(
-                new RequiresAuthForQuery()
-                {
-                    Content = "Test 1"
-                },
-                new RequiresAuthForQuery()
-                {
-                    Content = "Test 2"
-                }
-            );
+            seeder.Execute();
             
-            authDemoContext.RequiresAdminForQueryDemos.AddRange(
-                new RequiresAdminForQuery()
-                {
-                    Content = "Test 1"
-                },
-                new RequiresAdminForQuery()
-                {
-                    Content = "Test 2"
-                }
-            );
-            
-            authDemoContext.CustomFunctionForQueryDemos.AddRange(
-                new CustomFunctionForQuery()
-                {
-                    Content = "Test 1"
-                },
-                new CustomFunctionForQuery()
-                {
-                    Content = "Test 2"
-                }
-            );
-
-            authDemoContext.CustomFunctionPerEntryForQueryDemos.AddRange(
-                new CustomFunctionPerEntryForQuery()
-                {
-                    Content = "Test 1"
-                },
-                new CustomFunctionPerEntryForQuery()
-                {
-                    Content = "Test 2"
-                }
-            );
-            
-            authDemoContext.QueryFieldDemos.AddRange(
-                new QueryFields()
-                {
-                    Content = "Test 1",
-                    Content2 = "Content 2.1",
-                    Content3 = "Content 3.1"
-                },
-                new QueryFields()
-                {
-                    Content = "Test 2",
-                    Content2 = "Content 2.2",
-                    Content3 = "Content 3.2"
-                }
-            );
-            
-            authDemoContext.SaveChanges();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
