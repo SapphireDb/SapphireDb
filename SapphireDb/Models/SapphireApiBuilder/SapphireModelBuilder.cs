@@ -126,6 +126,12 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return attribute;
         }
 
+        public SapphireModelBuilder<T> MakeUpdatable()
+        {
+            attributesInfo.UpdatableAttribute = new UpdatableAttribute();
+            return this;
+        }
+        
         public SapphirePropertyBuilder<T, TProperty> Property<TProperty>(Expression<Func<T, TProperty>> selector)
         {
             PropertyInfo property = (PropertyInfo)((MemberExpression) selector.Body).Member;

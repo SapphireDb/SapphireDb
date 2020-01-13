@@ -64,7 +64,7 @@ namespace WebUI
                 .AddActionHandlerConfiguration<UserActionsConfiguration>()
                 .AddModelConfiguration<MessageConfiguration>();
 
-            services.AddMvc();
+            // services.AddMvc();
 
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "dist"; });
 
@@ -120,6 +120,7 @@ namespace WebUI
             });
 
             services.AddTransient<Seeder>();
+            services.AddCors();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Seeder seeder)

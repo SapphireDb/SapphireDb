@@ -16,7 +16,8 @@ namespace SapphireDb.Helper
 {
     static class ModelHelper
     {
-        public static object[] GetPrimaryKeyValues(this Type type, SapphireDbContext db, Dictionary<string, JValue> primaryKeys)
+        public static object[] GetPrimaryKeyValues(this Type type, SapphireDbContext db,
+            Dictionary<string, JValue> primaryKeys)
         {
             return type.GetPrimaryKeys(db)
                 .Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
@@ -33,7 +34,8 @@ namespace SapphireDb.Helper
             return type.GetPrimaryKeys(db).Select(p => p.Name.ToCamelCase()).ToArray();
         }
 
-        private static readonly ConcurrentDictionary<Type, IProperty[]> PrimaryKeyDictionary = new ConcurrentDictionary<Type, IProperty[]>();
+        private static readonly ConcurrentDictionary<Type, IProperty[]> PrimaryKeyDictionary =
+            new ConcurrentDictionary<Type, IProperty[]>();
 
         public static IProperty[] GetPrimaryKeys(this Type type, SapphireDbContext db)
         {
@@ -48,7 +50,8 @@ namespace SapphireDb.Helper
             return primaryKeys;
         }
 
-        private static readonly ConcurrentDictionary<Type, ModelAttributesInfo> ModelAttributesInfos = new ConcurrentDictionary<Type, ModelAttributesInfo>();
+        private static readonly ConcurrentDictionary<Type, ModelAttributesInfo> ModelAttributesInfos =
+            new ConcurrentDictionary<Type, ModelAttributesInfo>();
 
         public static ModelAttributesInfo GetModelAttributesInfo(this Type entityType)
         {
@@ -63,7 +66,8 @@ namespace SapphireDb.Helper
             return authModelInfo;
         }
 
-        private static readonly ConcurrentDictionary<Type, PropertyAttributesInfo[]> PropertyAttributesInfos = new ConcurrentDictionary<Type, PropertyAttributesInfo[]>();
+        private static readonly ConcurrentDictionary<Type, PropertyAttributesInfo[]> PropertyAttributesInfos =
+            new ConcurrentDictionary<Type, PropertyAttributesInfo[]>();
 
         public static PropertyAttributesInfo[] GetPropertyAttributesInfos(this Type entityType)
         {
@@ -93,7 +97,7 @@ namespace SapphireDb.Helper
 
             return newEntityObject;
         }
-        
+
         public static void UpdateFields(this Type entityType, object entityObject, object newValues,
             SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
         {
@@ -101,7 +105,7 @@ namespace SapphireDb.Helper
                 .Where(info =>
                 {
                     if (info.UpdatableAttribute != null ||
-                        info.PropertyInfo.DeclaringType?.GetCustomAttribute<UpdatableAttribute>(false) != null)
+                        info.PropertyInfo.DeclaringType.GetModelAttributesInfo().UpdatableAttribute != null)
                     {
                         return info.CanUpdate(information, entityObject, serviceProvider);
                     }
@@ -109,16 +113,17 @@ namespace SapphireDb.Helper
                     return false;
                 })
                 .ToList();
-            
+
             foreach (PropertyAttributesInfo pi in updatableProperties)
             {
                 pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
             }
         }
 
-        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property, IServiceProvider serviceProvider, HttpInformation httpInformation)
+        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property,
+            IServiceProvider serviceProvider, HttpInformation httpInformation)
         {
-            IQueryable<object> values = (IQueryable<object>)db.GetType().GetProperty(property.Value)?.GetValue(db);
+            IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
 
             QueryFunctionAttribute queryFunctionAttribute =
                 property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
@@ -130,25 +135,28 @@ namespace SapphireDb.Helper
                 }
                 else if (queryFunctionAttribute.FunctionInfo != null)
                 {
-                    object[] methodParameters = queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
-                    Expression queryFunctionExpression = (Expression)queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
-                
+                    object[] methodParameters =
+                        queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
+                    Expression queryFunctionExpression =
+                        (Expression) queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
+
                     MethodInfo whereMethodInfo = ReflectionMethodHelper.GetGenericWhere(property.Key);
-                    values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
+                    values = (IQueryable<object>) whereMethodInfo?.Invoke(values,
+                        new object[] {values, queryFunctionExpression});
                 }
-                
             }
 
             return values;
         }
 
         public static void ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider) where T : ModelStoreEventAttributeBase
+            object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
+            where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
 
             List<T> eventAttributes = null;
-            
+
             if (typeof(T) == typeof(CreateEventAttribute))
             {
                 eventAttributes = modelAttributesInfo.CreateEventAttributes.Cast<T>().ToList();
@@ -177,7 +185,8 @@ namespace SapphireDb.Helper
                     }
                     else if (attribute.BeforeFunction != null)
                     {
-                        attribute.BeforeFunction.Invoke(newValue, attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.BeforeFunction.Invoke(newValue,
+                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider));
                     }
                 }
                 else if (eventType == ModelStoreEventAttributeBase.EventType.BeforeSave)
@@ -188,7 +197,8 @@ namespace SapphireDb.Helper
                     }
                     else if (attribute.BeforeSaveFunction != null)
                     {
-                        attribute.BeforeSaveFunction.Invoke(newValue, attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.BeforeSaveFunction.Invoke(newValue,
+                            attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider));
                     }
                 }
                 else if (eventType == ModelStoreEventAttributeBase.EventType.After)
@@ -199,7 +209,8 @@ namespace SapphireDb.Helper
                     }
                     else if (attribute.AfterFunction != null)
                     {
-                        attribute.AfterFunction.Invoke(newValue, attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.AfterFunction.Invoke(newValue,
+                            attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider));
                     }
                 }
             }

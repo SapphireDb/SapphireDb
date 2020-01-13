@@ -26,6 +26,8 @@ namespace SapphireDb.Models
         
         public QueryFunctionAttribute QueryFunctionAttribute { get; set; }
         
+        public UpdatableAttribute UpdatableAttribute { get; set; }
+        
         public ModelAttributesInfo(Type modelType)
         {
             QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
@@ -40,6 +42,8 @@ namespace SapphireDb.Models
 
             QueryFunctionAttribute = modelType.GetCustomAttribute<QueryFunctionAttribute>(false);
             QueryFunctionAttribute?.Compile(modelType);
+
+            UpdatableAttribute = modelType.GetCustomAttribute<UpdatableAttribute>(false);
         }
 
         private List<T> GetAuthAttributesOfClassOrDirectTopClass<T>(Type modelType) where T : AuthAttributeBase
