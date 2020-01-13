@@ -23,6 +23,7 @@ using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.AuthDemo;
 using WebUI.Data.Authentication;
+using WebUI.Data.DemoDb;
 using WebUI.Data.Models;
 
 namespace WebUI
@@ -58,7 +59,10 @@ namespace WebUI
                     {
                         cfg.UseInMemoryDatabase("demoCtx");
                     }
-                }, "demo")
+                }, "demo", builder =>
+                {
+                    builder.AddModelConfiguration<MessageConfiguration>();
+                })
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo");
 
             services.AddMvc();

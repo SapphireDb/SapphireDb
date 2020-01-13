@@ -124,11 +124,20 @@ namespace SapphireDb.Helper
                 property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
             if (queryFunctionAttribute != null && queryFunctionAttribute.FunctionInfo != null)
             {
-                object[] methodParameters = queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
-                Expression queryFunctionExpression = (Expression)queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
+                if (queryFunctionAttribute.FunctionBuilder != null)
+                {
+                    Expression<Func<dynamic, bool>> queryFunctionExpression = queryFunctionAttribute.FunctionBuilder(httpInformation);
+                    values = values?.Where(queryFunctionExpression);
+                }
+                else if (queryFunctionAttribute.FunctionInfo != null)
+                {
+                    object[] methodParameters = queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
+                    Expression queryFunctionExpression = (Expression)queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
                 
-                MethodInfo whereMethodInfo = ReflectionMethodHelper.GetGenericWhere(property.Key);
-                values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
+                    MethodInfo whereMethodInfo = ReflectionMethodHelper.GetGenericWhere(property.Key);
+                    values = (IQueryable<object>)whereMethodInfo?.Invoke(values, new object[] {values, queryFunctionExpression});
+                }
+                
             }
 
             return values;

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
+using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
 {
@@ -9,6 +11,8 @@ namespace SapphireDb.Attributes
         public string Function { get; set; }
 
         public MethodInfo FunctionInfo { get; set; }
+
+        public Func<HttpInformation, dynamic> FunctionBuilder { get; set; }
         
         public QueryFunctionAttribute(string function)
         {

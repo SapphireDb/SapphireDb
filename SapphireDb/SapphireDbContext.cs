@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SapphireDb.Command.Subscribe;
+using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb
 {

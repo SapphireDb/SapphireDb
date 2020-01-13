@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using SapphireDb.Connection.SSE;
 using SapphireDb.Connection.Websocket;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.SapphireApiBuilder;
 using SapphireDb.Nlb;
 
 namespace SapphireDb.Extensions
@@ -61,6 +63,8 @@ namespace SapphireDb.Extensions
                 });
             });
 
+            ExecuteApiBuilders(builder.ApplicationServices);
+            
             return builder;
         }
 
@@ -107,6 +111,24 @@ namespace SapphireDb.Extensions
             }
 
             return new SapphireDatabaseBuilder(services);
+        }
+
+        private static void ExecuteApiBuilders(IServiceProvider serviceProvider)
+        {
+            IEnumerable<ISapphireModelConfiguration> sapphireModelConfigurations = serviceProvider.GetServices<ISapphireModelConfiguration>();
+
+            foreach (ISapphireModelConfiguration sapphireModelConfiguration in sapphireModelConfigurations)
+            {
+                Type modelConfigurationType = sapphireModelConfiguration.GetType();
+
+                MethodInfo configureMethod = modelConfigurationType.GetMethod("Configure",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                Type modelBuilderType = configureMethod?.GetParameters()[0].ParameterType;
+                object modelBuilder = Activator.CreateInstance(modelBuilderType);
+
+                configureMethod?.Invoke(sapphireModelConfiguration, new object[] { modelBuilder });
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Internal;
+using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Extensions
 {
@@ -19,7 +20,8 @@ namespace SapphireDb.Extensions
 
         public SapphireDatabaseBuilder AddContext<TContextType>(
             Action<DbContextOptionsBuilder> dbContextOptions = null,
-            string contextName = "Default")
+            string contextName = "Default",
+            Action<SapphireContextBuilder> contextBuilder = null)
             where TContextType : SapphireDbContext
         {
             DbContextTypeContainer contextTypes = (DbContextTypeContainer)serviceCollection
@@ -29,6 +31,8 @@ namespace SapphireDb.Extensions
             contextTypes.AddContext(contextName, typeof(TContextType));
 
             serviceCollection.AddDbContext<TContextType>(dbContextOptions, ServiceLifetime.Transient);
+
+            contextBuilder?.Invoke(new SapphireContextBuilder(serviceCollection));
 
             return this;
         }
