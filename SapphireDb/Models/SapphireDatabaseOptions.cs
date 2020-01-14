@@ -28,7 +28,7 @@ namespace SapphireDb.Models
 
         public SapphireDatabaseOptions(IConfigurationSection configuration, bool strict = false) : this(strict)
         {
-            Nlb = new NlbConfiguration(configuration.GetSection(nameof(Nlb)));
+            Sync = new SyncConfiguration(configuration.GetSection(nameof(Sync)));
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
             ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
@@ -54,22 +54,22 @@ namespace SapphireDb.Models
 
         public bool RestInterface { get; set; } = true;
 
-        public NlbConfiguration Nlb { get; set; } = new NlbConfiguration();
+        public SyncConfiguration Sync { get; set; } = new SyncConfiguration();
 
-        public class NlbConfiguration
+        public class SyncConfiguration
         {
-            public NlbConfiguration()
+            public SyncConfiguration()
             {
 
             }
 
-            public NlbConfiguration(IConfigurationSection configurationSection)
+            public SyncConfiguration(IConfigurationSection configurationSection)
             {
                 Enabled = configurationSection.GetValue<bool>(nameof(Enabled));
                 Id = configurationSection[nameof(Id)];
                 Secret = configurationSection[nameof(Secret)];
                 EncryptionKey = configurationSection[nameof(EncryptionKey)];
-                Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new NlbEntry(section)).ToList();
+                Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new SyncEntry(section)).ToList();
             }
 
             public bool Enabled { get; set; }
@@ -80,17 +80,17 @@ namespace SapphireDb.Models
 
             public string EncryptionKey { get; set; }
 
-            public List<NlbEntry> Entries { get; set; } = new List<NlbEntry>();
+            public List<SyncEntry> Entries { get; set; } = new List<SyncEntry>();
         }
 
-        public class NlbEntry
+        public class SyncEntry
         {
-            public NlbEntry()
+            public SyncEntry()
             {
 
             }
 
-            public NlbEntry(IConfigurationSection configurationSection)
+            public SyncEntry(IConfigurationSection configurationSection)
             {
                 Url = configurationSection[nameof(Url)];
                 Secret = configurationSection[nameof(Secret)];

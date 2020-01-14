@@ -25,7 +25,7 @@ namespace SapphireDb.Helper
 
         public static string Encrypt(this string value, string keyValue)
         {
-            if (string.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(keyValue)) return value;
             try
             {
                 var key = Encoding.UTF8.GetBytes(keyValue);
@@ -65,7 +65,7 @@ namespace SapphireDb.Helper
 
         public static string Decrypt(this string value, string keyValue)
         {
-            if (string.IsNullOrEmpty(value)) return value;
+            if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(keyValue)) return value;
             try
             {
                 value = value.Replace(" ", "+");

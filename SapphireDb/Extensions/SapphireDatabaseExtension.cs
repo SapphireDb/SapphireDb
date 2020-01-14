@@ -12,7 +12,7 @@ using SapphireDb.Connection.Websocket;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
-using SapphireDb.Nlb;
+using SapphireDb.Sync;
 
 namespace SapphireDb.Extensions
 {
@@ -48,9 +48,9 @@ namespace SapphireDb.Extensions
                     sapphireApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
                 }
 
-                if (options.Nlb.Enabled)
+                if (options.Sync.Enabled)
                 {
-                    sapphireApp.Map("/nlb", (nlb) => { nlb.UseMiddleware<NlbMiddleware>(); });
+                    sapphireApp.Map("/sync", (nlb) => { nlb.UseMiddleware<SyncMiddleware>(); });
                 }
 
                 sapphireApp.Map("/authToken", (authToken) =>
@@ -103,7 +103,7 @@ namespace SapphireDb.Extensions
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
             });
-            services.AddTransient<NlbManager>();
+            services.AddTransient<SyncManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)
             {

@@ -5,29 +5,30 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Models;
-using SapphireDb.Nlb.Models;
+using SapphireDb.Sync.Models;
 
-namespace SapphireDb.Nlb
+namespace SapphireDb.Sync
 {
-    class NlbMiddleware
+    class SyncMiddleware
     {
         private readonly RequestDelegate next;
         private readonly SapphireDatabaseOptions options;
-        private readonly ILogger<NlbMiddleware> logger;
+        private readonly ILogger<SyncMiddleware> logger;
 
-        // ReSharper disable once UnusedParameter.Local
-        public NlbMiddleware(RequestDelegate next, SapphireDatabaseOptions options, ILogger<NlbMiddleware> logger)
+        public SyncMiddleware(RequestDelegate next, SapphireDatabaseOptions options, ILogger<SyncMiddleware> logger)
         {
             this.next = next;
             this.options = options;
             this.logger = logger;
         }
 
-        public async Task Invoke(HttpContext context, SapphireChangeNotifier changeNotifier, SapphireMessageSender sender)
+        public async Task Invoke(HttpContext context, SapphireChangeNotifier changeNotifier,
+            SapphireMessageSender sender, SyncManager syncManager)
         {
             if (context.Request.Method != "POST")
             {
@@ -38,8 +39,8 @@ namespace SapphireDb.Nlb
             logger.LogInformation("Started handling nlb message");
 
             string originId = context.Request.Headers["OriginId"].ToString();
-            if (context.Request.Headers["Secret"].ToString().ComputeHash() != options.Nlb.Secret ||
-                options.Nlb.Entries.All(e => e.Id != originId))
+            if (context.Request.Headers["Secret"].ToString().ComputeHash() != options.Sync.Secret ||
+                options.Sync.Entries.All(e => e.Id != originId))
             {
                 logger.LogError("Prevented unauthorized access to nlb sync methods");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -49,30 +50,55 @@ namespace SapphireDb.Nlb
 
             StreamReader sr = new StreamReader(context.Request.Body);
             string requestBody = await sr.ReadToEndAsync();
-            requestBody = requestBody.Decrypt(options.Nlb.EncryptionKey);
+            requestBody = requestBody.Decrypt(options.Sync.EncryptionKey);
 
             string requestPath = context.Request.Path.Value.Split('/').LastOrDefault();
+
+            bool propagate = false;
+            if (context.Request.Query.TryGetValue("propagate", out StringValues propagateValue))
+            {
+                propagate = propagateValue.Equals("true");
+            }
 
             switch (requestPath)
             {
                 case "changes":
                     SendChangesRequest changesRequest = JsonConvert.DeserializeObject<SendChangesRequest>(requestBody);
 
-                    Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes.FirstOrDefault(t => t.FullName == changesRequest.DbType);
+                    Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes
+                        .FirstOrDefault(t => t.FullName == changesRequest.DbType);
 
+                    if (propagate)
+                    {
+                        syncManager.SendChanges(changesRequest.Changes, dbType);
+                    }
+                    
                     if (dbType != null)
                     {
                         logger.LogInformation("Handling changes from other server");
                         changeNotifier.HandleChanges(changesRequest.Changes, dbType);
                     }
+
                     break;
                 case "publish":
                     SendPublishRequest publishRequest = JsonConvert.DeserializeObject<SendPublishRequest>(requestBody);
+                    
+                    if (propagate)
+                    {
+                        syncManager.SendPublish(publishRequest.Topic, publishRequest.Message);
+                    }
+                    
                     logger.LogInformation("Handling publish from other server");
                     sender.Publish(publishRequest.Topic, publishRequest.Message, true);
                     break;
                 case "message":
                     SendMessageRequest messageRequest = JsonConvert.DeserializeObject<SendMessageRequest>(requestBody);
+                    
+                    if (propagate)
+                    {
+                        syncManager.SendMessage(messageRequest.Message);
+                    }
+                    
                     logger.LogInformation("Handling message from other server");
                     sender.Send(messageRequest.Message, true);
                     break;

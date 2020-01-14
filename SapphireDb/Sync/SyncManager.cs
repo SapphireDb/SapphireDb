@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -7,16 +8,16 @@ using System.Threading.Tasks;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Helper;
 using SapphireDb.Models;
-using SapphireDb.Nlb.Models;
+using SapphireDb.Sync.Models;
 
-namespace SapphireDb.Nlb
+namespace SapphireDb.Sync
 {
-    public class NlbManager
+    public class SyncManager
     {
         private readonly SapphireDatabaseOptions options;
         private readonly IHttpClientFactory httpClientFactory;
 
-        public NlbManager(SapphireDatabaseOptions options, IHttpClientFactory httpClientFactory)
+        public SyncManager(SapphireDatabaseOptions options, IHttpClientFactory httpClientFactory)
         {
             this.options = options;
             this.httpClientFactory = httpClientFactory;
@@ -56,21 +57,21 @@ namespace SapphireDb.Nlb
 
         private void SendToNlbs(object messageObject, string path)
         {
-            if (!options.Nlb.Enabled)
+            if (!options.Sync.Enabled)
             {
                 return;
             }
 
-            string requestString = JsonHelper.Serialize(messageObject).Encrypt(options.Nlb.EncryptionKey);
+            string requestString = JsonHelper.Serialize(messageObject).Encrypt(options.Sync.EncryptionKey);
 
-            options.Nlb.Entries.ForEach(nlbEntry =>
+            options.Sync.Entries.Where(entry => !string.IsNullOrEmpty(entry.Url)).ToList().ForEach(nlbEntry =>
             {
                 Task.Run(async () =>
                 {
                     HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
-                        $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}sapphire/nlb/{path}");
+                        $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}sapphire/sync/{path}");
                     request.Headers.Add("Secret", nlbEntry.Secret);
-                    request.Headers.Add("OriginId", options.Nlb.Id);
+                    request.Headers.Add("OriginId", options.Sync.Id);
                     request.Content = new StringContent(requestString);
 
                     HttpClient client = httpClientFactory.CreateClient();

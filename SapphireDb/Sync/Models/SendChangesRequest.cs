@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SapphireDb.Command.Subscribe;
 
-namespace SapphireDb.Nlb.Models
+namespace SapphireDb.Sync.Models
 {
     class SendChangesRequest
     {

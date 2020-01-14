@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SapphireDb.Nlb.Models
+namespace SapphireDb.Sync.Models
 {
     class SendMessageRequest
     {

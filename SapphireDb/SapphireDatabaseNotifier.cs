@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
-using SapphireDb.Nlb;
+using SapphireDb.Sync;
 
 namespace SapphireDb
 {
     public class SapphireDatabaseNotifier
     {
         private readonly SapphireChangeNotifier notifier;
-        private readonly NlbManager nlbManager;
+        private readonly SyncManager syncManager;
 
-        public SapphireDatabaseNotifier(SapphireChangeNotifier notifier, NlbManager nlbManager)
+        public SapphireDatabaseNotifier(SapphireChangeNotifier notifier, SyncManager syncManager)
         {
             this.notifier = notifier;
-            this.nlbManager = nlbManager;
+            this.syncManager = syncManager;
         }
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
             notifier.HandleChanges(changes, dbContextType);
-            nlbManager.SendChanges(changes, dbContextType);
+            syncManager.SendChanges(changes, dbContextType);
 
         }
     }

@@ -3,26 +3,26 @@ using System.Linq;
 using SapphireDb.Command.Message;
 using SapphireDb.Command.SubscribeMessage;
 using SapphireDb.Connection.Websocket;
-using SapphireDb.Nlb;
+using SapphireDb.Sync;
 
 namespace SapphireDb.Connection
 {
     public class SapphireMessageSender
     {
         private readonly ConnectionManager connectionManager;
-        private readonly NlbManager nlbManager;
+        private readonly SyncManager syncManager;
 
-        public SapphireMessageSender(ConnectionManager connectionManager, NlbManager nlbManager)
+        public SapphireMessageSender(ConnectionManager connectionManager, SyncManager syncManager)
         {
             this.connectionManager = connectionManager;
-            this.nlbManager = nlbManager;
+            this.syncManager = syncManager;
         }
 
         public void Send(object message, bool noNlb = false)
         {
             if (!noNlb)
             {
-                nlbManager.SendMessage(message);
+                syncManager.SendMessage(message);
             }
 
             foreach (ConnectionBase connection in connectionManager.connections)
@@ -49,7 +49,7 @@ namespace SapphireDb.Connection
         {
             if (!noNlb)
             {
-                nlbManager.SendPublish(topic, message);
+                syncManager.SendPublish(topic, message);
             }
 
             foreach (ConnectionBase connection in 
