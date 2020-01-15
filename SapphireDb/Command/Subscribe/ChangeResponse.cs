@@ -1,16 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Command.Subscribe
 {
+    public class ChangeResponses : ResponseBase
+    {
+        public List<ChangeResponse> Changes { get; set; }
+    }
+    
     public class ChangeResponse : ResponseBase
     {
-        public ChangeResponse(EntityEntry change, SapphireDbContext db)
+        public ChangeResponse(EntityEntry change)
         {
             Value = change.Entity;
-            PrimaryValues = Value.GetType().GetPrimaryKeyValues(db, Value);
-
             CollectionName = ((SapphireDbContext)change.Context).GetType().GetDbSetTypes()[change.Metadata.ClrType].ToLowerInvariant();
 
             switch (change.State)
@@ -37,7 +41,6 @@ namespace SapphireDb.Command.Subscribe
                 Value = value,
                 ReferenceId = referenceId,
                 CollectionName = CollectionName,
-                PrimaryValues = PrimaryValues,
                 Error = Error
             };
         }
@@ -45,8 +48,6 @@ namespace SapphireDb.Command.Subscribe
         public ChangeState State { get; set; }
 
         public object Value { get; set; }
-
-        public object[] PrimaryValues { get; set; }
 
         public string CollectionName { get; set; }
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using WebUI.Data.AuthDemo;
 using WebUI.Data.Authentication;
+using WebUI.Data.DemoDb;
 
 namespace WebUI.Data
 {
@@ -24,6 +25,20 @@ namespace WebUI.Data
         public void Execute()
         {
             demoContext.Database.EnsureCreated();
+
+            for (int x = 0; x < 10; x++) {
+                for (int y = 0; y < 10; y++)
+                {
+                    demoContext.Pixels.Add(new Pixel()
+                    {
+                        Color = "darkBlue",
+                        X = x,
+                        Y = y
+                    });
+                }
+            }
+
+            demoContext.SaveChanges();
 
             if (!userManager.Users.Any())
             {

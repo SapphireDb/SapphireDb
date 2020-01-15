@@ -38,7 +38,7 @@ namespace SapphireDb
         {
             return ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted || e.State == EntityState.Modified)
-                .Select(e => new ChangeResponse(e, this)).ToList();
+                .Select(e => new ChangeResponse(e)).ToList();
         }
     }
 }

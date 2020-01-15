@@ -197,13 +197,18 @@ namespace SapphireDb.Connection
                         Func<object, bool> whereFunction = wherePrefilter.WhereExpression.Compile();
                         collectionChanges = collectionChanges.Where((change) => whereFunction(change.Value)).ToList();
                     }
-
-                    collectionChanges.ForEach(change =>
+                    
+                    ChangeResponses changeResponses = new ChangeResponses()
                     {
-                        object value =
-                            change.Value.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider);
-                        _ = connection.Send(change.CreateResponse(subscription.ReferenceId, value));
-                    });
+                        ReferenceId = subscription.ReferenceId,
+                        Changes = collectionChanges.Select(change =>
+                        {
+                            object value =
+                                change.Value.GetAuthenticatedQueryModel(connection.Information, requestServiceProvider);
+                            return change.CreateResponse(subscription.ReferenceId, value);
+                        }).ToList()
+                    };
+                    _ = connection.Send(changeResponses);
                 }
             }
             catch (Exception ex)
