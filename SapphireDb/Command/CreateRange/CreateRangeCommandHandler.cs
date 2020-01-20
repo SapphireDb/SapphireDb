@@ -72,7 +72,7 @@ namespace SapphireDb.Command.CreateRange
 
         private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context)
         {
-            object newEntityObject = property.Key.SetFields(newValue, db);
+            object newEntityObject = property.Key.SetFields(newValue);
             
             if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {

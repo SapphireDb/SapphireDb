@@ -55,7 +55,7 @@ namespace SapphireDb.Command.Create
         private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context,
             CreateCommand command)
         {
-            object newEntityObject = property.Key.SetFields(newValue, db);
+            object newEntityObject = property.Key.SetFields(newValue);
 
             if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {

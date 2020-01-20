@@ -82,17 +82,14 @@ namespace SapphireDb.Helper
             return propertyInfos;
         }
 
-        public static object SetFields(this Type entityType, object newValues, SapphireDbContext db)
+        public static object SetFields(this Type entityType, object newValues)
         {
             object newEntityObject = Activator.CreateInstance(entityType);
-            string[] primaryKeys = entityType.GetPrimaryKeyNames(db);
 
-            foreach (PropertyAttributesInfo pi in entityType.GetPropertyAttributesInfos())
+            foreach (PropertyAttributesInfo pi in entityType.GetPropertyAttributesInfos()
+                .Where(p => p.NonCreatableAttribute == null))
             {
-                if (pi.NonCreatableAttribute == null && !primaryKeys.Contains(pi.PropertyInfo.Name.ToCamelCase()))
-                {
-                    pi.PropertyInfo.SetValue(newEntityObject, pi.PropertyInfo.GetValue(newValues));
-                }
+                pi.PropertyInfo.SetValue(newEntityObject, pi.PropertyInfo.GetValue(newValues));
             }
 
             return newEntityObject;
