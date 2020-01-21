@@ -4,7 +4,6 @@
   <a href="https://sapphire-db.com/">
     <img src="https://sapphire-db.com/assets/banner/SapphireDB%20Banner.png" alt="SapphireDb logo">
   </a>
-
 </p>
 
 SapphireDb is an open source library that enables you to easily create your own application with realtime data synchronization.
@@ -90,9 +89,15 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 
 ## Implementations
 
+### Server
+
 [SapphireDb - Server for Asp.Net Core](https://github.com/morrisjdev/SapphireDb)
 
-[ng-sapphiredb - Angular client](https://github.com/morrisjdev/ng-sapphiredb)
+### Client
+
+[sapphiredb - JS client](https://github.com/SapphireDb/sapphiredb-js/blob/master/projects/sapphiredb/README.md)
+
+[ng-sapphiredb - Angular client](https://github.com/SapphireDb/sapphiredb-js/blob/master/projects/ng-sapphiredb/README.md)
 
 ## Author
 
