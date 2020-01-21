@@ -11,6 +11,8 @@ SapphireDb is an open source library that enables you to easily create your own 
 Build amazing reactive applications with realtime data synchronization and get the best results of your project.
 SapphireDb should serve as a self hosted alternative to firebase and also gives you an alternative to SignalR.
 
+SapphireDb is an extension for Asp.Net Core and EF Core and creates a generic API that you can easily use with different clients. This enables you to rapidly develop amazing applications.
+
 Check out the documentation for more details: [Documentation](https://sapphire-db.com/)
 
 <p align="center">
