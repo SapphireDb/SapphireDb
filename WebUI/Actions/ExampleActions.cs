@@ -11,11 +11,6 @@ namespace WebUI.Actions
     [ActionAuth(functionName: "Test")]
     public class ExampleActions : ActionHandlerBase
     {
-        public ExampleActions()
-        {
-
-        }
-
         public async Task<int> GenerateRandomNumber()
         {
             for (int i = 0; i <= 100; i++)
