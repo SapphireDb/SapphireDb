@@ -22,7 +22,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>icon.png</PackageIcon>
     <PackageVersion>1.3.0</PackageVersion>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>README-NUGET.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,7 +45,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="..\README.md">
+    <None Include="..\README-NUGET.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
