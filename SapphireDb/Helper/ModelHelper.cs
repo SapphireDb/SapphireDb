@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
@@ -121,6 +122,7 @@ namespace SapphireDb.Helper
             IServiceProvider serviceProvider, HttpInformation httpInformation)
         {
             IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
+            values = values?.AsNoTracking();
 
             QueryFunctionAttribute queryFunctionAttribute =
                 property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
