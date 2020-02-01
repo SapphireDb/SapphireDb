@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <SpaRoot>..\..\sapphiredb-js\</SpaRoot>
     <UserSecretsId>8bbe278d-014f-4323-86d8-16084c863ee3</UserSecretsId>
   </PropertyGroup>
 
@@ -25,10 +24,6 @@
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles" />
   </ItemGroup>
-
-  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build -- --prod --output-path=$(PublishDir)dist" />
-  </Target>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1nlb1_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

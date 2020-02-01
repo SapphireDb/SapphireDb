@@ -65,9 +65,7 @@ namespace WebUI
                 .AddModelConfiguration<MessageConfiguration>();
 
             // services.AddMvc();
-
-            services.AddSpaStaticFiles(configuration => { configuration.RootPath = "dist"; });
-
+            
             /* Auth Demo */
             services.AddDbContext<IdentityDbContext<AppUser>>(cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
 
@@ -145,19 +143,15 @@ namespace WebUI
 
             //Add Middleware
             app.UseSapphireDb();
-
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles();
-
-            //app.UseMvcWithDefaultRoute();
-
-            app.UseSpa(spa =>
+            
+            app.Run(async context =>
             {
-                if (env.IsDevelopment() || env.EnvironmentName == "pg")
-                {
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
-                }
+                context.Response.Headers.Add("Content-Type", "text/html; charset=UTF-8");
+                await context.Response.WriteAsync(
+                    "SapphireDb Documentation Server. Visit <a href=\"https://sapphire-db.com\">https://sapphire-db.com</a> for more details.");
             });
+                
+            //app.UseMvcWithDefaultRoute();
         }
     }
 }
