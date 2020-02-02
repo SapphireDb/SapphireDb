@@ -103,7 +103,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 
 ### Client
 
-[sapphiredb - JS client](https://github.com/SapphireDb/sapphiredb-js/blob/master/projects/sapphiredb/README.md)
+[sapphiredb - JS client (JS, NodeJs, React, Svelte, ...)](https://github.com/SapphireDb/sapphiredb-js/blob/master/projects/sapphiredb/README.md)
 
 [ng-sapphiredb - Angular client](https://github.com/SapphireDb/sapphiredb-js/blob/master/projects/ng-sapphiredb/README.md)
 
