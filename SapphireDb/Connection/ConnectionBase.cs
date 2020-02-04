@@ -12,7 +12,6 @@ using SapphireDb.Models;
 
 namespace SapphireDb.Connection
 {
-    [DataContract]
     public abstract class ConnectionBase : IDisposable
     {
         public void Init(HttpContext context)
@@ -21,16 +20,13 @@ namespace SapphireDb.Connection
             Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
             HttpContext = context;
-            Information = new HttpInformation(context);
+            Information = new HttpInformation(context, Id);
         }
 
-        [DataMember]
         public Guid Id { get; set; }
-
-        [DataMember]
+        
         public abstract string Type { get; }
-
-        [DataMember]
+        
         public HttpInformation Information { get; set; }
 
         public HttpContext HttpContext { get; set; }

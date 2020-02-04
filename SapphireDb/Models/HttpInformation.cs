@@ -12,11 +12,11 @@ using Microsoft.Extensions.Primitives;
 
 namespace SapphireDb.Models
 {
-    [DataContract]
     public class HttpInformation
     {
-        public HttpInformation(HttpContext context)
+        public HttpInformation(HttpContext context, Guid connectionId)
         {
+            ConnectionId = connectionId;
             User = context.User;
             ClientCertificate = context.Connection.ClientCertificate;
             RemoteIpAddress = context.Connection.RemoteIpAddress;
@@ -29,11 +29,6 @@ namespace SapphireDb.Models
                 UserAgent = userAgent.ToString();
             }
 
-            if (context.User.Identity.IsAuthenticated)
-            {
-                UserId = context.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
-            }
-
             if (context.Request.Query.TryGetValue("key", out StringValues apiKey) || context.Request.Headers.TryGetValue("key", out apiKey))
             {
                 SapphireDatabaseOptions options = context.RequestServices.GetService<SapphireDatabaseOptions>();
@@ -44,24 +39,19 @@ namespace SapphireDb.Models
         public ClaimsPrincipal User { get; set; }
 
         public  X509Certificate2 ClientCertificate { get; set; }
-
-        [DataMember]
+        
+        public Guid ConnectionId { get; set; }
+        
         public int RemotePort { get; set; }
-
+        
         public IPAddress RemoteIpAddress { get; set; }
-
-        [DataMember]
+        
         public int LocalPort { get; set; }
-
+        
         public IPAddress LocalIpAddress { get; set; }
-
-        [DataMember]
-        public string UserId { get; set; }
-
-        [DataMember]
+        
         public string UserAgent { get; set; }
-
-        [DataMember]
+        
         public string ApiName { get; set; }
     }
 }

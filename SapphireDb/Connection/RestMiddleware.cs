@@ -68,7 +68,7 @@ namespace SapphireDb.Connection
                 }
 
                 ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                    serviceProvider.CreateScope().ServiceProvider, connection != null ? connection.Information : new HttpInformation(context), logger, connection);
+                    serviceProvider.CreateScope().ServiceProvider, connection != null ? connection.Information : new HttpInformation(context, Guid.Empty), logger, connection);
 
                 if (response?.Error != null)
                 {
