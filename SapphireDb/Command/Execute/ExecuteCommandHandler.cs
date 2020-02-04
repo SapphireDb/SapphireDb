@@ -87,23 +87,29 @@ namespace SapphireDb.Command.Execute
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            logger.LogInformation("Execution of " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name + " started");
+            logger.LogInformation("Execution of " + actionMethod.DeclaringType?.FullName + "." + actionMethod.Name + " started");
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
-
+            
             if (result != null)
             {
-                try { result = await (dynamic)result; }
-                catch (RuntimeBinderException) { /* Do nothing because result is not an awaitable and already contains the expected result */ }
+                if (ActionHelper.HandleAsyncEnumerable(result, actionHandler.AsyncResult))
+                {
+                    result = null;
+                }
+                else
+                {
+                    result = await ActionHelper.HandleAsyncResult(result);
+                }
             }
 
-            logger.LogInformation("Executed " + actionMethod.DeclaringType.FullName + "." + actionMethod.Name);
+            logger.LogInformation("Executed " + actionMethod.DeclaringType?.FullName + "." + actionMethod.Name);
 
             return new ExecuteResponse()
             {
                 ReferenceId = command.ReferenceId,
                 Result = result
-            };
+            };   
         }
 
         private object[] GetParameters(MethodInfo actionMethod, ExecuteCommand command)

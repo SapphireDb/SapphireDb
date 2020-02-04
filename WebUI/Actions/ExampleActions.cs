@@ -1,5 +1,6 @@
 ﻿using SapphireDb.Attributes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,6 +55,21 @@ namespace WebUI.Actions
         public string CreateHash(string input)
         {
             return input.ComputeHash();
+        }
+
+        public async IAsyncEnumerable<string> AsyncEnumerableTest()
+        {
+            for (int i = 0; i <= 100; i++)
+            {
+                yield return i.ToString();
+
+                if (i % 10 == 0)
+                {
+                    Notify("Progress: " + i + "%");
+                }
+                
+                await Task.Delay(10);
+            }
         }
     }
 }

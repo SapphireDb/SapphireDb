@@ -20,5 +20,18 @@ namespace SapphireDb.Actions
                 });
             }
         }
+        
+        public void AsyncResult(object data)
+        {
+            if (connection != null)
+            {
+                _ = connection.Send(new ExecuteResponse()
+                {
+                    ReferenceId = executeCommand.ReferenceId,
+                    Result = data,
+                    Type = ExecuteResponse.ExecuteResponseType.Async
+                });
+            }
+        }
     }
 }

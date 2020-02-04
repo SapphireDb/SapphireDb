@@ -8,7 +8,7 @@
 
         public enum ExecuteResponseType
         {
-            End, Notify
+            End, Notify, Async
         }
     }
 }
