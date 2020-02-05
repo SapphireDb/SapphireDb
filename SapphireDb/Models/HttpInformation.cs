@@ -14,9 +14,9 @@ namespace SapphireDb.Models
 {
     public class HttpInformation
     {
-        public HttpInformation(HttpContext context, Guid connectionId, string connectionType)
+        public HttpInformation(HttpContext context, string connectionType)
         {
-            ConnectionId = connectionId;
+            ConnectionType = connectionType;
             User = context.User;
             ClientCertificate = context.Connection.ClientCertificate;
             RemoteIpAddress = context.Connection.RemoteIpAddress;
@@ -39,11 +39,9 @@ namespace SapphireDb.Models
         public ClaimsPrincipal User { get; set; }
 
         public  X509Certificate2 ClientCertificate { get; set; }
-        
-        public Guid ConnectionId { get; set; }
 
-        public string ConnectionType { get; set; }
-        
+        public string ConnectionType { get; }
+
         public int RemotePort { get; set; }
         
         public IPAddress RemoteIpAddress { get; set; }

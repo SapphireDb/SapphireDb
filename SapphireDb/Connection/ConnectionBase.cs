@@ -20,7 +20,7 @@ namespace SapphireDb.Connection
             Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
             HttpContext = context;
-            Information = new HttpInformation(context, Id, Type);
+            Information = new HttpInformation(context, Type);
         }
 
         public Guid Id { get; set; }

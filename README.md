@@ -19,18 +19,23 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
     <a href="https://www.patreon.com/user?u=27738280"><img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160"></a>
 </p>
 
-## Advantages
+## Features
 
 - :wrench: Dead simple configuration
-- :stars: Blazing fast development
-- :satellite: Modern technologies
+- :satellite: Broad technology support
 - :computer: Self hosted
-- :floppy_disk: Easy CRUD operations
-- :key: Authentication/Authorization included
+- :floppy_disk: Easy to use CRUD operations
+- :zap: Model validation
 - :heavy_check_mark: Database support
-- :open_file_folder: Supports includes/joins
+- :open_file_folder: Supports joins/includes
+- :loop: Complex queries
 - :electric_plug: Actions
-- :globe_with_meridians: NLB support
+- :key: Authorization included
+- :envelope: Messaging
+- :globe_with_meridians: Scalable
+
+[Learn more](https://sapphire-db.com/)
+
 
 ## Installation
 
