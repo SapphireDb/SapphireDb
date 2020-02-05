@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SapphireDb.Connection;
 using SapphireDb.Internal;
+using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Extensions
@@ -43,6 +45,18 @@ namespace SapphireDb.Extensions
         public SapphireDatabaseBuilder AddModelConfiguration<T>() where T : class, ISapphireModelConfiguration
         {
             serviceCollection.AddTransient<ISapphireModelConfiguration, T>();
+            return this;
+        }
+
+        public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, object[], bool> filter)
+        {
+            SapphireMessageSender.registeredMessageFilter.Add(name.ToLowerInvariant(), filter);
+            return this;
+        }
+        
+        public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, bool> filter)
+        {
+            SapphireMessageSender.registeredMessageFilter.Add(name.ToLowerInvariant(), filter);
             return this;
         }
     }

@@ -89,7 +89,7 @@ namespace SapphireDb.Sync
                     }
                     
                     logger.LogInformation("Handling publish from other server");
-                    sender.Publish(publishRequest.Topic, publishRequest.Message, true);
+                    sender.Publish(publishRequest.Topic, publishRequest.Message, false);
                     break;
                 case "message":
                     SendMessageRequest messageRequest = JsonConvert.DeserializeObject<SendMessageRequest>(requestBody);
@@ -100,7 +100,7 @@ namespace SapphireDb.Sync
                     }
                     
                     logger.LogInformation("Handling message from other server");
-                    sender.Send(messageRequest.Message, true);
+                    sender.Send(messageRequest.Message, sync: false);
                     break;
             }
         }

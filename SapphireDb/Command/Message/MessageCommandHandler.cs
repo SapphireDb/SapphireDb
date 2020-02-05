@@ -27,7 +27,7 @@ namespace SapphireDb.Command.Message
             }
 
 
-            messageSender.Send(command.Data);
+            messageSender.Send(command.Data, command.Filter, command.FilterParameters);
             return Task.FromResult<ResponseBase>(null);
         }
     }
