@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -88,7 +89,7 @@ namespace SapphireDb.Command.Execute
             MethodInfo actionMethod)
         {
             logger.LogInformation("Execution of " + actionMethod.DeclaringType?.FullName + "." + actionMethod.Name + " started");
-
+            
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
             
             if (result != null)
@@ -120,7 +121,21 @@ namespace SapphireDb.Command.Execute
                     return null;
                 }
 
-                object parameterValue = command.Parameters[parameter.Position];
+                if (parameter.ParameterType.IsGenericType &&
+                    parameter.ParameterType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
+                {
+                    Type enumerableType = parameter.ParameterType.GenericTypeArguments.FirstOrDefault();
+                    object asyncEnumerable = typeof(AsyncEnumerable)
+                        .GetMethod(nameof(AsyncEnumerable.Empty))?
+                        .MakeGenericMethod(enumerableType)
+                        .Invoke(null, new object[] { });
+                    
+                    StreamHelper.OpenStreamChannel(Connection, command, asyncEnumerable);
+                    
+                    return asyncEnumerable;
+                }
+
+                object parameterValue = command.Parameters[parameter.Position];     
 
                 if (parameterValue == null)
                 {

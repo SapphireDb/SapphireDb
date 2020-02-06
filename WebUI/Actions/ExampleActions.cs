@@ -71,5 +71,13 @@ namespace WebUI.Actions
                 await Task.Delay(10);
             }
         }
+
+        public async IAsyncEnumerable<string> StreamTest(IAsyncEnumerable<string> inputStream)
+        {
+            await foreach (string input in inputStream)
+            {
+                yield return input + " from server";
+            }
+        }
     }
 }
