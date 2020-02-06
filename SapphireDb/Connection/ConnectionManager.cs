@@ -12,30 +12,30 @@ namespace SapphireDb.Connection
 {
     public class ConnectionManager
     {
-        public ConcurrentBag<ConnectionBase> connections;
+        public ConcurrentDictionary<Guid, ConnectionBase> connections;
 
         public ConnectionManager()
         {
-            connections = new ConcurrentBag<ConnectionBase>();
+            connections = new ConcurrentDictionary<Guid, ConnectionBase>();
         }
 
         public void AddConnection(ConnectionBase connection)
         {
-            connections.Add(connection);
+            connections.TryAdd(connection.Id, connection);
         }
 
         public void RemoveConnection(ConnectionBase connection)
         {
             Guid connectionId = connection.Id;
-            connections = new ConcurrentBag<ConnectionBase>(connections.Where(c => c.Id != connectionId));
+            connections.TryRemove(connectionId, out _);
             connection.Dispose();
         }
 
         public void CheckExistingConnections()
         {
-            foreach (ConnectionBase connectionBase in connections.Where(c => c is PollConnection))
+            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in connections.Where(c => c.Value is PollConnection))
             {
-                PollConnection pollConnection = (PollConnection)connectionBase;
+                PollConnection pollConnection = (PollConnection)connectionValue.Value;
 
                 if (pollConnection.lastPoll < DateTime.UtcNow.AddMinutes(-2d))
                 {
@@ -51,9 +51,8 @@ namespace SapphireDb.Connection
             if (!string.IsNullOrEmpty(context.Request.Headers["connectionId"]))
             {
                 Guid connectionId = Guid.Parse(context.Request.Headers["connectionId"]);
-                connection = connections.FirstOrDefault(c => c.Id == connectionId);
 
-                if (connection != null)
+                if (connections.TryGetValue(connectionId, out connection))
                 {
                     // Compare user Information of the request and the found connection
                     if (connection.Information.User.Identity.IsAuthenticated)

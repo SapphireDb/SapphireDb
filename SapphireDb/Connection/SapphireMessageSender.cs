@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using SapphireDb.Command.Message;
@@ -11,7 +12,8 @@ namespace SapphireDb.Connection
 {
     public class SapphireMessageSender
     {
-        public static readonly Dictionary<string, object> registeredMessageFilter = new Dictionary<string, object>();
+        public static readonly ConcurrentDictionary<string, object> RetainedTopicMessages = new ConcurrentDictionary<string, object>();
+        public static readonly Dictionary<string, object> RegisteredMessageFilter = new Dictionary<string, object>();
         
         private readonly ConnectionManager connectionManager;
         private readonly SyncManager syncManager;
@@ -26,12 +28,12 @@ namespace SapphireDb.Connection
         {
             if (sync)
             {
-                syncManager.SendMessage(message);
+                syncManager.SendMessage(message, filter, filterParameters);
             }
 
-            List<ConnectionBase> connections = connectionManager.connections.ToList();
+            List<ConnectionBase> connections = connectionManager.connections.Values.ToList();
             
-            if (!string.IsNullOrEmpty(filter) && registeredMessageFilter.TryGetValue(filter, out object filterFunction))
+            if (!string.IsNullOrEmpty(filter) && RegisteredMessageFilter.TryGetValue(filter, out object filterFunction))
             {
                 if (filterFunction is Func<HttpInformation, bool> filterFunctionNoParameters)
                 {
@@ -56,20 +58,25 @@ namespace SapphireDb.Connection
             }
         }
 
-        public void Publish(string topic, object message, bool sync = true)
+        public void Publish(string topic, object message, bool retain, bool sync = true)
         {
+            if (retain)
+            {
+                RetainedTopicMessages.AddOrUpdate(topic, message, ((s, o) => message));
+            }
+            
             if (sync)
             {
-                syncManager.SendPublish(topic, message);
+                syncManager.SendPublish(topic, message, retain);
             }
 
-            foreach (ConnectionBase connection in 
-                connectionManager.connections.Where(c => c.MessageSubscriptions.ContainsValue(topic)))
+            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in 
+                connectionManager.connections.Where(c => c.Value.MessageSubscriptions.ContainsValue(topic)))
             {
                 foreach (string subscriptionId in 
-                    connection.MessageSubscriptions.Where(s => s.Value.ToLowerInvariant() == topic).Select(s => s.Key))
+                    connectionValue.Value.MessageSubscriptions.Where(s => s.Value == topic).Select(s => s.Key))
                 {
-                    _ = connection.Send(new TopicResponse()
+                    _ = connectionValue.Value.Send(new TopicResponse()
                     {
                         ReferenceId = subscriptionId,
                         Message = message

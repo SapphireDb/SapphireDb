@@ -50,13 +50,13 @@ namespace SapphireDb.Extensions
 
         public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, object[], bool> filter)
         {
-            SapphireMessageSender.registeredMessageFilter.Add(name.ToLowerInvariant(), filter);
+            SapphireMessageSender.RegisteredMessageFilter.Add(name.ToLowerInvariant(), filter);
             return this;
         }
         
         public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, bool> filter)
         {
-            SapphireMessageSender.registeredMessageFilter.Add(name.ToLowerInvariant(), filter);
+            SapphireMessageSender.RegisteredMessageFilter.Add(name.ToLowerInvariant(), filter);
             return this;
         }
     }

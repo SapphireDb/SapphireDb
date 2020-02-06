@@ -26,7 +26,7 @@ namespace SapphireDb.Command.Publish
                     command.CreateExceptionResponse<ResponseBase>("User is not allowed to publish data to this topic"));
             }
 
-            messageSender.Publish(command.Topic, command.Data);
+            messageSender.Publish(command.Topic, command.Data, command.Retain);
             return Task.FromResult<ResponseBase>(null);
         }
     }

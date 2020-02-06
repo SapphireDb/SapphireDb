@@ -7,5 +7,9 @@ namespace SapphireDb.Sync.Models
     class SendMessageRequest
     {
         public object Message { get; set; }
+        
+        public string Filter { get; set; }
+        
+        public object[] FilterParameters { get; set; }
     }
 }

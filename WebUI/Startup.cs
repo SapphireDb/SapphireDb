@@ -63,7 +63,7 @@ namespace WebUI
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
                 .AddActionHandlerConfiguration<UserActionsConfiguration>()
                 .AddModelConfiguration<MessageConfiguration>()
-                .AddMessageFilter("admin", i => i.User.IsInRole("admin"));
+                .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string)parameters[0]));
 
             // services.AddMvc();
             

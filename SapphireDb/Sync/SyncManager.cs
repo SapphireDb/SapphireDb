@@ -34,22 +34,25 @@ namespace SapphireDb.Sync
             SendToNlbs(sendChangesRequest, "changes");
         }
 
-        public void SendPublish(string topic, object message)
+        public void SendPublish(string topic, object message, bool retain)
         {
             SendPublishRequest sendPublishRequest = new SendPublishRequest()
             {
                 Topic = topic,
-                Message = message
+                Message = message,
+                Retain = retain
             };
 
             SendToNlbs(sendPublishRequest, "publish");
         }
 
-        public void SendMessage(object message)
+        public void SendMessage(object message, string filter, object[] filterParameters)
         {
             SendMessageRequest sendMessageRequest = new SendMessageRequest()
             {
-                Message = message
+                Message = message,
+                Filter = filter,
+                FilterParameters = filterParameters
             };
 
             SendToNlbs(sendMessageRequest, "message");

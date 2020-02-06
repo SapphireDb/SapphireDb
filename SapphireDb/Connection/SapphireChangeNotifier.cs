@@ -45,7 +45,7 @@ namespace SapphireDb.Connection
         {
             string contextName = contextTypeContainer.GetName(dbContextType);
 
-            foreach (ConnectionBase connection in connectionManager.connections)
+            foreach (ConnectionBase connection in connectionManager.connections.Values.ToList())
             {
                 Task.Run(() =>
                 {

@@ -5,5 +5,7 @@
         public string Topic { get; set; }
 
         public object Data { get; set; }
+        
+        public bool Retain { get; set; }
     }
 }

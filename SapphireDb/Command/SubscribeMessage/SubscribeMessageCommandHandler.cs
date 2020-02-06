@@ -26,6 +26,15 @@ namespace SapphireDb.Command.SubscribeMessage
 
             await Connection.AddMessageSubscription(command);
 
+            if (SapphireMessageSender.RetainedTopicMessages.TryGetValue(command.Topic, out object retainedMessage))
+            {
+                _ = Connection.Send(new TopicResponse()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Message = retainedMessage
+                });
+            }
+            
             return null;
         }
     }

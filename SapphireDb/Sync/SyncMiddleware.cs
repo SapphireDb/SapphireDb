@@ -85,22 +85,22 @@ namespace SapphireDb.Sync
                     
                     if (propagate)
                     {
-                        syncManager.SendPublish(publishRequest.Topic, publishRequest.Message);
+                        syncManager.SendPublish(publishRequest.Topic, publishRequest.Message, publishRequest.Retain);
                     }
                     
                     logger.LogInformation("Handling publish from other server");
-                    sender.Publish(publishRequest.Topic, publishRequest.Message, false);
+                    sender.Publish(publishRequest.Topic, publishRequest.Message, publishRequest.Retain, false);
                     break;
                 case "message":
                     SendMessageRequest messageRequest = JsonConvert.DeserializeObject<SendMessageRequest>(requestBody);
                     
                     if (propagate)
                     {
-                        syncManager.SendMessage(messageRequest.Message);
+                        syncManager.SendMessage(messageRequest.Message, messageRequest.Filter, messageRequest.FilterParameters);
                     }
                     
                     logger.LogInformation("Handling message from other server");
-                    sender.Send(messageRequest.Message, sync: false);
+                    sender.Send(messageRequest.Message, messageRequest.Filter, messageRequest.FilterParameters, false);
                     break;
             }
         }
