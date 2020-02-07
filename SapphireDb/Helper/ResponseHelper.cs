@@ -11,10 +11,10 @@ namespace SapphireDb.Helper
             where T : ResponseBase
         {
             T response = Activator.CreateInstance<T>();
-
+            
             response.ReferenceId = command.ReferenceId;
             response.Error = exception;
-
+            
             return response;
         }
 

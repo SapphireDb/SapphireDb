@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -44,8 +44,6 @@ namespace SapphireDb.Helper
         
         public object OpenStreamChannel(ConnectionBase connection, ExecuteCommand executeCommand, Type parameterType)
         {
-            CloseOldStreamChannels();
-
             StreamContainer streamContainer = new StreamContainer(connection.Id, parameterType);
             
             Guid streamId = Guid.NewGuid();
@@ -57,6 +55,8 @@ namespace SapphireDb.Helper
                 Id = streamId
             });
 
+            CloseOldStreamChannels();
+            
             return streamContainer.AsyncEnumerableValue;
         }
 

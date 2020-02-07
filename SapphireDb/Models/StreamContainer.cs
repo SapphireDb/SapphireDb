@@ -1,8 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 
 namespace SapphireDb.Models
 {
@@ -27,7 +29,7 @@ namespace SapphireDb.Models
         private object CreateAsyncEnumerableWrapper()
         {
             return GetType()
-                .GetMethod(nameof(CreateAsyncEnumerable))?
+                .GetMethod(nameof(CreateAsyncEnumerable), BindingFlags.Instance|BindingFlags.NonPublic)?
                 .MakeGenericMethod(EnumerableGenericType)
                 .Invoke(this, new object [] { });
         }
@@ -79,6 +81,18 @@ namespace SapphireDb.Models
 
         public void NewValue(object value, int index)
         {
+            if (value != null)
+            {
+                if (value.GetType() == typeof(JObject))
+                {
+                    value = ((JObject)value).ToObject(EnumerableGenericType);
+                }
+                else if (value.GetType() == typeof(JArray))
+                {
+                    value = ((JArray)value).ToObject(EnumerableGenericType);
+                }
+            }
+
             LastFrame = DateTime.UtcNow;
             streamFrames.TryAdd(index, new StreamData() { Data = value });
             newData.Set();

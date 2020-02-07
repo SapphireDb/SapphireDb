@@ -4,7 +4,7 @@ namespace SapphireDb.Command
 {
     public class ResponseBase
     {
-        protected ResponseBase()
+        public ResponseBase()
         {
             Timestamp = DateTime.UtcNow;
         }
