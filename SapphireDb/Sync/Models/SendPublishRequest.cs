@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SapphireDb.Sync.Models
 {
-    class SendPublishRequest
+    class SendPublishRequest : SyncRequest
     {
         public string Topic { get; set; }
 

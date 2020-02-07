@@ -106,7 +106,7 @@ namespace SapphireDb.Extensions
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
             });
-            services.AddTransient<SyncManager>();
+            services.AddSingleton<SyncManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)
             {

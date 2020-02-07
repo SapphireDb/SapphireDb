@@ -5,7 +5,7 @@ using SapphireDb.Command.Subscribe;
 
 namespace SapphireDb.Sync.Models
 {
-    class SendChangesRequest
+    class SendChangesRequest : SyncRequest
     {
         public string DbType { get; set; }
         public List<ChangeResponse> Changes { get; set; }

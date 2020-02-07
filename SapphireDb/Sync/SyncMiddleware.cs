@@ -54,12 +54,6 @@ namespace SapphireDb.Sync
 
             string requestPath = context.Request.Path.Value.Split('/').LastOrDefault();
 
-            bool propagate = false;
-            if (context.Request.Query.TryGetValue("propagate", out StringValues propagateValue))
-            {
-                propagate = propagateValue.Equals("true");
-            }
-
             switch (requestPath)
             {
                 case "changes":
@@ -68,7 +62,7 @@ namespace SapphireDb.Sync
                     Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes
                         .FirstOrDefault(t => t.FullName == changesRequest.DbType);
 
-                    if (propagate)
+                    if (changesRequest.Propagate)
                     {
                         syncManager.SendChanges(changesRequest.Changes, dbType);
                     }
@@ -83,7 +77,7 @@ namespace SapphireDb.Sync
                 case "publish":
                     SendPublishRequest publishRequest = JsonConvert.DeserializeObject<SendPublishRequest>(requestBody);
                     
-                    if (propagate)
+                    if (publishRequest.Propagate)
                     {
                         syncManager.SendPublish(publishRequest.Topic, publishRequest.Message, publishRequest.Retain);
                     }
@@ -94,7 +88,7 @@ namespace SapphireDb.Sync
                 case "message":
                     SendMessageRequest messageRequest = JsonConvert.DeserializeObject<SendMessageRequest>(requestBody);
                     
-                    if (propagate)
+                    if (messageRequest.Propagate)
                     {
                         syncManager.SendMessage(messageRequest.Message, messageRequest.Filter, messageRequest.FilterParameters);
                     }
