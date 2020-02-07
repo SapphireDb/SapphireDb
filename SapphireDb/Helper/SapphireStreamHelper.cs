@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -13,20 +13,33 @@ namespace SapphireDb.Helper
 {
     public class SapphireStreamHelper
     {
+        public bool closeStreamRunningInBackground = false;
         public readonly ConcurrentDictionary<Guid, StreamContainer> streamContainers = new ConcurrentDictionary<Guid, StreamContainer>();
 
-        private void CloseStream(Guid streamId)
-        {
-            streamContainers.TryRemove(streamId, out StreamContainer streamContainer);
-            streamContainer.Abort();
-        }
-        
         public void CloseOldStreamChannels()
         {
-            streamContainers
-                .Where(c => c.Value.LastFrame < DateTime.UtcNow.AddMinutes(-10d))
-                .ToList()
-                .ForEach(pair => CloseStream(pair.Key));
+            if (!closeStreamRunningInBackground)
+            {
+                closeStreamRunningInBackground = true;
+                Task.Run(async () =>
+                {
+                    while (streamContainers.Any())
+                    {
+                        streamContainers
+                            .Where(c => c.Value.LastFrame < DateTime.UtcNow.AddMinutes(-1d))
+                            .ToList()
+                            .ForEach(pair =>
+                            {
+                                streamContainers.TryRemove(pair.Key, out StreamContainer streamContainer);
+                                streamContainer.Abort();
+                            });
+                    
+                        await Task.Delay(500);
+                    }
+
+                    closeStreamRunningInBackground = false;
+                });
+            }
         }
         
         public object OpenStreamChannel(ConnectionBase connection, ExecuteCommand executeCommand, Type parameterType)
@@ -55,12 +68,11 @@ namespace SapphireDb.Helper
             }
         }
 
-        public void CompleteStream(Guid streamId, int index, Guid connectionId)
+        public void CompleteStream(Guid streamId, int index, bool error, Guid connectionId)
         {
             if (streamContainers.TryGetValue(streamId, out StreamContainer streamContainer) && streamContainer.ConnectionId == connectionId)
             {
-                streamContainer.Complete(index);
-                CloseStream(streamId);
+                streamContainer.Complete(index, error);
             }
         }
     }

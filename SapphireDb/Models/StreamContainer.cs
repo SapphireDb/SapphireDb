@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,8 +53,13 @@ namespace SapphireDb.Models
                     {
                         yield return (T) streamData.Data;
                     }
-                    else
+                    else if (streamFrame is StreamEnd streamEnd)
                     {
+                        if (streamEnd.Error)
+                        {
+                            throw new Exception();
+                        }
+                        
                         break;
                     }
 
@@ -65,6 +70,11 @@ namespace SapphireDb.Models
                     newData.WaitOne();
                 }
             }
+
+            if (aborted)
+            {
+                throw new TimeoutException();
+            }
         }
 
         public void NewValue(object value, int index)
@@ -74,9 +84,9 @@ namespace SapphireDb.Models
             newData.Set();
         }
         
-        public void Complete(int index)
+        public void Complete(int index, bool error)
         {
-            streamFrames.TryAdd(index, new StreamEnd());
+            streamFrames.TryAdd(index, new StreamEnd() { Error = error });
             newData.Set();
         }
 
@@ -93,6 +103,9 @@ namespace SapphireDb.Models
     {
         public object Data { get; set; }
     }
-    
-    class StreamEnd : StreamFrame { }
+
+    class StreamEnd : StreamFrame
+    {
+        public bool Error { get; set; }
+    }
 }

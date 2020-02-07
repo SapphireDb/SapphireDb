@@ -7,5 +7,7 @@ namespace SapphireDb.Command.Stream
         public Guid StreamId { get; set; }
 
         public int Index { get; set; }
+
+        public bool Error { get; set; }
     }
 }

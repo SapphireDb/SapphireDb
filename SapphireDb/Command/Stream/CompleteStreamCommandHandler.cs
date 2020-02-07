@@ -19,7 +19,7 @@ namespace SapphireDb.Command.Stream
 
         public Task<ResponseBase> Handle(HttpInformation context, CompleteStreamCommand command)
         {
-            streamHelper.CompleteStream(command.StreamId, command.Index, Connection.Id);
+            streamHelper.CompleteStream(command.StreamId, command.Index, command.Error, Connection.Id);
             return Task.FromResult<ResponseBase>(null);
         }
         
