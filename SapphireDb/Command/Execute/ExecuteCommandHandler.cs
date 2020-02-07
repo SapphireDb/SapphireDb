@@ -124,15 +124,8 @@ namespace SapphireDb.Command.Execute
                 if (parameter.ParameterType.IsGenericType &&
                     parameter.ParameterType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
                 {
-                    Type enumerableType = parameter.ParameterType.GenericTypeArguments.FirstOrDefault();
-                    object asyncEnumerable = typeof(AsyncEnumerable)
-                        .GetMethod(nameof(AsyncEnumerable.Empty))?
-                        .MakeGenericMethod(enumerableType)
-                        .Invoke(null, new object[] { });
-                    
-                    StreamHelper.OpenStreamChannel(Connection, command, asyncEnumerable);
-                    
-                    return asyncEnumerable;
+                    SapphireStreamHelper streamHelper = (SapphireStreamHelper)serviceProvider.GetService(typeof(SapphireStreamHelper));
+                    return streamHelper.OpenStreamChannel(Connection, command, parameter.ParameterType);
                 }
 
                 object parameterValue = command.Parameters[parameter.Position];     

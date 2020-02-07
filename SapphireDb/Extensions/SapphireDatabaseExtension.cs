@@ -9,6 +9,7 @@ using SapphireDb.Connection;
 using SapphireDb.Connection.Poll;
 using SapphireDb.Connection.SSE;
 using SapphireDb.Connection.Websocket;
+using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
@@ -96,6 +97,8 @@ namespace SapphireDb.Extensions
 
             services.AddSingleton<SapphireMessageSender>();
 
+            services.AddSingleton<SapphireStreamHelper>();
+            
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);
 
