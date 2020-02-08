@@ -6,10 +6,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SapphireDb.Helper;
 using SapphireDb.Models;
-using SapphireDb.Sync.Http;
 using SapphireDb.Sync.Models;
 
-namespace SapphireDb.Sync
+namespace SapphireDb.Sync.Http
 {
     class SapphireHttpSyncMiddleware
     {

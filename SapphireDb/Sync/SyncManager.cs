@@ -5,25 +5,28 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
-using SapphireDb.Models;
 using SapphireDb.Sync.Models;
 
 namespace SapphireDb.Sync
 {
     public class SyncManager
     {
-        private readonly SapphireDatabaseOptions options;
+        private readonly Guid uId = Guid.NewGuid();
         private readonly ISapphireSyncModule sapphireSyncModule;
 
-        public SyncManager(SapphireDatabaseOptions options, IServiceProvider serviceProvider, ILogger<SyncManager> logger)
+        public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger)
         {
-            this.options = options;
             sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
 
             if (sapphireSyncModule != null)
             {
                 sapphireSyncModule.SyncRequestRequestReceived += request =>
                 {
+                    if (request.OriginId == uId)
+                    {
+                        return;
+                    }
+                    
                     if (request.Propagate)
                     {
                         Publish(request);
@@ -63,7 +66,7 @@ namespace SapphireDb.Sync
             {
                 Changes = changes,
                 DbType = dbContextType.FullName,
-                OriginId = options.Sync.Id
+                OriginId = uId
             };
 
             Publish(sendChangesRequest);
@@ -76,7 +79,7 @@ namespace SapphireDb.Sync
                 Topic = topic,
                 Message = message,
                 Retain = retain,
-                OriginId = options.Sync.Id
+                OriginId = uId
             };
 
             Publish(sendPublishRequest);
@@ -89,7 +92,7 @@ namespace SapphireDb.Sync
                 Message = message,
                 Filter = filter,
                 FilterParameters = filterParameters,
-                OriginId = options.Sync.Id
+                OriginId = uId
             };
 
             Publish(sendMessageRequest);

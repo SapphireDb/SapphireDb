@@ -20,6 +20,7 @@ using SapphireDb.Command.Execute;
 using SapphireDb.Extensions;
 using SapphireDb.Models;
 using SapphireDb.Sync.Http;
+using SapphireDb.Sync.Redis;
 using WebUI.Actions;
 using WebUI.Data;
 using WebUI.Data.AuthDemo;
@@ -64,8 +65,9 @@ namespace WebUI
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
                 .AddActionHandlerConfiguration<UserActionsConfiguration>()
                 .AddModelConfiguration<MessageConfiguration>()
-                .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string)parameters[0]))
-                .AddHttpSync();
+                .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string) parameters[0]));
+                // .AddRedisSync();
+                // .AddHttpSync();
 
             // services.AddMvc();
             
@@ -146,7 +148,7 @@ namespace WebUI
 
             //Add Middleware
             app.UseSapphireDb();
-            app.UseSapphireHttpSync();
+            // app.UseSapphireHttpSync();
             
             app.Run(async context =>
             {

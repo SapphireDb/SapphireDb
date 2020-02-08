@@ -67,12 +67,15 @@ namespace SapphireDb.Models
             {
                 Id = configurationSection[nameof(Id)];
                 Secret = configurationSection[nameof(Secret)];
+                ConnectionString = configurationSection[nameof(ConnectionString)];
                 Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new SyncEntry(section)).ToList();
             }
 
             public string Id { get; set; }
 
             public string Secret { get; set; }
+
+            public string ConnectionString { get; set; }
 
             public List<SyncEntry> Entries { get; set; } = new List<SyncEntry>();
         }

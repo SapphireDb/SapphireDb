@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using SapphireDb.Command.Subscribe;
-using SapphireDb.Sync.Models;
+﻿using SapphireDb.Sync.Models;
 
 namespace SapphireDb.Sync
 {
