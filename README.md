@@ -28,7 +28,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 - :zap: Model validation
 - :heavy_check_mark: Database support
 - :open_file_folder: Supports joins/includes
-- :loop: Complex queries
+- :loop: Complex server evaluated queries
 - :electric_plug: Actions
 - :key: Authorization included
 - :envelope: Messaging
