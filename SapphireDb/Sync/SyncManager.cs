@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
 using SapphireDb.Command.Subscribe;
-using SapphireDb.Helper;
+using SapphireDb.Connection;
 using SapphireDb.Models;
 using SapphireDb.Sync.Models;
 
@@ -15,12 +13,48 @@ namespace SapphireDb.Sync
     public class SyncManager
     {
         private readonly SapphireDatabaseOptions options;
-        private readonly IHttpClientFactory httpClientFactory;
+        private readonly ISapphireSyncModule sapphireSyncModule;
 
-        public SyncManager(SapphireDatabaseOptions options, IHttpClientFactory httpClientFactory)
+        public SyncManager(SapphireDatabaseOptions options, IServiceProvider serviceProvider, ILogger<SyncManager> logger)
         {
             this.options = options;
-            this.httpClientFactory = httpClientFactory;
+            sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
+
+            if (sapphireSyncModule != null)
+            {
+                sapphireSyncModule.SyncRequestRequestReceived += request =>
+                {
+                    if (request.Propagate)
+                    {
+                        Publish(request);
+                    }
+
+                    if (request is SendChangesRequest sendChangesRequest)
+                    {
+                        Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes
+                            .FirstOrDefault(t => t.FullName == sendChangesRequest.DbType);
+
+                        if (dbType != null)
+                        {
+                            SapphireChangeNotifier changeNotifier = (SapphireChangeNotifier) serviceProvider.GetService(typeof(SapphireChangeNotifier));
+                            logger.LogInformation("Handling changes from other server");
+                            changeNotifier.HandleChanges(sendChangesRequest.Changes, dbType);
+                        }
+                    }
+                    else if (request is SendMessageRequest sendMessageRequest)
+                    {
+                        SapphireMessageSender sender = (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
+                        logger.LogInformation("Handling message from other server");
+                        sender.Send(sendMessageRequest.Message, sendMessageRequest.Filter, sendMessageRequest.FilterParameters, false);
+                    }
+                    else if (request is SendPublishRequest sendPublishRequest)
+                    {
+                        SapphireMessageSender sender = (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
+                        logger.LogInformation("Handling publish from other server");
+                        sender.Publish(sendPublishRequest.Topic, sendPublishRequest.Message, sendPublishRequest.Retain, false);
+                    }
+                };
+            }
         }
 
         public void SendChanges(List<ChangeResponse> changes, Type dbContextType)
@@ -28,10 +62,11 @@ namespace SapphireDb.Sync
             SendChangesRequest sendChangesRequest = new SendChangesRequest()
             {
                 Changes = changes,
-                DbType = dbContextType.FullName
+                DbType = dbContextType.FullName,
+                OriginId = options.Sync.Id
             };
 
-            SendToNlbs(sendChangesRequest, "changes");
+            Publish(sendChangesRequest);
         }
 
         public void SendPublish(string topic, object message, bool retain)
@@ -40,10 +75,11 @@ namespace SapphireDb.Sync
             {
                 Topic = topic,
                 Message = message,
-                Retain = retain
+                Retain = retain,
+                OriginId = options.Sync.Id
             };
 
-            SendToNlbs(sendPublishRequest, "publish");
+            Publish(sendPublishRequest);
         }
 
         public void SendMessage(object message, string filter, object[] filterParameters)
@@ -52,35 +88,16 @@ namespace SapphireDb.Sync
             {
                 Message = message,
                 Filter = filter,
-                FilterParameters = filterParameters
+                FilterParameters = filterParameters,
+                OriginId = options.Sync.Id
             };
 
-            SendToNlbs(sendMessageRequest, "message");
+            Publish(sendMessageRequest);
         }
 
-        private void SendToNlbs(object messageObject, string path)
+        private void Publish(SyncRequest syncRequest)
         {
-            if (!options.Sync.Enabled)
-            {
-                return;
-            }
-
-            string requestString = JsonHelper.Serialize(messageObject).Encrypt(options.Sync.EncryptionKey);
-
-            options.Sync.Entries.Where(entry => !string.IsNullOrEmpty(entry.Url)).ToList().ForEach(nlbEntry =>
-            {
-                Task.Run(async () =>
-                {
-                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
-                        $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}sapphire/sync/{path}");
-                    request.Headers.Add("Secret", nlbEntry.Secret);
-                    request.Headers.Add("OriginId", options.Sync.Id);
-                    request.Content = new StringContent(requestString);
-
-                    HttpClient client = httpClientFactory.CreateClient();
-                    await client.SendAsync(request);
-                });
-            });
+            sapphireSyncModule?.Publish(syncRequest);
         }
     }
 }

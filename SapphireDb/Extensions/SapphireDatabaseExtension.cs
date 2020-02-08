@@ -21,6 +21,9 @@ namespace SapphireDb.Extensions
     {
         public static IApplicationBuilder UseSapphireDb(this IApplicationBuilder builder)
         {
+            // Invoke instance of sync manager on startup
+            builder.ApplicationServices.GetService(typeof(SyncManager));
+            
             SapphireDatabaseOptions options = (SapphireDatabaseOptions)builder.ApplicationServices.GetService(typeof(SapphireDatabaseOptions));
 
             builder.Map("/sapphire", (sapphireApp) =>
@@ -47,11 +50,6 @@ namespace SapphireDb.Extensions
                 if (options.PollInterface)
                 {
                     sapphireApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
-                }
-
-                if (options.Sync.Enabled)
-                {
-                    sapphireApp.Map("/sync", (nlb) => { nlb.UseMiddleware<SyncMiddleware>(); });
                 }
 
                 sapphireApp.Map("/authToken", (authToken) =>
@@ -101,11 +99,7 @@ namespace SapphireDb.Extensions
             
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);
-
-            services.AddHttpClient<HttpClient>((client) =>
-            {
-                client.Timeout = TimeSpan.FromSeconds(10);
-            });
+            
             services.AddSingleton<SyncManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)

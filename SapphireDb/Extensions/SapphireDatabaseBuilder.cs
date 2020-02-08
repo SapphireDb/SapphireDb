@@ -13,7 +13,7 @@ namespace SapphireDb.Extensions
 {
     public class SapphireDatabaseBuilder
     {
-        private readonly IServiceCollection serviceCollection;
+        public readonly IServiceCollection serviceCollection;
 
         public SapphireDatabaseBuilder(IServiceCollection serviceCollection)
         {

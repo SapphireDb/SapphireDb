@@ -65,20 +65,14 @@ namespace SapphireDb.Models
 
             public SyncConfiguration(IConfigurationSection configurationSection)
             {
-                Enabled = configurationSection.GetValue<bool>(nameof(Enabled));
                 Id = configurationSection[nameof(Id)];
                 Secret = configurationSection[nameof(Secret)];
-                EncryptionKey = configurationSection[nameof(EncryptionKey)];
                 Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new SyncEntry(section)).ToList();
             }
-
-            public bool Enabled { get; set; }
 
             public string Id { get; set; }
 
             public string Secret { get; set; }
-
-            public string EncryptionKey { get; set; }
 
             public List<SyncEntry> Entries { get; set; } = new List<SyncEntry>();
         }
