@@ -6,12 +6,10 @@
   </a>
 </p>
 
-SapphireDb is an open source library that enables you to easily create your own application with realtime data synchronization.
+SapphireDb is a self-hosted, easy to use realtime database for Asp.Net Core and EF Core.
 
-Build amazing reactive applications with realtime data synchronization and get the best results of your project.
-SapphireDb should serve as a self hosted alternative to firebase realtime database and firestore and also gives you an alternative to SignalR.
-
-SapphireDb is an extension for Asp.Net Core and EF Core and creates a generic API that you can easily use with different clients. This enables you to rapidly develop amazing applications.
+It creates a generic API you can easily use with different clients to effortlessly create applications with realtime data synchronization.
+SapphireDb should serve as a self hosted alternative to firebase realtime database and firestore on top of .Net.
 
 Check out the documentation for more details: [Documentation](https://sapphire-db.com/)
 
