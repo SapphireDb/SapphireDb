@@ -198,7 +198,7 @@ namespace SapphireDb.Connection
                         collectionChanges = collectionChanges.Where((change) => whereFunction(change.Value)).ToList();
                     }
                     
-                    ChangeResponses changeResponses = new ChangeResponses()
+                    ChangesResponse changesResponse = new ChangesResponse()
                     {
                         ReferenceId = subscription.ReferenceId,
                         Changes = collectionChanges.Select(change =>
@@ -208,7 +208,7 @@ namespace SapphireDb.Connection
                             return change.CreateResponse(subscription.ReferenceId, value);
                         }).ToList()
                     };
-                    _ = connection.Send(changeResponses);
+                    _ = connection.Send(changesResponse);
                 }
             }
             catch (Exception ex)

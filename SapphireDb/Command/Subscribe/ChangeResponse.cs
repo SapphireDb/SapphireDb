@@ -5,7 +5,7 @@ using SapphireDb.Helper;
 
 namespace SapphireDb.Command.Subscribe
 {
-    public class ChangeResponses : ResponseBase
+    public class ChangesResponse : ResponseBase
     {
         public List<ChangeResponse> Changes { get; set; }
     }
