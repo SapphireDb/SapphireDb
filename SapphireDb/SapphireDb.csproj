@@ -16,12 +16,12 @@
     <PackageTags>realtime, database, core, .net, entityframework, database, websocket, sse, polling, self-hosted, angular, firebase, signalr</PackageTags>
     <SignAssembly Condition="'$(OS)' == 'Windows_NT'">true</SignAssembly>
     <AssemblyOriginatorKeyFile>SapphireDbCert.snk</AssemblyOriginatorKeyFile>
-    <Version>1.4.0</Version>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <Version>1.5.0</Version>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageVersion>1.4.0</PackageVersion>
+    <PackageVersion>1.5.0</PackageVersion>
     <PackageReadmeFile>README-NUGET.md</PackageReadmeFile>
   </PropertyGroup>
 
