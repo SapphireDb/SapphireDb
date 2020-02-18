@@ -55,7 +55,7 @@ namespace SapphireDb.Command.Update
 
             if (value != null)
             {
-                db.Entry(value).State = EntityState.Detached;
+                // db.Entry(value).State = EntityState.Detached;
                 return SaveChangesToDb(property, value, updateValue, db, context, command);
             }
 

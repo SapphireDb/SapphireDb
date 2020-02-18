@@ -128,24 +128,8 @@ namespace SapphireDb.Command.Execute
                     return streamHelper.OpenStreamChannel(Connection, command, parameter.ParameterType);
                 }
 
-                object parameterValue = command.Parameters[parameter.Position];     
-
-                if (parameterValue == null)
-                {
-                    return null;
-                }
-
-                if (parameterValue.GetType() == typeof(JObject))
-                {
-                    return ((JObject)parameterValue).ToObject(parameter.ParameterType);
-                }
-
-                if (parameterValue.GetType() == typeof(JArray))
-                {
-                    return ((JArray) parameterValue).ToObject(parameter.ParameterType);
-                }
-
-                return parameterValue;
+                JToken parameterValue = command.Parameters[parameter.Position];
+                return parameterValue?.ToObject(parameter.ParameterType);
             }).ToArray();
         }
     }

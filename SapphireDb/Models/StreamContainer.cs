@@ -79,22 +79,12 @@ namespace SapphireDb.Models
             }
         }
 
-        public void NewValue(object value, int index)
+        public void NewValue(JToken value, int index)
         {
-            if (value != null)
-            {
-                if (value.GetType() == typeof(JObject))
-                {
-                    value = ((JObject)value).ToObject(EnumerableGenericType);
-                }
-                else if (value.GetType() == typeof(JArray))
-                {
-                    value = ((JArray)value).ToObject(EnumerableGenericType);
-                }
-            }
+            object valueObject = value?.ToObject(EnumerableGenericType);
 
             LastFrame = DateTime.UtcNow;
-            streamFrames.TryAdd(index, new StreamData() { Data = value });
+            streamFrames.TryAdd(index, new StreamData() { Data = valueObject });
             newData.Set();
         }
         

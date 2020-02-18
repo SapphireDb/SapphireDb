@@ -25,7 +25,13 @@ namespace SapphireDb.Internal
 
         public Type GetHandler(ExecuteCommand executeCommand)
         {
-            return actionHandlerTypes[executeCommand.ActionHandlerName.ToCamelCase()];
+            if (actionHandlerTypes.TryGetValue(executeCommand.ActionHandlerName.ToCamelCase(),
+                out Type actionHandlerType))
+            {
+                return actionHandlerType;
+            }
+            
+            return null;
         }
 
         public MethodInfo GetAction(ExecuteCommand executeCommand, Type actionHandlerType)

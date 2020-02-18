@@ -25,8 +25,7 @@ namespace SapphireDb.Command.Message
                 return Task.FromResult(
                     command.CreateExceptionResponse<ResponseBase>("User is not allowed to send messages"));
             }
-
-
+            
             messageSender.Send(command.Data, command.Filter, command.FilterParameters);
             return Task.FromResult<ResponseBase>(null);
         }

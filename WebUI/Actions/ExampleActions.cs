@@ -58,6 +58,11 @@ namespace WebUI.Actions
             return input.ComputeHash();
         }
 
+        public string GuidTest(Guid test)
+        {
+            return test.ToString();
+        }
+        
         public async IAsyncEnumerable<string> AsyncEnumerableTest()
         {
             for (int i = 0; i <= 100; i++)

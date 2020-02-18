@@ -12,13 +12,15 @@ namespace SapphireDb.Sync.Redis
 {
     public class SapphireRedisSyncModule : ISapphireSyncModule
     {
+        private readonly SapphireDatabaseOptions options;
         private readonly IConnectionMultiplexer redisMultiplexer;
 
-        public SapphireRedisSyncModule(RedisStore redisStore)
+        public SapphireRedisSyncModule(RedisStore redisStore, SapphireDatabaseOptions options)
         {
+            this.options = options;
             redisMultiplexer = redisStore.RedisCache.Multiplexer;
 
-            redisMultiplexer.GetSubscriber().Subscribe("sapphiresync/*", (channel, message) =>
+            redisMultiplexer.GetSubscriber().Subscribe($"{options.Sync.Prefix}sapphiresync/*", (channel, message) =>
             {
                 string channelPath = channel.ToString().Split('/').LastOrDefault();
                 
@@ -47,7 +49,7 @@ namespace SapphireDb.Sync.Redis
             string path = syncRequest is SendPublishRequest ? "publish" :
                 syncRequest is SendMessageRequest ? "message" : "changes";
 
-            redisMultiplexer.GetSubscriber().Publish($"sapphiresync/{path}", requestString);
+            redisMultiplexer.GetSubscriber().Publish($"{options.Sync.Prefix}sapphiresync/{path}", requestString);
         }
         
         public event ISapphireSyncModule.SyncRequestReceivedHandler SyncRequestRequestReceived;

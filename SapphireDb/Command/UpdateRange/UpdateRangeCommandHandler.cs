@@ -63,7 +63,7 @@ namespace SapphireDb.Command.UpdateRange
                     
                     if (value != null)
                     {
-                        db.Entry(value).State = EntityState.Detached;
+                        // db.Entry(value).State = EntityState.Detached;
                         return ApplyChangesToDb(property, value, updateValue, db, context);
                     }
 

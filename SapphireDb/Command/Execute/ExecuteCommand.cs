@@ -1,4 +1,6 @@
-﻿namespace SapphireDb.Command.Execute
+﻿using Newtonsoft.Json.Linq;
+
+namespace SapphireDb.Command.Execute
 {
     public class ExecuteCommand : CommandBase
     {
@@ -6,6 +8,6 @@
 
         public string ActionName { get; set; }
 
-        public object[] Parameters { get; set; } = new object[0];
+        public JToken[] Parameters { get; set; } = new JToken[0];
     }
 }

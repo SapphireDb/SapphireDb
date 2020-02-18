@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Newtonsoft.Json;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Command.Subscribe
@@ -26,6 +27,7 @@ namespace SapphireDb.Command.Subscribe
                     State = ChangeState.Deleted;
                     break;
                 case EntityState.Modified:
+                    OriginalValue = change.OriginalValues.ToObject();
                     State = ChangeState.Modified;
                     break;
             }
@@ -48,6 +50,9 @@ namespace SapphireDb.Command.Subscribe
         public ChangeState State { get; set; }
 
         public object Value { get; set; }
+        
+        [JsonIgnore]
+        public object OriginalValue { get; set; }
 
         public string CollectionName { get; set; }
 

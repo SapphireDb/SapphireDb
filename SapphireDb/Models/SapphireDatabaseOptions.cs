@@ -68,6 +68,7 @@ namespace SapphireDb.Models
                 Id = configurationSection[nameof(Id)];
                 Secret = configurationSection[nameof(Secret)];
                 ConnectionString = configurationSection[nameof(ConnectionString)];
+                Prefix = configurationSection[nameof(Prefix)] ?? "";
                 Entries = configurationSection.GetSection(nameof(Entries)).GetChildren().Select((section) => new SyncEntry(section)).ToList();
             }
 
@@ -77,6 +78,8 @@ namespace SapphireDb.Models
 
             public string ConnectionString { get; set; }
 
+            public string Prefix { get; set; } = "";
+            
             public List<SyncEntry> Entries { get; set; } = new List<SyncEntry>();
         }
 
@@ -95,7 +98,7 @@ namespace SapphireDb.Models
             }
 
             public string Url { get; set; }
-
+            
             public string Secret { get; set; }
 
             public string Id { get; set; }

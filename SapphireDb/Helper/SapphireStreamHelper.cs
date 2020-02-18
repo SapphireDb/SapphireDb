@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Command.Execute;
 using SapphireDb.Command.Stream;
 using SapphireDb.Connection;
@@ -60,7 +61,7 @@ namespace SapphireDb.Helper
             return streamContainer.AsyncEnumerableValue;
         }
 
-        public void StreamData(Guid streamId, object frameData, int index, Guid connectionId)
+        public void StreamData(Guid streamId, JToken frameData, int index, Guid connectionId)
         {
             if (streamContainers.TryGetValue(streamId, out StreamContainer streamContainer) && streamContainer.ConnectionId == connectionId)
             {

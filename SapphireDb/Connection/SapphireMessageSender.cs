@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using SapphireDb.Command.Message;
 using SapphireDb.Command.SubscribeMessage;
 using SapphireDb.Connection.Websocket;
@@ -30,32 +31,39 @@ namespace SapphireDb.Connection
             {
                 syncManager.SendMessage(message, filter, filterParameters);
             }
-
-            List<ConnectionBase> connections = connectionManager.connections.Values.ToList();
+            
+            Func<HttpInformation, bool> filterFunctionNoParameters = null;
+            Func<HttpInformation, object[], bool> filterFunctionParameters = null;
             
             if (!string.IsNullOrEmpty(filter) && RegisteredMessageFilter.TryGetValue(filter, out object filterFunction))
             {
-                if (filterFunction is Func<HttpInformation, bool> filterFunctionNoParameters)
+                if (filterFunction is Func<HttpInformation, bool> filterFunctionNoParametersTemp)
                 {
-                    connections = connections
-                        .Where((connection) => filterFunctionNoParameters(connection.Information))
-                        .ToList();
+                    filterFunctionNoParameters = filterFunctionNoParametersTemp;
                 }
-                else if (filterFunction is Func<HttpInformation, object[], bool> filterFunctionParameters)
+                else if (filterFunction is Func<HttpInformation, object[], bool> filterFunctionParametersTemp)
                 {
-                    connections = connections
-                        .Where((connection) => filterFunctionParameters(connection.Information, filterParameters))
-                        .ToList();
+                    filterFunctionParameters = filterFunctionParametersTemp;
                 }
             }
 
-            foreach (ConnectionBase connection in connections)
+            Parallel.ForEach(connectionManager.connections.Values, connection =>
             {
+                if (filterFunctionNoParameters != null && !filterFunctionNoParameters(connection.Information))
+                {
+                    return;
+                }
+                
+                if (filterFunctionParameters != null && !filterFunctionParameters(connection.Information, filterParameters))
+                {
+                    return;
+                }
+                
                 _ = connection.Send(new MessageResponse()
                 {
                     Data = message
                 });
-            }
+            });
         }
 
         public void Publish(string topic, object message, bool retain, bool sync = true)
@@ -70,19 +78,22 @@ namespace SapphireDb.Connection
                 syncManager.SendPublish(topic, message, retain);
             }
 
-            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in 
-                connectionManager.connections.Where(c => c.Value.MessageSubscriptions.ContainsValue(topic)))
+            Parallel.ForEach(connectionManager.connections.Values, connection =>
             {
-                foreach (string subscriptionId in 
-                    connectionValue.Value.MessageSubscriptions.Where(s => s.Value == topic).Select(s => s.Key))
+                if (!connection.MessageSubscriptions.ContainsValue(topic))
                 {
-                    _ = connectionValue.Value.Send(new TopicResponse()
-                    {
-                        ReferenceId = subscriptionId,
-                        Message = message
-                    });
+                    return;
                 }
-            }
+
+                foreach (KeyValuePair<string,string> subscription in connection.MessageSubscriptions.Where(s => s.Value == topic))
+                {
+                    _ = connection.Send(new TopicResponse()
+                    {
+                        ReferenceId = subscription.Key,
+                        Message = message
+                    });   
+                }
+            });
         }
     }
 }
