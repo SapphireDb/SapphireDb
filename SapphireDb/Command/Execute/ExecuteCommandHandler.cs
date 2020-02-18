@@ -47,11 +47,21 @@ namespace SapphireDb.Command.Execute
 
         private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpInformation context)
         {
-            Type actionHandlerType = actionMapper.GetHandler(command);
+            string[] actionParts = command?.Action.Split('.');
+
+            if (actionParts == null || actionParts.Length != 2)
+            {
+                return command.CreateExceptionResponse<ExecuteResponse>("The format the action name was false.");
+            }
+            
+            string actionHandlerName = actionParts[0];
+            string actionName = actionParts[1];
+            
+            Type actionHandlerType = actionMapper.GetHandler(actionHandlerName);
 
             if (actionHandlerType != null)
             {
-                MethodInfo actionMethod = actionMapper.GetAction(command, actionHandlerType);
+                MethodInfo actionMethod = actionMapper.GetAction(actionName, actionHandlerType);
 
                 if (actionMethod != null)
                 {

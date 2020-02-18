@@ -23,9 +23,9 @@ namespace SapphireDb.Internal
                 t => t.Value.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly));
         }
 
-        public Type GetHandler(ExecuteCommand executeCommand)
+        public Type GetHandler(string actionHandlerName)
         {
-            if (actionHandlerTypes.TryGetValue(executeCommand.ActionHandlerName.ToCamelCase(),
+            if (actionHandlerTypes.TryGetValue(actionHandlerName.ToCamelCase(),
                 out Type actionHandlerType))
             {
                 return actionHandlerType;
@@ -34,12 +34,12 @@ namespace SapphireDb.Internal
             return null;
         }
 
-        public MethodInfo GetAction(ExecuteCommand executeCommand, Type actionHandlerType)
+        public MethodInfo GetAction(string actionName, Type actionHandlerType)
         {
             if (actionHandlerActions.TryGetValue(actionHandlerType, out MethodInfo[] actions))
             {
                 return actions.FirstOrDefault(a =>
-                    a.Name.Equals(executeCommand.ActionName, StringComparison.InvariantCultureIgnoreCase));
+                    a.Name.Equals(actionName, StringComparison.InvariantCultureIgnoreCase));
             }
 
             return null;
