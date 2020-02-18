@@ -108,8 +108,21 @@ namespace SapphireDb.Connection
                             newChangeResponse.State = ChangeResponse.ChangeState.Deleted;
                             return newChangeResponse;
                         });
+                    
+                    IEnumerable<ChangeResponse> notLoadedNewAllowed = changesForCollection
+                        .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
+                                         property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
+                                             change.Value) &&
+                                         !property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
+                                             change.OriginalValue))
+                        .Select(change =>
+                        {
+                            ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
+                            newChangeResponse.State = ChangeResponse.ChangeState.Added;
+                            return newChangeResponse;
+                        });
 
-                    authenticatedChanges = authenticatedChanges.Concat(oldLoadedNotAllowed);
+                    authenticatedChanges = authenticatedChanges.Concat(oldLoadedNotAllowed).Concat(notLoadedNewAllowed);
                 }
 
                 List<ChangeResponse> collectionChanges = authenticatedChanges.ToList();
