@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using SapphireDb.Command;
 using SapphireDb.Connection.Websocket;
 using SapphireDb.Helper;
 
@@ -18,12 +19,12 @@ namespace SapphireDb.Connection.Poll
             HttpContext = null;
         }
 
-        private readonly ConcurrentQueue<object> messages = new ConcurrentQueue<object>();
+        private readonly ConcurrentQueue<ResponseBase> messages = new ConcurrentQueue<ResponseBase>();
         public DateTime lastPoll;
 
         public override string Type => "Poll";
 
-        public override Task Send(object message)
+        public override Task Send(ResponseBase message)
         {
             messages.Enqueue(message);
             return Task.CompletedTask;

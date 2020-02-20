@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using SapphireDb.Command;
 using SapphireDb.Command.SubscribeMessage;
 using SapphireDb.Command.Unsubscribe;
 using SapphireDb.Command.UnsubscribeMessage;
@@ -37,7 +38,7 @@ namespace SapphireDb.Connection
 
         public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
 
-        public abstract Task Send(object message);
+        public abstract Task Send(ResponseBase message);
 
         public abstract Task Close();
 

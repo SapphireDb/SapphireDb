@@ -51,7 +51,7 @@ namespace SapphireDb.Internal
         }
 
         private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<T> logger,
-            HttpInformation information, ConnectionBase connection = null)
+            HttpInformation information, ConnectionBase connection)
         {
             object handler = serviceProvider.GetService(handlerType);
 

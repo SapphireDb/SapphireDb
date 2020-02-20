@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using SapphireDb.Command;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Connection.SSE
@@ -16,7 +17,7 @@ namespace SapphireDb.Connection.SSE
 
         public override string Type => "SSE";
 
-        public override async Task Send(object message)
+        public override async Task Send(ResponseBase message)
         {
             await Lock.WaitAsync();
 

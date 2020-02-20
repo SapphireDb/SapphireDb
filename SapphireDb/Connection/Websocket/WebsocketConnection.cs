@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Runtime.Serialization;
 using Microsoft.Extensions.Primitives;
+using SapphireDb.Command;
 using SapphireDb.Connection;
 
 namespace SapphireDb.Connection.Websocket
@@ -25,7 +26,7 @@ namespace SapphireDb.Connection.Websocket
 
         public override string Type => "Websocket";
 
-        public override async Task Send(object message)
+        public override async Task Send(ResponseBase message)
         {
             await Lock.WaitAsync();
 
