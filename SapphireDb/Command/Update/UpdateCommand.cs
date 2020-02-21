@@ -4,6 +4,6 @@ namespace SapphireDb.Command.Update
 {
     public class UpdateCommand : CollectionCommandBase
     {
-        public JObject UpdateValue { get; set; }
+        public JObject Value { get; set; }
     }
 }

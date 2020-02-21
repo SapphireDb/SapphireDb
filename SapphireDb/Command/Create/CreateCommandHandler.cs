@@ -61,7 +61,7 @@ namespace SapphireDb.Command.Create
             {
                 return new CreateResponse()
                 {
-                    NewObject = newEntityObject,
+                    Value = newEntityObject,
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
                 };
@@ -79,7 +79,7 @@ namespace SapphireDb.Command.Create
 
             return new CreateResponse()
             {
-                NewObject = newEntityObject,
+                Value = newEntityObject,
                 ReferenceId = command.ReferenceId
             };
         }

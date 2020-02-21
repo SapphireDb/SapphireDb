@@ -78,7 +78,7 @@ namespace SapphireDb.Command.CreateRange
             {
                 return new CreateResponse()
                 {
-                    NewObject = newEntityObject,
+                    Value = newEntityObject,
                     ValidationResults = validationResults
                 };
             }
@@ -91,7 +91,7 @@ namespace SapphireDb.Command.CreateRange
             
             return new CreateResponse()
             {
-                NewObject = newEntityObject,
+                Value = newEntityObject,
             };
         }
     }

@@ -43,7 +43,7 @@ namespace SapphireDb.Command.Update
         private ResponseBase InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
-            object updateValue = command.UpdateValue.ToObject(property.Key);
+            object updateValue = command.Value.ToObject(property.Key);
 
             if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
             {
@@ -73,7 +73,7 @@ namespace SapphireDb.Command.Update
             {
                 return new UpdateResponse()
                 {
-                    UpdatedObject = value,
+                    Value = value,
                     ReferenceId = command.ReferenceId,
                     ValidationResults = validationResults
                 };
@@ -89,7 +89,7 @@ namespace SapphireDb.Command.Update
 
             return new UpdateResponse()
             {
-                UpdatedObject = value,
+                Value = value,
                 ReferenceId = command.ReferenceId
             };
         }

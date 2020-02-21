@@ -45,7 +45,7 @@ namespace SapphireDb.Command.UpdateRange
         private ResponseBase InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
-            object[] updateValues = command.UpdateValues.Values<JObject>().Select(newValue => newValue.ToObject(property.Key)).ToArray();
+            object[] updateValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key)).ToArray();
 
             UpdateRangeResponse response = new UpdateRangeResponse
             {
@@ -92,7 +92,7 @@ namespace SapphireDb.Command.UpdateRange
             {
                 return new UpdateResponse()
                 {
-                    UpdatedObject = value,
+                    Value = value,
                     ValidationResults = validationResults
                 };
             }
@@ -103,7 +103,7 @@ namespace SapphireDb.Command.UpdateRange
             
             return new UpdateResponse()
             {
-                UpdatedObject = value
+                Value = value
             };
         }
     }

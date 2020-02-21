@@ -4,6 +4,6 @@ namespace SapphireDb.Command.UpdateRange
 {
     public class UpdateRangeCommand : CollectionCommandBase
     {
-        public JArray UpdateValues { get; set; }
+        public JArray Values { get; set; }
     }
 }

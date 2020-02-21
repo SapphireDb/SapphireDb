@@ -35,7 +35,7 @@ namespace SapphireDb.Command.DeleteRange
                     DeleteRangeResponse response = new DeleteRangeResponse
                     {
                         ReferenceId = command.ReferenceId,
-                        Results = command.PrimaryKeyList.Select(valuePrimaryKeys =>
+                        Results = command.Values.Select(valuePrimaryKeys =>
                         {
                             object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
                             object value = db.Find(property.Key, primaryKeys);

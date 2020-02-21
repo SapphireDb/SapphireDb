@@ -5,6 +5,6 @@ namespace SapphireDb.Command.Delete
 {
     public class DeleteCommand : CollectionCommandBase
     {
-        public Dictionary<string, JValue> PrimaryKeys { get; set; } = new Dictionary<string, JValue>();
+        public Dictionary<string, JValue> Value { get; set; } = new Dictionary<string, JValue>();
     }
 }

@@ -28,7 +28,7 @@ namespace SapphireDb.Command.Delete
             {
                 try
                 {
-                    object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.PrimaryKeys);
+                    object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.Value);
                     object value = db.Find(property.Key, primaryKeys);
 
                     if (!property.Key.CanRemove(context, value, serviceProvider))

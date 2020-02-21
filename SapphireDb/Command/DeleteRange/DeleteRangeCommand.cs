@@ -5,6 +5,6 @@ namespace SapphireDb.Command.DeleteRange
 {
     public class DeleteRangeCommand : CollectionCommandBase
     {
-        public List<Dictionary<string, JValue>> PrimaryKeyList { get; set; } = new List<Dictionary<string, JValue>>();
+        public List<Dictionary<string, JValue>> Values { get; set; } = new List<Dictionary<string, JValue>>();
     }
 }
