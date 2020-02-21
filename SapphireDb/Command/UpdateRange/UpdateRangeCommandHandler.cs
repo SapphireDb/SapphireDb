@@ -54,7 +54,7 @@ namespace SapphireDb.Command.UpdateRange
                 {
                     if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
                     {
-                        return command.CreateExceptionResponse<UpdateResponse>(
+                        return (UpdateResponse)command.CreateExceptionResponse<UpdateResponse>(
                             "The user is not authorized for this action.");
                     }
 
@@ -67,7 +67,7 @@ namespace SapphireDb.Command.UpdateRange
                         return ApplyChangesToDb(property, value, updateValue, db, context);
                     }
 
-                    return command.CreateExceptionResponse<UpdateResponse>("No value to update was found");
+                    return (UpdateResponse)command.CreateExceptionResponse<UpdateResponse>("No value to update was found");
                 }).ToList()
             };
 
@@ -82,7 +82,7 @@ namespace SapphireDb.Command.UpdateRange
             return response;
         }
 
-        private ResponseBase ApplyChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue, SapphireDbContext db, HttpInformation context)
+        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue, SapphireDbContext db, HttpInformation context)
         {
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
             

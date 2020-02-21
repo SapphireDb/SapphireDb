@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using SapphireDb.Command.Update;
 
 namespace SapphireDb.Command.UpdateRange
 {
     public class UpdateRangeResponse : ResponseBase
     {
-        public List<ResponseBase> Results { get; set; }
+        public List<UpdateResponse> Results { get; set; }
     }
 }

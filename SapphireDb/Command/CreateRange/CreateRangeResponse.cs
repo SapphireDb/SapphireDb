@@ -5,6 +5,6 @@ namespace SapphireDb.Command.CreateRange
 {
     public class CreateRangeResponse : ResponseBase
     {
-        public List<ResponseBase> Results { get; set; }
+        public List<CreateResponse> Results { get; set; }
     }
 }

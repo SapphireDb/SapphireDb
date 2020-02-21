@@ -52,7 +52,7 @@ namespace SapphireDb.Command.CreateRange
                 {
                     if (!property.Key.CanCreate(context, value, serviceProvider))
                     {
-                        return command.CreateExceptionResponse<CreateResponse>(
+                        return (CreateResponse)command.CreateExceptionResponse<CreateResponse>(
                             "The user is not authorized for this action.");
                     }
 
@@ -70,7 +70,7 @@ namespace SapphireDb.Command.CreateRange
             return response;
         }
 
-        private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context)
+        private CreateResponse SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context)
         {
             object newEntityObject = property.Key.SetFields(newValue);
             

@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using SapphireDb.Command.Delete;
 
 namespace SapphireDb.Command.DeleteRange
 {
     public class DeleteRangeResponse : ResponseBase
     {
-        public List<ResponseBase> Results { get; set; }
+        public List<DeleteResponse> Results { get; set; }
     }
 }

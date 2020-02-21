@@ -42,7 +42,7 @@ namespace SapphireDb.Command.DeleteRange
 
                             if (!property.Key.CanRemove(context, value, serviceProvider))
                             {
-                                return command.CreateExceptionResponse<DeleteResponse>(
+                                return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
                                     "The user is not authorized for this action.");
                             }
 
@@ -62,7 +62,7 @@ namespace SapphireDb.Command.DeleteRange
                                 };
                             }
 
-                            return command.CreateExceptionResponse<DeleteResponse>("The value was not found.");
+                            return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>("The value was not found.");
                         }).ToList()
                     };
 
