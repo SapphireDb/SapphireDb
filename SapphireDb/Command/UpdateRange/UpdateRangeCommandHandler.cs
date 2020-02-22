@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
+using SapphireDb.Command.CreateRange;
 using SapphireDb.Command.Update;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -63,15 +64,14 @@ namespace SapphireDb.Command.UpdateRange
                     
                     if (value != null)
                     {
-                        // db.Entry(value).State = EntityState.Detached;
                         return ApplyChangesToDb(property, value, updateValue, db, context);
                     }
 
-                    return (UpdateResponse)command.CreateExceptionResponse<UpdateResponse>("No value to update was found");
+                    return (ValidatedResponseBase)CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
+                        serviceProvider);
                 }).ToList()
             };
-
-
+            
             db.SaveChanges();
 
             foreach (object value in updateValues)
@@ -86,7 +86,7 @@ namespace SapphireDb.Command.UpdateRange
         {
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
             
-            property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
+            property.Key.UpdateFields(value, updateValue, context, serviceProvider);
 
             if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {

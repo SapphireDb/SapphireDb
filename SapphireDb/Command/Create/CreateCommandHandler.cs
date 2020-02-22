@@ -49,11 +49,11 @@ namespace SapphireDb.Command.Create
                         "The user is not authorized for this action.");
             }
 
-            return SetPropertiesAndValidate(db, property, newValue, context, command);
+            return SetPropertiesAndValidate<CreateEventAttribute>(db, property, newValue, context, command.ReferenceId, serviceProvider);
         }
 
-        private ResponseBase SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context,
-            CreateCommand command)
+        public static ResponseBase SetPropertiesAndValidate<TEventAttribute>(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context,
+            string referenceId, IServiceProvider serviceProvider) where TEventAttribute : ModelStoreEventAttributeBase
         {
             object newEntityObject = property.Key.SetFields(newValue);
 
@@ -62,25 +62,25 @@ namespace SapphireDb.Command.Create
                 return new CreateResponse()
                 {
                     Value = newEntityObject,
-                    ReferenceId = command.ReferenceId,
+                    ReferenceId = referenceId,
                     ValidationResults = validationResults
                 };
             }
 
-            property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, newEntityObject, context, serviceProvider);
 
             db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, newEntityObject, context, serviceProvider);
 
             db.SaveChanges();
 
-            property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.After, newEntityObject, context, serviceProvider);
 
             return new CreateResponse()
             {
                 Value = newEntityObject,
-                ReferenceId = command.ReferenceId
+                ReferenceId = referenceId
             };
         }
     }

@@ -40,14 +40,27 @@ namespace SapphireDb.Command.DeleteRange
                             object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
                             object value = db.Find(property.Key, primaryKeys);
 
-                            if (!property.Key.CanRemove(context, value, serviceProvider))
-                            {
-                                return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
-                                    "The user is not authorized for this action.");
-                            }
-
                             if (value != null)
                             {
+                                if (value is SapphireOfflineEntity valueOfflineEntity &&
+                                    valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
+                                {
+                                    DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+
+                                    if (valueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1))
+                                        != commandModifiedOn.Round(TimeSpan.FromMilliseconds(1)))
+                                    {
+                                        return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
+                                            "Deletion rejected. The object state has changed.");
+                                    }
+                                }
+                                
+                                if (!property.Key.CanRemove(context, value, serviceProvider))
+                                {
+                                    return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
+                                        "The user is not authorized for this action.");
+                                }
+                                
                                 property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
 
                                 db.Remove(value);

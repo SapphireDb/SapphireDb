@@ -5,6 +5,6 @@ namespace SapphireDb.Command.UpdateRange
 {
     public class UpdateRangeResponse : ResponseBase
     {
-        public List<UpdateResponse> Results { get; set; }
+        public List<ValidatedResponseBase> Results { get; set; }
     }
 }

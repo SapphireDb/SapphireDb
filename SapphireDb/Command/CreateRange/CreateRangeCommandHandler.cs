@@ -56,7 +56,7 @@ namespace SapphireDb.Command.CreateRange
                             "The user is not authorized for this action.");
                     }
 
-                    return SetPropertiesAndValidate(db, property, value, context);
+                    return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context, serviceProvider);
                 }).ToList()
             };
 
@@ -70,7 +70,8 @@ namespace SapphireDb.Command.CreateRange
             return response;
         }
 
-        private CreateResponse SetPropertiesAndValidate(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue, HttpInformation context)
+        public static CreateResponse SetPropertiesAndValidate<TEventAttribute>(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue,
+            HttpInformation context, IServiceProvider serviceProvider) where TEventAttribute : ModelStoreEventAttributeBase
         {
             object newEntityObject = property.Key.SetFields(newValue);
             
@@ -83,11 +84,11 @@ namespace SapphireDb.Command.CreateRange
                 };
             }
 
-            property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, newEntityObject, context, serviceProvider);
 
             db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, newEntityObject, context, serviceProvider);
             
             return new CreateResponse()
             {

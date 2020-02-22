@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SapphireDb.Attributes;
+using SapphireDb.Command.Create;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -20,7 +21,7 @@ namespace SapphireDb.Command.Update
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, UpdateCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UpdateCommand command)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
@@ -29,18 +30,18 @@ namespace SapphireDb.Command.Update
             {
                 try
                 {
-                    return Task.FromResult(InitializeUpdate(command, property, context, db));
+                    return await InitializeUpdate(command, property, context, db);
                 }
                 catch (Exception ex)
                 {
-                    return Task.FromResult(command.CreateExceptionResponse<UpdateResponse>(ex));
+                    return command.CreateExceptionResponse<UpdateResponse>(ex);
                 }
             }
 
-            return Task.FromResult(command.CreateExceptionResponse<UpdateResponse>("No set for collection was found."));
+            return command.CreateExceptionResponse<UpdateResponse>("No set for collection was found.");
         }
 
-        private ResponseBase InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
+        private async Task<ResponseBase> InitializeUpdate(UpdateCommand command, KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
             object updateValue = command.Value.ToObject(property.Key);
@@ -55,19 +56,19 @@ namespace SapphireDb.Command.Update
 
             if (value != null)
             {
-                // db.Entry(value).State = EntityState.Detached;
-                return SaveChangesToDb(property, value, updateValue, db, context, command);
+                return await SaveChangesToDb(property, value, updateValue, db, context, command);
             }
-
-            return command.CreateExceptionResponse<UpdateResponse>("No value to update was found");
+            
+            return CreateCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
+                command.ReferenceId, serviceProvider);
         }
 
-        private ResponseBase SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
+        private async Task<ResponseBase> SaveChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue,
             SapphireDbContext db, HttpInformation context, UpdateCommand command)
         {
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
             
-            property.Key.UpdateFields(value, updateValue, db, context, serviceProvider);
+            property.Key.UpdateFields(value, updateValue, context, serviceProvider);
 
             if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
@@ -83,8 +84,23 @@ namespace SapphireDb.Command.Update
 
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, value, context, serviceProvider);
 
-            db.SaveChanges();
-
+            try
+            {
+                db.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                await ex.Entries.Single().ReloadAsync();
+                await Task.Delay(10);
+                
+                ResponseBase result =  CreateCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
+                    command.ReferenceId, serviceProvider);
+                
+                db.SaveChanges();
+            
+                return result;
+            }
+            
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
 
             return new UpdateResponse()

@@ -96,8 +96,8 @@ namespace SapphireDb.Helper
             return newEntityObject;
         }
 
-        public static void UpdateFields(this Type entityType, object entityObject, object newValues,
-            SapphireDbContext db, HttpInformation information, IServiceProvider serviceProvider)
+        public static void UpdateFields(this Type entityType, object entityObject, object newValues, 
+            HttpInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updatableProperties = entityType.GetPropertyAttributesInfos()
                 .Where(info =>

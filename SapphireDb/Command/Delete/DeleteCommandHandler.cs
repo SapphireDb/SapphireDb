@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -30,15 +31,28 @@ namespace SapphireDb.Command.Delete
                 {
                     object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, command.Value);
                     object value = db.Find(property.Key, primaryKeys);
-
-                    if (!property.Key.CanRemove(context, value, serviceProvider))
-                    {
-                        return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(
-                            "The user is not authorized for this action."));
-                    }
-
+                    
                     if (value != null)
                     {
+                        if (value is SapphireOfflineEntity valueOfflineEntity &&
+                            command.Value.TryGetValue("modifiedOn", out JValue modifiedOn))
+                        {
+                            DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+
+                            if (valueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1))
+                                != commandModifiedOn.Round(TimeSpan.FromMilliseconds(1)))
+                            {
+                                return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(
+                                    "Deletion rejected. The object state has changed."));
+                            }
+                        }
+                        
+                        if (!property.Key.CanRemove(context, value, serviceProvider))
+                        {
+                            return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(
+                                "The user is not authorized for this action."));
+                        }
+                        
                         property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
 
                         db.Remove(value);
