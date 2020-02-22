@@ -46,14 +46,14 @@ namespace SapphireDb.Command.UpdateRange
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
-            List<object> updateValues = command.Values.Values<JObject>()
+            List<object> updateValues = command.Entries.Select(e => e.Value)
                 .Select(newValue => newValue.ToObject(property.Key))
                 .ToList();
 
             UpdateRangeResponse response = new UpdateRangeResponse
             {
                 ReferenceId = command.ReferenceId,
-                Results = updateValues.Select(updateValue =>
+                Results = updateValues.Select((updateValue, index) =>
                 {
                     if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
                     {
@@ -66,7 +66,8 @@ namespace SapphireDb.Command.UpdateRange
                     
                     if (value != null)
                     {
-                        return ApplyChangesToDb(property, value, updateValue, db, context);
+                        object previousValue = command.Entries[index].Previous?.ToObject(property.Key);
+                        return ApplyChangesToDb(property, value, updateValue, previousValue, db, context);
                     }
 
                     return (ValidatedResponseBase)CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
@@ -83,7 +84,7 @@ namespace SapphireDb.Command.UpdateRange
                     property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
                 }
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException)
             {
                 foreach (EntityEntry entry in db.ChangeTracker.Entries())
                 {
@@ -100,28 +101,41 @@ namespace SapphireDb.Command.UpdateRange
             return response;
         }
 
-        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object value, object updateValue, SapphireDbContext db, HttpInformation context)
+        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object dbValue, object updateValue,
+            object previousValue, SapphireDbContext db, HttpInformation context)
         {
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
-            
-            property.Key.UpdateFields(value, updateValue, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, dbValue, context, serviceProvider);
 
-            if (!ValidationHelper.ValidateModel(value, serviceProvider, out Dictionary<string, List<string>> validationResults))
+            if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
+                updateValue is SapphireOfflineEntity updateOfflineEntity &&
+                previousValue != null && previousValue is SapphireOfflineEntity previousValueOfflineEntity &&
+                dbValueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1)) !=
+                previousValueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1)))
+            {
+                property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
+                    previousValueOfflineEntity, context, serviceProvider);
+            }
+            else
+            {
+                property.Key.UpdateFields(dbValue, updateValue, context, serviceProvider);
+            }
+
+            if (!ValidationHelper.ValidateModel(dbValue, serviceProvider, out Dictionary<string, List<string>> validationResults))
             {
                 return new UpdateResponse()
                 {
-                    Value = value,
+                    Value = dbValue,
                     ValidationResults = validationResults
                 };
             }
             
-            db.Update(value);
+            db.Update(dbValue);
 
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, value, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, dbValue, context, serviceProvider);
             
             return new UpdateResponse()
             {
-                Value = value
+                Value = dbValue
             };
         }
     }

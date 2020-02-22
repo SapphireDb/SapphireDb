@@ -125,8 +125,9 @@ namespace SapphireDb.Helper
             }
         }
         
-        public static void MergeFields(this Type entityType, object entityObject, object newValues, 
-            HttpInformation information, IServiceProvider serviceProvider)
+        public static void MergeFields(this Type entityType, SapphireOfflineEntity entityObject,
+            SapphireOfflineEntity newValues, SapphireOfflineEntity previousValue, HttpInformation information,
+            IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
                 information, serviceProvider);
