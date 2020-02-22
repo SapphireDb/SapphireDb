@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SapphireDb.Command.Subscribe;
+using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb
@@ -21,6 +22,15 @@ namespace SapphireDb
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             List<ChangeResponse> changes = GetChanges();
+
+            foreach (ChangeResponse change in changes)
+            {
+                if (change.Value is SapphireOfflineEntity offlineEntity)
+                {
+                    offlineEntity.MarkModified();
+                }
+            }
+            
             int result = base.SaveChanges(acceptAllChangesOnSuccess);
             notifier.HandleChanges(changes, GetType());
             return result;
@@ -29,6 +39,15 @@ namespace SapphireDb
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
         {
             List<ChangeResponse> changes = GetChanges();
+            
+            foreach (ChangeResponse change in changes)
+            {
+                if (change.Value is SapphireOfflineEntity offlineEntity)
+                {
+                    offlineEntity.MarkModified();
+                }
+            }
+            
             int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
             notifier.HandleChanges(changes, GetType());
             return result;

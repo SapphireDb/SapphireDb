@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Command.CreateRange;
-using SapphireDb.Command.Update;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -23,7 +23,7 @@ namespace SapphireDb.Command.UpdateRange
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
@@ -32,21 +32,23 @@ namespace SapphireDb.Command.UpdateRange
             {
                 try
                 {
-                    return Task.FromResult(InitializeUpdate(command, property, context, db));
+                    return await InitializeUpdate(command, property, context, db);
                 }
                 catch (Exception ex)
                 {
-                    return Task.FromResult(command.CreateExceptionResponse<UpdateRangeResponse>(ex));
+                    return command.CreateExceptionResponse<UpdateRangeResponse>(ex);
                 }
             }
 
-            return Task.FromResult(command.CreateExceptionResponse<UpdateRangeResponse>("No set for collection was found."));
+            return command.CreateExceptionResponse<UpdateRangeResponse>("No set for collection was found.");
         }
 
-        private ResponseBase InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
+        private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
-            object[] updateValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key)).ToArray();
+            List<object> updateValues = command.Values.Values<JObject>()
+                .Select(newValue => newValue.ToObject(property.Key))
+                .ToList();
 
             UpdateRangeResponse response = new UpdateRangeResponse
             {
@@ -71,12 +73,28 @@ namespace SapphireDb.Command.UpdateRange
                         serviceProvider);
                 }).ToList()
             };
-            
-            db.SaveChanges();
 
-            foreach (object value in updateValues)
+            try
             {
-                property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                db.SaveChanges();
+                
+                foreach (object value in updateValues)
+                {
+                    property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                }
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                foreach (EntityEntry entry in db.ChangeTracker.Entries())
+                {
+                    await entry.ReloadAsync();
+                }
+
+                response.Results = updateValues.Select(updateValue => 
+                    (ValidatedResponseBase)CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db,
+                        property, updateValue, context, serviceProvider)).ToList();
+
+                db.SaveChanges();
             }
 
             return response;

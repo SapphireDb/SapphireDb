@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
-using SapphireDb.Command.Delete;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;

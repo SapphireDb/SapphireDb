@@ -96,10 +96,10 @@ namespace SapphireDb.Helper
             return newEntityObject;
         }
 
-        public static void UpdateFields(this Type entityType, object entityObject, object newValues, 
+        private static List<PropertyAttributesInfo> GetUpdateableProperties(this Type entityType,  object entityObject,
             HttpInformation information, IServiceProvider serviceProvider)
         {
-            List<PropertyAttributesInfo> updatableProperties = entityType.GetPropertyAttributesInfos()
+            return entityType.GetPropertyAttributesInfos()
                 .Where(info =>
                 {
                     if (info.UpdatableAttribute != null ||
@@ -111,10 +111,49 @@ namespace SapphireDb.Helper
                     return false;
                 })
                 .ToList();
+        }
+        
+        public static void UpdateFields(this Type entityType, object entityObject, object newValues, 
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
+            List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
+                information, serviceProvider);
 
-            foreach (PropertyAttributesInfo pi in updatableProperties)
+            foreach (PropertyAttributesInfo pi in updateableProperties)
             {
                 pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
+            }
+        }
+        
+        public static void MergeFields(this Type entityType, object entityObject, object newValues, 
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
+            List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
+                information, serviceProvider);
+
+            foreach (PropertyAttributesInfo pi in updateableProperties)
+            {
+                object entityPropertyValue = pi.PropertyInfo.GetValue(entityObject);
+                object newPropertyValue = pi.PropertyInfo.GetValue(newValues);
+
+                if (!entityPropertyValue.Equals(newPropertyValue))
+                {
+                    if (newPropertyValue is string newPropertyValueString &&
+                        entityPropertyValue is string entityPropertyValueString)
+                    {
+                        string newValue = "<<<<<<< HEAD\n" +
+                                          $"{entityPropertyValueString}\n" +
+                                          "=======\n" +
+                                          $"{newPropertyValueString}\n" +
+                                          ">>>>>>> LOCAL";
+                        
+                        pi.PropertyInfo.SetValue(entityObject, newValue);
+                    }
+                    else
+                    {
+                        pi.PropertyInfo.SetValue(entityObject, newPropertyValue);
+                    }
+                }
             }
         }
 
