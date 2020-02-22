@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using FileContextCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -8,25 +6,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using SapphireDb;
-using SapphireDb.Command;
-using SapphireDb.Command.Execute;
 using SapphireDb.Extensions;
 using SapphireDb.Models;
-using SapphireDb.Sync.Http;
-using SapphireDb.Sync.Redis;
 using WebUI.Actions;
 using WebUI.Data;
-using WebUI.Data.AuthDemo;
 using WebUI.Data.Authentication;
 using WebUI.Data.DemoDb;
-using WebUI.Data.Models;
 
 namespace WebUI
 {
@@ -50,7 +39,7 @@ namespace WebUI
 
             //Register services
             services.AddSapphireDb(options)
-                .AddContext<RealtimeContext>(cfg => cfg.UseFileContextDatabase(databaseName: "realtime"))
+                .AddContext<RealtimeContext>(cfg => cfg.UseInMemoryDatabase(databaseName: "realtime"))
                 .AddContext<DemoContext>(cfg =>
                 {
                     if (usePostgres)
