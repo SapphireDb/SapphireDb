@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using SapphireDb.Attributes;
+using SapphireDb.Models;
 
 namespace WebUI.Data.DemoDb
 {
-    public class ValidationDemo
+    public class ValidationDemo : SapphireOfflineEntity
     {
-        [Key]
-        public Guid Id { get; set; }
-        
         [Updatable]
         [Required(ErrorMessage = "username is required")]
         [MinLength(3, ErrorMessage = "username min length not reached")]

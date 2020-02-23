@@ -125,34 +125,25 @@ namespace SapphireDb.Helper
             }
         }
         
-        public static void MergeFields(this Type entityType, SapphireOfflineEntity entityObject,
-            SapphireOfflineEntity newValues, SapphireOfflineEntity previousValue, HttpInformation information,
+        public static void MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
+            SapphireOfflineEntity updatedObject, SapphireOfflineEntity previousObject, HttpInformation information,
             IServiceProvider serviceProvider)
         {
-            List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
+            List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
                 information, serviceProvider);
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
-                object entityPropertyValue = pi.PropertyInfo.GetValue(entityObject);
-                object newPropertyValue = pi.PropertyInfo.GetValue(newValues);
+                object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
+                object updatedPropertyValue = pi.PropertyInfo.GetValue(updatedObject);
+                object previousPropertyValue = pi.PropertyInfo.GetValue(previousObject);
 
-                if (!entityPropertyValue.Equals(newPropertyValue))
+                if (!dbPropertyValue.Equals(updatedPropertyValue) &&
+                    !previousPropertyValue.Equals(updatedPropertyValue))
                 {
-                    if (newPropertyValue is string newPropertyValueString &&
-                        entityPropertyValue is string entityPropertyValueString)
+                    if (dbPropertyValue.Equals(previousPropertyValue))
                     {
-                        string newValue = "<<<<<<< HEAD\n" +
-                                          $"{entityPropertyValueString}\n" +
-                                          "=======\n" +
-                                          $"{newPropertyValueString}\n" +
-                                          ">>>>>>> LOCAL";
-                        
-                        pi.PropertyInfo.SetValue(entityObject, newValue);
-                    }
-                    else
-                    {
-                        pi.PropertyInfo.SetValue(entityObject, newPropertyValue);
+                        pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                     }
                 }
             }
