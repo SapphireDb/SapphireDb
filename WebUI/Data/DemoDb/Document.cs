@@ -5,14 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SapphireDb.Attributes;
+using SapphireDb.Models;
 
 namespace WebUI.Data.DemoDb
 {
-    public class Document
+    public class Document : SapphireOfflineEntity
     {
-        [Key]
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
         [Updatable]
