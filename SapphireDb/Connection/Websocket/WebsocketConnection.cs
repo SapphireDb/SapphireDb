@@ -18,8 +18,9 @@ namespace SapphireDb.Connection.Websocket
     {
         public WebsocketConnection(WebSocket webSocket, HttpContext context)
         {
-            Websocket = webSocket;
             Init(context);
+            Websocket = webSocket;
+            HttpContext = null;
         }
 
         public WebSocket Websocket { get; set; }

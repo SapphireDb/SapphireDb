@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -65,7 +66,8 @@ namespace SapphireDb.Connection.Poll
 
                 if (connection != null)
                 {
-                    await context.Response.WriteAsync(JsonHelper.Serialize(connection.GetMessages()));
+                    IEnumerable<object> messages =  await connection.GetMessages();
+                    await context.Response.WriteAsync(JsonHelper.Serialize(messages));
                 }
                 else
                 {

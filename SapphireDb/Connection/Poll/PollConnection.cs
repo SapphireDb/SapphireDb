@@ -2,10 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SapphireDb.Command;
-using SapphireDb.Connection.Websocket;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Connection.Poll
@@ -24,14 +24,18 @@ namespace SapphireDb.Connection.Poll
 
         public override string Type => "Poll";
 
+        private SemaphoreSlim MessageLock = new SemaphoreSlim(0, 1);
+        
         public override Task Send(ResponseBase message)
         {
             messages.Enqueue(message);
+            try { MessageLock.Release(); } catch (SemaphoreFullException) { }
             return Task.CompletedTask;
         }
 
-        public IEnumerable<object> GetMessages()
+        public async Task<IEnumerable<object>> GetMessages()
         {
+            await MessageLock.WaitAsync();
             lastPoll = DateTime.UtcNow;
             return messages.DequeueChunk();
         }
