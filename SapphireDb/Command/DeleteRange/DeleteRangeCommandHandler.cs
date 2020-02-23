@@ -46,8 +46,7 @@ namespace SapphireDb.Command.DeleteRange
                                 {
                                     DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
 
-                                    if (valueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1))
-                                        != commandModifiedOn.Round(TimeSpan.FromMilliseconds(1)))
+                                    if (valueOfflineEntity.ModifiedOn != commandModifiedOn)
                                     {
                                         return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
                                             "Deletion rejected. The object state has changed.");
@@ -70,6 +69,7 @@ namespace SapphireDb.Command.DeleteRange
 
                                 return new DeleteResponse()
                                 {
+                                    Value = value,
                                     ReferenceId = command.ReferenceId
                                 };
                             }

@@ -125,12 +125,14 @@ namespace SapphireDb.Helper
             }
         }
         
-        public static void MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
+        public static List<string> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
             SapphireOfflineEntity updatedObject, SapphireOfflineEntity previousObject, HttpInformation information,
             IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
                 information, serviceProvider);
+
+            List<string> mergeErrors = new List<string>();
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
@@ -145,8 +147,14 @@ namespace SapphireDb.Helper
                     {
                         pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                     }
+                    else
+                    {
+                        mergeErrors.Add(pi.PropertyInfo.Name);
+                    }
                 }
             }
+
+            return mergeErrors;
         }
 
         public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property,

@@ -106,13 +106,14 @@ namespace SapphireDb.Command.UpdateRange
         {
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, dbValue, context, serviceProvider);
 
+            List<string> mergeErrors = null;
+            
             if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
                 updateValue is SapphireOfflineEntity updateOfflineEntity &&
                 previousValue != null && previousValue is SapphireOfflineEntity previousValueOfflineEntity &&
-                dbValueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1)) !=
-                previousValueOfflineEntity.ModifiedOn.Round(TimeSpan.FromMilliseconds(1)))
+                dbValueOfflineEntity.ModifiedOn != updateOfflineEntity.ModifiedOn)
             {
-                property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
+                mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
                     previousValueOfflineEntity, context, serviceProvider);
             }
             else
@@ -135,7 +136,9 @@ namespace SapphireDb.Command.UpdateRange
             
             return new UpdateResponse()
             {
-                Value = dbValue
+                Value = dbValue,
+                ValidationResults = mergeErrors != null && mergeErrors.Any() ? 
+                    mergeErrors.ToDictionary(v => v, v => new List<string>() { "merge conflict" }) : null
             };
         }
     }
