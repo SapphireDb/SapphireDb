@@ -22,6 +22,7 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 - :wrench: Dead simple configuration
 - :satellite: Broad technology support
 - :computer: Self hosted
+- :iphone: Offline support
 - :floppy_disk: Easy to use CRUD operations
 - :zap: Model validation
 - :heavy_check_mark: Database support
