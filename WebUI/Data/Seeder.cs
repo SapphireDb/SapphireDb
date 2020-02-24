@@ -26,21 +26,24 @@ namespace WebUI.Data
         {
             demoContext.Database.EnsureCreated();
 
-            demoContext.Pixels.RemoveRange(demoContext.Pixels);
+            if (demoContext.Pixels.Count() != 100)
+            {
+                demoContext.Pixels.RemoveRange(demoContext.Pixels);
             
-            for (int x = 0; x < 10; x++) {
-                for (int y = 0; y < 10; y++)
-                {
-                    demoContext.Pixels.Add(new Pixel()
+                for (int x = 0; x < 10; x++) {
+                    for (int y = 0; y < 10; y++)
                     {
-                        Color = "darkBlue",
-                        X = x,
-                        Y = y
-                    });
+                        demoContext.Pixels.Add(new Pixel()
+                        {
+                            Color = "darkBlue",
+                            X = x,
+                            Y = y
+                        });
+                    }
                 }
-            }
 
-            demoContext.SaveChanges();
+                demoContext.SaveChanges();   
+            }
 
             if (!userManager.Users.Any())
             {
