@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace SapphireDb.Helper
 {
@@ -122,7 +118,7 @@ namespace SapphireDb.Helper
             }
         }
 
-        public static  Expression ConvertConditionParts(Type modelType, JToken conditionParts, Expression modelExpression)
+        public static Expression ConvertConditionParts(Type modelType, JToken conditionParts, Expression modelExpression)
         {
             if (conditionParts.Type == JTokenType.Array)
             {
