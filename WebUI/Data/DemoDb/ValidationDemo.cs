@@ -10,6 +10,7 @@ namespace WebUI.Data.DemoDb
         [Updatable]
         [Required(ErrorMessage = "username is required")]
         [MinLength(3, ErrorMessage = "username min length not reached")]
+        [MergeConflictResolutionMode(MergeConflictResolutionMode.ConflictMarkers)]
         public string Username { get; set; }
 
         [Updatable]

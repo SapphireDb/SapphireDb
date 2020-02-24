@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Helper;
@@ -20,7 +22,7 @@ namespace SapphireDb.Command.DeleteRange
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, DeleteRangeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, DeleteRangeCommand command)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
@@ -31,70 +33,95 @@ namespace SapphireDb.Command.DeleteRange
                 {
                     List<object> removedValues = new List<object>();
 
-                    DeleteRangeResponse response = new DeleteRangeResponse
+                    DeleteRangeResponse response;
+                    bool updateRejected;
+
+                    do
                     {
-                        ReferenceId = command.ReferenceId,
-                        Results = command.Values.Select(valuePrimaryKeys =>
+                        updateRejected = false;
+                        
+                        response = new DeleteRangeResponse
                         {
-                            object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
-                            object value = db.Find(property.Key, primaryKeys);
-
-                            if (value != null)
+                            ReferenceId = command.ReferenceId,
+                            Results = command.Values.Select(valuePrimaryKeys =>
                             {
-                                if (value is SapphireOfflineEntity valueOfflineEntity &&
-                                    valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
-                                {
-                                    DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+                                object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
+                                object value = db.Find(property.Key, primaryKeys);
 
-                                    if (valueOfflineEntity.ModifiedOn.RoundToMilliseconds(10) !=
-                                        commandModifiedOn.RoundToMilliseconds(10))
+                                if (value != null)
+                                {
+                                    if (value is SapphireOfflineEntity valueOfflineEntity &&
+                                        valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
                                     {
-                                        return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
-                                            "Deletion rejected. The object state has changed.");
+                                        DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+
+                                        if (valueOfflineEntity.ModifiedOn.RoundToMilliseconds() !=
+                                            commandModifiedOn.RoundToMilliseconds())
+                                        {
+                                            return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
+                                                "Deletion rejected. The object state has changed.");
+                                        }
                                     }
+
+                                    if (!property.Key.CanRemove(context, value, serviceProvider))
+                                    {
+                                        return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
+                                            "The user is not authorized for this action.");
+                                    }
+
+                                    property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                                        ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
+
+                                    db.Remove(value);
+
+                                    property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                                        ModelStoreEventAttributeBase.EventType.BeforeSave, value, context,
+                                        serviceProvider);
+
+                                    removedValues.Add(value);
+
+                                    return new DeleteResponse()
+                                    {
+                                        Value = value,
+                                        ReferenceId = command.ReferenceId
+                                    };
                                 }
-                                
-                                if (!property.Key.CanRemove(context, value, serviceProvider))
-                                {
-                                    return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>(
-                                        "The user is not authorized for this action.");
-                                }
-                                
-                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
 
-                                db.Remove(value);
+                                return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
+                                    "The value was not found.");
+                            }).ToList()
+                        };
 
-                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, value, context, serviceProvider);
-
-                                removedValues.Add(value);
-
-                                return new DeleteResponse()
-                                {
-                                    Value = value,
-                                    ReferenceId = command.ReferenceId
-                                };
+                        try
+                        {
+                            db.SaveChanges();
+                        }
+                        catch (DbUpdateConcurrencyException)
+                        {
+                            foreach (EntityEntry entityEntry in db.ChangeTracker.Entries())
+                            {
+                                await entityEntry.ReloadAsync();
                             }
-
-                            return (DeleteResponse)command.CreateExceptionResponse<DeleteResponse>("The value was not found.");
-                        }).ToList()
-                    };
-
-                    db.SaveChanges();
+                            
+                            updateRejected = true;
+                        }
+                    } while (updateRejected);
 
                     foreach (object value in removedValues)
                     {
-                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                            ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
                     }
 
-                    return Task.FromResult<ResponseBase>(response);
+                    return response;
                 }
                 catch (Exception ex)
                 {
-                    return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>(ex));
+                    return command.CreateExceptionResponse<DeleteResponse>(ex);
                 }
             }
 
-            return Task.FromResult(command.CreateExceptionResponse<DeleteResponse>("No set for collection was found."));
+            return command.CreateExceptionResponse<DeleteResponse>("No set for collection was found.");
         }
     }
 }

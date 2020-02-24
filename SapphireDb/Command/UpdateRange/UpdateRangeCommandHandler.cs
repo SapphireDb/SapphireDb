@@ -50,54 +50,59 @@ namespace SapphireDb.Command.UpdateRange
                 .Select(newValue => newValue.ToObject(property.Key))
                 .ToList();
 
-            UpdateRangeResponse response = new UpdateRangeResponse
+            UpdateRangeResponse response;
+            bool updateRejected;
+
+            do
             {
-                ReferenceId = command.ReferenceId,
-                Results = updateValues.Select((updateValue, index) =>
-                {
-                    if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
-                    {
-                        return (UpdateResponse)command.CreateExceptionResponse<UpdateResponse>(
-                            "The user is not authorized for this action.");
-                    }
-
-                    object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);
-                    object value = db.Find(property.Key, primaryKeys);
-                    
-                    if (value != null)
-                    {
-                        object previousValue = command.Entries[index].Previous?.ToObject(property.Key);
-                        return ApplyChangesToDb(property, value, updateValue, previousValue, db, context);
-                    }
-
-                    return (ValidatedResponseBase)CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
-                        serviceProvider);
-                }).ToList()
-            };
-
-            try
-            {
-                db.SaveChanges();
+                updateRejected = false;
                 
-                foreach (object value in updateValues)
+                response = new UpdateRangeResponse
                 {
-                    property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                    ReferenceId = command.ReferenceId,
+                    Results = updateValues.Select((updateValue, index) =>
+                    {
+                        if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
+                        {
+                            return (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
+                                "The user is not authorized for this action.");
+                        }
+
+                        object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);
+                        object value = db.Find(property.Key, primaryKeys);
+
+                        if (value != null)
+                        {
+                            object previousValue = command.Entries[index].Previous?.ToObject(property.Key);
+                            return ApplyChangesToDb(property, value, updateValue, previousValue, db, context);
+                        }
+
+                        return (ValidatedResponseBase) CreateRangeCommandHandler
+                            .SetPropertiesAndValidate<UpdateEventAttribute>(db, property, updateValue, context,
+                                serviceProvider);
+                    }).ToList()
+                };
+                
+                try
+                {
+                    db.SaveChanges();
                 }
-            }
-            catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException)
+                {
+                    foreach (EntityEntry entityEntry in db.ChangeTracker.Entries())
+                    {
+                        await entityEntry.ReloadAsync();
+                    }
+                    
+                    updateRejected = true;
+                }
+            } while (updateRejected);
+
+            foreach (object value in updateValues)
             {
-                foreach (EntityEntry entry in db.ChangeTracker.Entries())
-                {
-                    await entry.ReloadAsync();
-                }
-
-                response.Results = updateValues.Select(updateValue => 
-                    (ValidatedResponseBase)CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db,
-                        property, updateValue, context, serviceProvider)).ToList();
-
-                db.SaveChanges();
+                property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
             }
-
+            
             return response;
         }
 

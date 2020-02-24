@@ -16,6 +16,8 @@ namespace SapphireDb.Models
         public UpdatableAttribute UpdatableAttribute { get; set; }
 
         public NonCreatableAttribute NonCreatableAttribute { get; set; }
+        
+        public MergeConflictResolutionModeAttribute MergeConflictResolutionModeAttribute { get; set; }
 
         public PropertyAttributesInfo(PropertyInfo propertyInfo)
         {
@@ -24,6 +26,7 @@ namespace SapphireDb.Models
             UpdateAuthAttributes = GetCustomAttributes<UpdateAuthAttribute>();
             UpdatableAttribute = PropertyInfo.GetCustomAttribute<UpdatableAttribute>(false);
             NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>(false);
+            MergeConflictResolutionModeAttribute = PropertyInfo.GetCustomAttribute<MergeConflictResolutionModeAttribute>();
         }
 
         private List<T> GetCustomAttributes<T>() where T : AuthAttributeBase

@@ -149,6 +149,25 @@ namespace SapphireDb.Helper
                     }
                     else
                     {
+                        if (pi.MergeConflictResolutionModeAttribute != null)
+                        {
+                            if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionConflictResolutionMode == MergeConflictResolutionMode.Last)
+                            {
+                                pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
+                            }
+                            else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionConflictResolutionMode == MergeConflictResolutionMode.ConflictMarkers &&
+                                     dbPropertyValue is string dbPropertyValueString &&
+                                     updatedPropertyValue is string updatedPropertyValueString)
+                            {
+                                string propertyValueConflictMarkers = "<<<<<<< database\n" +
+                                                       $"{dbPropertyValueString}\n" +
+                                                       "=======\n" +
+                                                       $"{updatedPropertyValueString}\n" +
+                                                       ">>>>>>> update";
+                                pi.PropertyInfo.SetValue(dbObject, propertyValueConflictMarkers);
+                            }
+                        }
+                        
                         mergeErrors.Add(pi.PropertyInfo.Name);
                     }
                 }
