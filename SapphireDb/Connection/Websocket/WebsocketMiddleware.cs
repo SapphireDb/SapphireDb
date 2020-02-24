@@ -19,29 +19,34 @@ namespace SapphireDb.Connection.Websocket
         private readonly SapphireDatabaseOptions options;
 
         // ReSharper disable once UnusedParameter.Local
-        public WebsocketMiddleware(RequestDelegate next, ConnectionManager connectionManager, SapphireDatabaseOptions options)
+        public WebsocketMiddleware(RequestDelegate next, ConnectionManager connectionManager,
+            SapphireDatabaseOptions options)
         {
             this.connectionManager = connectionManager;
             this.options = options;
         }
 
-        public async Task Invoke(HttpContext context, CommandExecutor commandExecutor, IServiceProvider serviceProvider, ILogger<WebsocketConnection> logger)
+        public async Task Invoke(HttpContext context, CommandExecutor commandExecutor, IServiceProvider serviceProvider,
+            ILogger<WebsocketConnection> logger)
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
-                if (!AuthHelper.CheckApiAuth(context.Request.Query["key"], context.Request.Query["secret"], options))
+                if (!AuthHelper.CheckApiAuth(context.Request.Query["key"], context.Request.Query["secret"],
+                    options))
                 {
                     await webSocket.Send(new WrongApiResponse());
-                    await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Wrong API key or secret", CancellationToken.None);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Wrong API key or secret",
+                        CancellationToken.None);
                     return;
                 }
 
                 WebsocketConnection connection = new WebsocketConnection(webSocket, context);
 
                 connectionManager.AddConnection(connection);
-                await connection.Send(new ConnectionResponse() {
+                await connection.Send(new ConnectionResponse()
+                {
                     ConnectionId = connection.Id
                 });
 
@@ -60,7 +65,8 @@ namespace SapphireDb.Connection.Websocket
                                 if (command != null)
                                 {
                                     ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                                        serviceProvider.CreateScope().ServiceProvider, connection.Information, logger,
+                                        serviceProvider.CreateScope().ServiceProvider, connection.Information,
+                                        logger,
                                         connection);
 
                                     if (response != null)
@@ -75,7 +81,11 @@ namespace SapphireDb.Connection.Websocket
                     {
                         break;
                     }
-                    catch(Exception ex)
+                    catch (WebSocketException)
+                    {
+                        // Ignore
+                    }
+                    catch (Exception ex)
                     {
                         logger.LogError(ex.Message);
                     }
