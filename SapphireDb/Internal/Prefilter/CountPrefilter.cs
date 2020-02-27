@@ -18,5 +18,10 @@ namespace SapphireDb.Internal.Prefilter
         }
 
         public void Initialize(Type modelType) { }
+        
+        public string Hash()
+        {
+            return "CountPrefilter";
+        }
     }
 }

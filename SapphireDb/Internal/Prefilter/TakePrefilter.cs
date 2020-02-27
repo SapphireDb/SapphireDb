@@ -18,5 +18,10 @@ namespace SapphireDb.Internal.Prefilter
         {
             
         }
+        
+        public string Hash()
+        {
+            return $"TakePrefilter,{Number}";
+        }
     }
 }

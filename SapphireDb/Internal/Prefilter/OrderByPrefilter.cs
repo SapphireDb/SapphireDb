@@ -48,5 +48,10 @@ namespace SapphireDb.Internal.Prefilter
         {
             
         }
+        
+        public string Hash()
+        {
+            return $"OrderByPrefilter,{Property},{Descending}";
+        }
     }
 }

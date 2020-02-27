@@ -65,5 +65,10 @@ namespace SapphireDb.Internal.Prefilter
         {
             return array.Include(includeConverted);
         }
+
+        public string Hash()
+        {
+            return $"IncludePrefilter,{Include}";
+        }
     }
 }

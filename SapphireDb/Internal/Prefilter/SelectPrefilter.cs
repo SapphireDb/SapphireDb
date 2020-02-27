@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Helper;
 
@@ -72,6 +73,11 @@ namespace SapphireDb.Internal.Prefilter
         public void Dispose()
         {
             
+        }
+        
+        public string Hash()
+        {
+            return $"SelectPrefilter,{JsonHelper.Serialize(Properties)}";
         }
     }
 }

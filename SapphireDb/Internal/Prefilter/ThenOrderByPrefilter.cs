@@ -10,5 +10,10 @@ namespace SapphireDb.Internal.Prefilter
                 ? ((IOrderedQueryable<object>)array).ThenByDescending(PropertySelectExpression)
                 : ((IOrderedQueryable<object>)array).ThenBy(PropertySelectExpression);
         }
+        
+        public new string Hash()
+        {
+            return $"ThenOrderByPrefilter,{Property},{Descending}";
+        }
     }
 }
