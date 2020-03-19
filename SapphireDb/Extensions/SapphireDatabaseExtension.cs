@@ -85,6 +85,8 @@ namespace SapphireDb.Extensions
             }
 
             services.AddSingleton(new DbContextTypeContainer());
+            
+            services.AddSingleton<SubscriptionManager>();
 
             services.AddScoped<SapphireDatabaseNotifier>();
 

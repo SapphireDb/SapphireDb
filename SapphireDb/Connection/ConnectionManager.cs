@@ -12,10 +12,12 @@ namespace SapphireDb.Connection
 {
     public class ConnectionManager
     {
+        private readonly SubscriptionManager subscriptionManager;
         public ConcurrentDictionary<Guid, ConnectionBase> connections;
 
-        public ConnectionManager()
+        public ConnectionManager(SubscriptionManager subscriptionManager)
         {
+            this.subscriptionManager = subscriptionManager;
             connections = new ConcurrentDictionary<Guid, ConnectionBase>();
         }
 
@@ -28,6 +30,7 @@ namespace SapphireDb.Connection
         {
             Guid connectionId = connection.Id;
             connections.TryRemove(connectionId, out _);
+            subscriptionManager.RemoveConnectionSubscriptions(connectionId);
             connection.Dispose();
         }
 

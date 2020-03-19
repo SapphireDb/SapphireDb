@@ -47,42 +47,6 @@ namespace SapphireDb.Connection
             Subscriptions.ForEach(s => s.Dispose());
         }
 
-        public async Task AddSubscription(CollectionSubscription subscription)
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                if (Subscriptions.All(s => s.ReferenceId != subscription.ReferenceId))
-                {
-                    Subscriptions.Add(subscription);
-                }
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
-        public async Task RemoveSubscription(UnsubscribeCommand command)
-        {
-            await Lock.WaitAsync();
-
-            try
-            {
-                int index = Subscriptions.FindIndex(s => s.ReferenceId == command.ReferenceId);
-
-                if (index != -1)
-                {
-                    Subscriptions.RemoveAt(index);
-                }
-            }
-            finally
-            {
-                Lock.Release();
-            }
-        }
-
         public async Task AddMessageSubscription(SubscribeMessageCommand command)
         {
             await Lock.WaitAsync();

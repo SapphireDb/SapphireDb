@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Attributes;
 using SapphireDb.Command;
@@ -27,46 +28,146 @@ namespace SapphireDb.Connection
         private readonly IServiceProvider serviceProvider;
         private readonly ILogger<WebsocketConnection> logger;
         private readonly DbContextTypeContainer contextTypeContainer;
+        private readonly SubscriptionManager subscriptionManager;
 
         public SapphireChangeNotifier(
             ConnectionManager connectionManager,
             DbContextAccesor dbContextAccessor,
             IServiceProvider serviceProvider,
             ILogger<WebsocketConnection> logger,
-            DbContextTypeContainer contextTypeContainer)
+            DbContextTypeContainer contextTypeContainer,
+            SubscriptionManager subscriptionManager)
         {
             this.connectionManager = connectionManager;
             this.dbContextAccessor = dbContextAccessor;
-            this.serviceProvider = serviceProvider;
+            // Test if working
+            this.serviceProvider = serviceProvider.CreateScope().ServiceProvider;
+            // this.serviceProvider = serviceProvider;
             this.logger = logger;
             this.contextTypeContainer = contextTypeContainer;
+            this.subscriptionManager = subscriptionManager;
         }
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
             string contextName = contextTypeContainer.GetName(dbContextType);
 
-            Parallel.ForEach(connectionManager.connections.Values, connection =>
+            Parallel.ForEach(changes.GroupBy(change => change.CollectionName), collectionChanges =>
             {
-                Task.Run(() =>
-                {
-                    IServiceProvider requestServiceProvider = null;
+                KeyValuePair<Type, string> property = dbContextType.GetDbSetType(collectionChanges.Key);
+                ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
+                Dictionary<string, List<CollectionSubscription>> equalCollectionSubscriptionsGrouping =
+                    subscriptionManager.GetSubscriptions(contextName, collectionChanges.Key);
 
-                    try
+                if (equalCollectionSubscriptionsGrouping == null)
+                {
+                    return;
+                }
+                
+                Parallel.ForEach(equalCollectionSubscriptionsGrouping.Values, equalCollectionSubscriptions =>
+                {
+                    if (!equalCollectionSubscriptions.Any())
                     {
-                        requestServiceProvider = connection.HttpContext?.RequestServices;
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        connectionManager.RemoveConnection(connection);
                         return;
                     }
 
-                    requestServiceProvider ??= serviceProvider;
+                    List<IPrefilterBase> prefilters = equalCollectionSubscriptions.FirstOrDefault()?.Prefilters;
 
-                    HandleCollections(connection, contextName, dbContextType, changes, requestServiceProvider);
+                    IEnumerable<WherePrefilter> wherePrefilters = prefilters.OfType<WherePrefilter>();
+
+                    List<ChangeResponse> oldValuesUnloadResponses = new List<ChangeResponse>();
+                    List<ChangeResponse> newValuesLoadResponses = new List<ChangeResponse>();
+
+                    List<ChangeResponse> completeChanges = collectionChanges.ToList();
+                    
+                    foreach (WherePrefilter wherePrefilter in wherePrefilters)
+                    {
+                        wherePrefilter.Initialize(property.Key);
+
+                        // Values that did change and now do match the prefilters
+                        oldValuesUnloadResponses.AddRange(
+                            collectionChanges
+                                .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
+                                                 !wherePrefilter.WhereExpressionCompiled(change.Value) &&
+                                                 wherePrefilter.WhereExpressionCompiled(change.OriginalValue))
+                                .Select(change =>
+                                {
+                                    ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
+                                    newChangeResponse.State = ChangeResponse.ChangeState.Deleted;
+                                    return newChangeResponse;
+                                })
+                        );
+
+                        newValuesLoadResponses.AddRange(
+                            collectionChanges
+                                .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
+                                                 wherePrefilter.WhereExpressionCompiled(change.Value) &&
+                                                 !wherePrefilter.WhereExpressionCompiled(change.OriginalValue))
+                                .Select(change =>
+                                {
+                                    ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
+                                    newChangeResponse.State = ChangeResponse.ChangeState.Added;
+                                    return newChangeResponse;
+                                })
+                        );
+
+                        completeChanges = collectionChanges.Where((change) => wherePrefilter.WhereExpressionCompiled(change.Value)).ToList();
+                    }
+
+                    IEnumerable<ChangeResponse> changesForWherePrefilter = oldValuesUnloadResponses
+                        .Concat(newValuesLoadResponses)
+                        .GroupBy(v => v.Value)
+                        .Select(g => g.LastOrDefault());
+
+                    completeChanges = completeChanges.Concat(changesForWherePrefilter).ToList();
+
+                    Parallel.ForEach(equalCollectionSubscriptions, subscription =>
+                    {
+                        // TODO: Handle auth of changes
+                        ChangesResponse changesResponse = new ChangesResponse()
+                        {
+                            ReferenceId = subscription.ReferenceId,
+                            Changes = completeChanges.Select(change =>
+                            {
+                                // TODO: Check if use requestSerivceProvider
+                                object value =
+                                    change.Value.GetAuthenticatedQueryModel(subscription.Connection.Information, serviceProvider);
+                                return change.CreateResponse(subscription.ReferenceId, value);
+                            }).ToList()
+                        };
+                        
+                        if (changesResponse.Changes.Any())
+                        {
+                            _ = subscription.Connection.Send(changesResponse);
+                        }
+                    });
+                    // TODO: Handle query function
+                    // TODO: Handle prefilters
+                    // TODO: Handle auth for each connection
                 });
             });
+
+            // Parallel.ForEach(connectionManager.connections.Values, connection =>
+            // {
+            //     Task.Run(() =>
+            //     {
+            //         IServiceProvider requestServiceProvider = null;
+            //
+            //         try
+            //         {
+            //             requestServiceProvider = connection.HttpContext?.RequestServices;
+            //         }
+            //         catch (ObjectDisposedException)
+            //         {
+            //             connectionManager.RemoveConnection(connection);
+            //             return;
+            //         }
+            //
+            //         requestServiceProvider ??= serviceProvider;
+            //
+            //         HandleCollections(connection, contextName, dbContextType, changes, requestServiceProvider);
+            //     });
+            // });
         }
 
         public void HandleCollections(ConnectionBase connection, string contextName, Type dbContextType,
@@ -75,27 +176,27 @@ namespace SapphireDb.Connection
             IEnumerable<IGrouping<string, CollectionSubscription>> subscriptionGroupings = connection.Subscriptions
                 .Where(s => s.ContextName == contextName)
                 .GroupBy(s => s.CollectionName);
-
+        
             foreach (IGrouping<string, CollectionSubscription> subscriptionGrouping in subscriptionGroupings)
             {
                 KeyValuePair<Type, string> property = dbContextType.GetDbSetType(subscriptionGrouping.Key);
-
+        
                 List<ChangeResponse> changesForCollection = changes
                     .Where(c => c.CollectionName == subscriptionGrouping.Key)
                     .ToList();
-
+        
                 ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
-
+        
                 IEnumerable<ChangeResponse> authenticatedChanges = changesForCollection;
-
+        
                 if (modelAttributesInfo.QueryEntryAuthAttributes.Any())
                 {
                     authenticatedChanges = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Deleted ||
                                          property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
                                              change.Value));
-
-
+        
+        
                     IEnumerable<ChangeResponse> oldLoadedNotAllowed = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
                                          !property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
@@ -108,7 +209,7 @@ namespace SapphireDb.Connection
                             newChangeResponse.State = ChangeResponse.ChangeState.Deleted;
                             return newChangeResponse;
                         });
-                    
+        
                     IEnumerable<ChangeResponse> notLoadedNewAllowed = changesForCollection
                         .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
                                          property.Key.CanQueryEntry(connection.Information, requestServiceProvider,
@@ -121,16 +222,17 @@ namespace SapphireDb.Connection
                             newChangeResponse.State = ChangeResponse.ChangeState.Added;
                             return newChangeResponse;
                         });
-
+        
                     authenticatedChanges = authenticatedChanges.Concat(oldLoadedNotAllowed).Concat(notLoadedNewAllowed);
                 }
-
+        
                 List<ChangeResponse> collectionChanges = authenticatedChanges.ToList();
-
+        
                 if (collectionChanges.Any())
                 {
                     if (modelAttributesInfo.QueryFunctionAttribute != null)
                     {
+                        // TODO: Handle change of value that was previously filtered out -> general solution for all three filters
                         if (modelAttributesInfo.QueryFunctionAttribute.FunctionBuilder != null)
                         {
                             Func<object, bool> expression =
@@ -146,13 +248,13 @@ namespace SapphireDb.Connection
                             dynamic queryFunctionExpression =
                                 ((dynamic) modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.Invoke(null,
                                     methodParameters)).Compile();
-
+        
                             collectionChanges = collectionChanges.Where(change => queryFunctionExpression(change.Value))
                                 .ToList();
                         }
                     }
                 }
-
+        
                 foreach (CollectionSubscription subscription in subscriptionGrouping)
                 {
                     Task.Run(() =>
@@ -171,23 +273,23 @@ namespace SapphireDb.Connection
             try
             {
                 bool anyCollectionChanges = collectionChanges.Any();
-
+        
                 if ((anyCollectionChanges && subscription.Prefilters.Any(prefilter =>
                          prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter || prefilter is SkipPrefilter))
                     || HasIncludePrefilterWithChange(subscription, allChanges))
                 {
                     SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, requestServiceProvider);
-
+        
                     IQueryable<object> collectionValues = db.GetCollectionValues(requestServiceProvider,
                         connection.Information, property, subscription.Prefilters);
-
+        
                     IAfterQueryPrefilter afterQueryPrefilter =
                         subscription.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
-
+        
                     if (afterQueryPrefilter != null)
                     {
                         afterQueryPrefilter.Initialize(property.Key);
-
+        
                         _ = connection.Send(new QueryResponse()
                         {
                             ReferenceId = subscription.ReferenceId,
@@ -209,14 +311,14 @@ namespace SapphireDb.Connection
                 else if (anyCollectionChanges)
                 {
                     IEnumerable<WherePrefilter> wherePrefilters = subscription.Prefilters.OfType<WherePrefilter>();
-
+        
                     List<ChangeResponse> oldValuesUnloadResponses = new List<ChangeResponse>();
                     List<ChangeResponse> newValuesLoadResponses = new List<ChangeResponse>();
-
+        
                     foreach (WherePrefilter wherePrefilter in wherePrefilters)
                     {
                         wherePrefilter.Initialize(property.Key);
-
+        
                         // Values that did change know do match the 
                         oldValuesUnloadResponses.AddRange(
                             collectionChanges
@@ -230,7 +332,7 @@ namespace SapphireDb.Connection
                                     return newChangeResponse;
                                 })
                         );
-                        
+        
                         newValuesLoadResponses.AddRange(
                             collectionChanges
                                 .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
@@ -243,18 +345,18 @@ namespace SapphireDb.Connection
                                     return newChangeResponse;
                                 })
                         );
-                        
+        
                         collectionChanges = collectionChanges
                             .Where((change) => wherePrefilter.WhereExpressionCompiled(change.Value)).ToList();
                     }
-
+        
                     IEnumerable<ChangeResponse> changesForWherePrefilter = oldValuesUnloadResponses
                         .Concat(newValuesLoadResponses)
                         .GroupBy(v => v.Value)
                         .Select(g => g.LastOrDefault());
-
+        
                     collectionChanges = collectionChanges.Concat(changesForWherePrefilter).ToList();
-                    
+        
                     ChangesResponse changesResponse = new ChangesResponse()
                     {
                         ReferenceId = subscription.ReferenceId,
@@ -265,7 +367,7 @@ namespace SapphireDb.Connection
                             return change.CreateResponse(subscription.ReferenceId, value);
                         }).ToList()
                     };
-
+        
                     if (changesResponse.Changes.Any())
                     {
                         _ = connection.Send(changesResponse);
@@ -280,7 +382,7 @@ namespace SapphireDb.Connection
                     ReferenceId = subscription.ReferenceId,
                     Prefilters = subscription.Prefilters
                 };
-
+        
                 _ = connection.Send(tempErrorCommand.CreateExceptionResponse<ResponseBase>(ex));
                 logger.LogError(
                     $"Error handling subscription '{subscription.ReferenceId}' of {subscription.CollectionName}");

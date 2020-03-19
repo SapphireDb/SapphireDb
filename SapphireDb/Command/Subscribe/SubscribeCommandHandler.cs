@@ -13,14 +13,17 @@ namespace SapphireDb.Command.Subscribe
     {
         public ConnectionBase Connection { get; set; }
         private readonly IServiceProvider serviceProvider;
+        private readonly SubscriptionManager subscriptionManager;
 
-        public SubscribeCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider)
+        public SubscribeCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider,
+            SubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
             this.serviceProvider = serviceProvider;
+            this.subscriptionManager = subscriptionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command)
         {
             ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
 
@@ -31,13 +34,14 @@ namespace SapphireDb.Command.Subscribe
                     CollectionName = command.CollectionName.ToLowerInvariant(),
                     ContextName = command.ContextName.ToLowerInvariant(),
                     ReferenceId = command.ReferenceId,
-                    Prefilters = command.Prefilters
+                    Prefilters = command.Prefilters,
+                    Connection = Connection
                 };
 
-                await Connection.AddSubscription(collectionSubscription);   
+                subscriptionManager.AddSubscription(collectionSubscription);
             }
 
-            return response;
+            return Task.FromResult(response);
         }
     }
 }
