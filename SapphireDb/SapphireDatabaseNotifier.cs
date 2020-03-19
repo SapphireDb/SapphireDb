@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
 using SapphireDb.Sync;
@@ -19,8 +20,11 @@ namespace SapphireDb
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
-            notifier.HandleChanges(changes, dbContextType);
-            syncManager.SendChanges(changes, dbContextType);
+            Task.Run(() =>
+            {
+                notifier.HandleChanges(changes, dbContextType);
+                syncManager.SendChanges(changes, dbContextType); 
+            });
         }
     }
 }

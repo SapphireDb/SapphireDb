@@ -58,6 +58,8 @@ namespace SapphireDb.Connection
                 }
             }
             
+            // TODO: Add cleanup of empty subscription groupings
+            
             readerWriterLockSlim.ExitWriteLock();
         }
 

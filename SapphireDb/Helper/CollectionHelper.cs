@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SapphireDb.Command;
@@ -11,9 +10,9 @@ namespace SapphireDb.Helper
 {
     static class CollectionHelper
     {
-        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, HttpInformation information, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
+        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
         {
-            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider, information);
+            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider);
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
@@ -38,7 +37,7 @@ namespace SapphireDb.Helper
                         "Not allowed to query values from collection");
                 }
                 
-                IQueryable<object> collectionValues = db.GetCollectionValues(serviceProvider, information, property, command.Prefilters);
+                IQueryable<object> collectionValues = db.GetCollectionValues(serviceProvider, property, command.Prefilters);
 
                 QueryResponse queryResponse = new QueryResponse()
                 {

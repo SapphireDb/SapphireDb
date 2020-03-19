@@ -177,7 +177,7 @@ namespace SapphireDb.Helper
         }
 
         public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property,
-            IServiceProvider serviceProvider, HttpInformation httpInformation)
+            IServiceProvider serviceProvider)
         {
             IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
             values = values?.AsNoTracking();
@@ -188,12 +188,12 @@ namespace SapphireDb.Helper
             {
                 if (queryFunctionAttribute.FunctionBuilder != null)
                 {
-                    values = values?.Where(queryFunctionAttribute.GetLambda(httpInformation, property.Key));
+                    values = values?.Where(queryFunctionAttribute.GetLambda(null, property.Key));
                 }
                 else if (queryFunctionAttribute.FunctionInfo != null)
                 {
                     object[] methodParameters =
-                        queryFunctionAttribute.FunctionInfo.CreateParameters(httpInformation, serviceProvider);
+                        queryFunctionAttribute.FunctionInfo.CreateParameters(null, serviceProvider);
                     Expression queryFunctionExpression =
                         (Expression) queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
 
