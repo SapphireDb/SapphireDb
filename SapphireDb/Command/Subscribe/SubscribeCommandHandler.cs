@@ -29,16 +29,8 @@ namespace SapphireDb.Command.Subscribe
 
             if (response.Error == null)
             {
-                CollectionSubscription collectionSubscription = new CollectionSubscription()
-                {
-                    CollectionName = command.CollectionName.ToLowerInvariant(),
-                    ContextName = command.ContextName.ToLowerInvariant(),
-                    ReferenceId = command.ReferenceId,
-                    Prefilters = command.Prefilters,
-                    Connection = Connection
-                };
-
-                subscriptionManager.AddSubscription(collectionSubscription);
+                subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters,
+                    Connection, command.ReferenceId);
             }
 
             return Task.FromResult(response);

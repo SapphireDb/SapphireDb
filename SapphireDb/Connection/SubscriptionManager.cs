@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 
 namespace SapphireDb.Connection
@@ -11,93 +10,185 @@ namespace SapphireDb.Connection
     public class SubscriptionManager
     {
         private readonly ReaderWriterLockSlim readerWriterLockSlim = new ReaderWriterLockSlim();
-        private readonly Dictionary<string, Dictionary<string, Dictionary<string, List<CollectionSubscription>>>> subscriptions =
-            new Dictionary<string, Dictionary<string, Dictionary<string, List<CollectionSubscription>>>>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>> subscriptions =
+            new Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>>(StringComparer.InvariantCultureIgnoreCase);
 
-        public void AddSubscription(CollectionSubscription subscription)
+        public void AddSubscription(string contextName, string collectionName, List<IPrefilterBase> prefilters,
+            ConnectionBase connection, string referenceId)
         {
-            readerWriterLockSlim.EnterWriteLock();
+            contextName = contextName.ToLowerInvariant();
+            collectionName = collectionName.ToLowerInvariant();
 
-            if (!subscriptions.TryGetValue(subscription.ContextName, out Dictionary<string, Dictionary<string, List<CollectionSubscription>>> subscriptionsOfContext))
+            try
             {
-                subscriptionsOfContext = new Dictionary<string, Dictionary<string, List<CollectionSubscription>>>(StringComparer.InvariantCultureIgnoreCase);
-                subscriptions.Add(subscription.ContextName.ToLowerInvariant(), subscriptionsOfContext);
-            }
+                readerWriterLockSlim.EnterWriteLock();
 
-            if (!subscriptionsOfContext.TryGetValue(subscription.CollectionName,
-                out Dictionary<string, List<CollectionSubscription>> subscriptionsOfCollection))
+                if (!subscriptions.TryGetValue(contextName,
+                    out Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>
+                        subscriptionsOfContext))
+                {
+                    subscriptionsOfContext =
+                        new Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>(
+                            StringComparer.InvariantCultureIgnoreCase);
+                    subscriptions.Add(contextName, subscriptionsOfContext);
+                }
+
+                if (!subscriptionsOfContext.TryGetValue(collectionName,
+                    out Dictionary<PrefilterContainer, List<CollectionSubscription>> subscriptionsOfCollection))
+                {
+                    subscriptionsOfCollection = new Dictionary<PrefilterContainer, List<CollectionSubscription>>();
+                    subscriptionsOfContext.Add(collectionName, subscriptionsOfCollection);
+                }
+
+                PrefilterContainer prefilterContainer = new PrefilterContainer(prefilters);
+
+                if (!subscriptionsOfCollection.TryGetValue(prefilterContainer,
+                    out List<CollectionSubscription> equalCollectionSubscriptions))
+                {
+                    equalCollectionSubscriptions = new List<CollectionSubscription>();
+                    subscriptionsOfCollection.Add(prefilterContainer, equalCollectionSubscriptions);
+                }
+
+                CollectionSubscription subscription = new CollectionSubscription()
+                {
+                    Connection = connection,
+                    ReferenceId = referenceId
+                };
+
+                equalCollectionSubscriptions.Add(subscription);
+            }
+            finally
             {
-                subscriptionsOfCollection = new Dictionary<string, List<CollectionSubscription>>();
-                subscriptionsOfContext.Add(subscription.CollectionName.ToLowerInvariant(), subscriptionsOfCollection);
+                readerWriterLockSlim.ExitWriteLock();
             }
-            
-            if (!subscriptionsOfCollection.TryGetValue(subscription.PrefilterHash,
-                out List<CollectionSubscription> equalCollectionSubscriptions))
-            {
-                equalCollectionSubscriptions = new List<CollectionSubscription>();
-                subscriptionsOfCollection.Add(subscription.PrefilterHash, equalCollectionSubscriptions);
-            }
-
-            equalCollectionSubscriptions.Add(subscription);
-
-            readerWriterLockSlim.ExitWriteLock();
         }
 
         public void RemoveSubscription(string referenceId)
         {
-            readerWriterLockSlim.EnterWriteLock();
-            
-            foreach (var contextSubscriptions in subscriptions)
+            try
             {
-                foreach (var collectionSubscriptions in contextSubscriptions.Value)
+                readerWriterLockSlim.EnterWriteLock();
+
+                foreach (var contextSubscriptions in subscriptions)
                 {
-                    foreach (var equalSubscriptions in collectionSubscriptions.Value)
+                    foreach (var collectionSubscriptions in contextSubscriptions.Value)
                     {
-                        equalSubscriptions.Value.RemoveAll(subscription => subscription.ReferenceId == referenceId);
+                        foreach (var equalSubscriptions in collectionSubscriptions.Value)
+                        {
+                            equalSubscriptions.Value.RemoveAll(subscription => subscription.ReferenceId == referenceId);
+                            CleanupSubscriptionGrouping(equalSubscriptions, collectionSubscriptions,
+                                contextSubscriptions);
+                        }
                     }
                 }
             }
-            
-            // TODO: Add cleanup of empty subscription groupings
-            
-            readerWriterLockSlim.ExitWriteLock();
+            finally
+            {
+                readerWriterLockSlim.ExitWriteLock();
+            }
         }
 
         public void RemoveConnectionSubscriptions(Guid connectionId)
         {
-            readerWriterLockSlim.EnterWriteLock();
-            
-            foreach (var contextSubscriptions in subscriptions)
+            try
             {
-                foreach (var collectionSubscriptions in contextSubscriptions.Value)
+                readerWriterLockSlim.EnterWriteLock();
+
+                foreach (var contextSubscriptions in subscriptions)
                 {
-                    foreach (var equalSubscriptions in collectionSubscriptions.Value)
+                    foreach (var collectionSubscriptions in contextSubscriptions.Value)
                     {
-                        equalSubscriptions.Value.RemoveAll(subscription => subscription.Connection.Id == connectionId);
+                        foreach (var equalSubscriptions in collectionSubscriptions.Value)
+                        {
+                            equalSubscriptions.Value.RemoveAll(subscription =>
+                                subscription.Connection.Id == connectionId);
+                            CleanupSubscriptionGrouping(equalSubscriptions, collectionSubscriptions,
+                                contextSubscriptions);
+                        }
                     }
                 }
             }
-            
-            readerWriterLockSlim.ExitWriteLock();
-        }
-        
-        public Dictionary<string, List<CollectionSubscription>> GetSubscriptions(string contextName, string collectionName)
-        {
-            readerWriterLockSlim.EnterReadLock();
-            
-            if (subscriptions.TryGetValue(contextName,
-                out Dictionary<string, Dictionary<string, List<CollectionSubscription>>> subscriptionsOfContext))
+            finally
             {
-                if (subscriptionsOfContext.TryGetValue(collectionName,
-                    out Dictionary<string, List<CollectionSubscription>> subscriptionsOfCollection))
+                readerWriterLockSlim.ExitWriteLock();
+            }
+        }
+
+        public Dictionary<PrefilterContainer, List<CollectionSubscription>> GetSubscriptions(string contextName, string collectionName)
+        {
+            try
+            {
+                readerWriterLockSlim.EnterReadLock();
+            
+                if (subscriptions.TryGetValue(contextName,
+                    out Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>> subscriptionsOfContext))
                 {
-                    readerWriterLockSlim.ExitReadLock();
-                    return subscriptionsOfCollection;
+                    if (subscriptionsOfContext.TryGetValue(collectionName,
+                        out Dictionary<PrefilterContainer, List<CollectionSubscription>> subscriptionsOfCollection))
+                    {
+                        return subscriptionsOfCollection;
+                    }
                 }
             }
-            
-            readerWriterLockSlim.ExitReadLock();
+            finally
+            {
+                readerWriterLockSlim.ExitReadLock();
+            }
+
             return null;
+        }
+
+        public List<CollectionSubscriptionsContainer> GetSubscriptionsWithInclude(string contextName, string collectionName)
+        {
+            try
+            {
+                readerWriterLockSlim.EnterReadLock();
+
+                if (!subscriptions.TryGetValue(contextName, out var contextSubscriptions))
+                {
+                    return null;
+                }
+
+                var includeSubscriptions = contextSubscriptions
+                    .Select(collectionSubscriptions =>
+                    {
+                        return new CollectionSubscriptionsContainer()
+                        {
+                            CollectionName = collectionSubscriptions.Key,
+                            Subscriptions = collectionSubscriptions.Value
+                                .Where(equalSubscriptions => equalSubscriptions.Key.HasAffectedIncludePrefilter(collectionName))
+                        };
+                    })
+                    .Where(container => container.Subscriptions.Any())
+                    .ToList();
+                
+                return includeSubscriptions;
+            }
+            finally
+            {
+                readerWriterLockSlim.ExitReadLock();
+            }
+        }
+        
+        private void CleanupSubscriptionGrouping(KeyValuePair<PrefilterContainer, List<CollectionSubscription>> equalSubscriptions,
+            KeyValuePair<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>> collectionSubscriptions,
+            KeyValuePair<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>> contextSubscriptions)
+        {
+            if (!equalSubscriptions.Value.Any())
+            {
+                collectionSubscriptions.Value.Remove(equalSubscriptions.Key);
+                equalSubscriptions.Key.Dispose();
+
+                if (!collectionSubscriptions.Value.Keys.Any())
+                {
+                    contextSubscriptions.Value.Remove(collectionSubscriptions.Key);
+
+                    if (!contextSubscriptions.Value.Keys.Any())
+                    {
+                        subscriptions.Remove(contextSubscriptions.Key);
+                    }
+                }
+            }
         }
     }
 }

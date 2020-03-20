@@ -18,7 +18,6 @@ namespace SapphireDb.Connection
         public void Init(HttpContext context)
         {
             Id = Guid.NewGuid();
-            Subscriptions = new List<CollectionSubscription>();
             MessageSubscriptions = new Dictionary<string, string>();
             HttpContext = context;
             Information = new HttpInformation(context, Type);
@@ -31,9 +30,7 @@ namespace SapphireDb.Connection
         public HttpInformation Information { get; set; }
 
         public HttpContext HttpContext { get; set; }
-
-        public List<CollectionSubscription> Subscriptions { get; set; }
-
+        
         public Dictionary<string, string> MessageSubscriptions { get; set; }
 
         public SemaphoreSlim Lock { get; } = new SemaphoreSlim(1, 1);
@@ -44,7 +41,7 @@ namespace SapphireDb.Connection
 
         public void Dispose()
         {
-            Subscriptions.ForEach(s => s.Dispose());
+            
         }
 
         public async Task AddMessageSubscription(SubscribeMessageCommand command)

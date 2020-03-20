@@ -33,5 +33,7 @@ namespace WebUI.Data
         public DbSet<EventDemoDerived> EventDerivedDemos { get; set; }
         
         public DbSet<ValidationDemo> ValidationDemos { get; set; }
+
+        public DbSet<QueryFunctionDemo> QueryFunctionDemos { get; set; }
     }
 }

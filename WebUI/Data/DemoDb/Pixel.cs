@@ -19,9 +19,9 @@ namespace WebUI.Data.DemoDb
 
         public int Y { get; set; }
 
-        public static Expression<Func<Pixel, bool>> GetQuery()
-        {
-            return pixel => pixel.X < 5 && pixel.Y < 5;
-        }
+        // public static Expression<Func<Pixel, bool>> GetQuery()
+        // {
+        //     return pixel => pixel.X < 5 && pixel.Y < 5;
+        // }
     }
 }

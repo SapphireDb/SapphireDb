@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using SapphireDb.Attributes;
-using SapphireDb.Command;
 using SapphireDb.Command.Query;
 using SapphireDb.Command.Subscribe;
-using SapphireDb.Connection.Websocket;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
@@ -35,15 +26,14 @@ namespace SapphireDb.Connection
             SubscriptionManager subscriptionManager)
         {
             this.dbContextAccessor = dbContextAccessor;
-            // Test if working
             this.serviceProvider = serviceProvider.CreateScope().ServiceProvider;
-            // this.serviceProvider = serviceProvider;
             this.contextTypeContainer = contextTypeContainer;
             this.subscriptionManager = subscriptionManager;
         }
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
+            Guid handlingId = Guid.NewGuid();
             string contextName = contextTypeContainer.GetName(dbContextType);
 
             Parallel.ForEach(changes.GroupBy(change => change.CollectionName),
@@ -51,59 +41,38 @@ namespace SapphireDb.Connection
                 {
                     Task.Run(() =>
                     {
-                        HandleChangesOfCollection(dbContextType, collectionChanges, contextName, changes);
+                        HandleChangesOfCollection(dbContextType, collectionChanges, contextName, changes,
+                            handlingId);
+                    });
+
+                    Task.Run(() =>
+                    {
+                        HandleSubscriptionsWithAffectedInclude(dbContextType, contextName, collectionChanges,
+                            handlingId);
                     });
                 });
-
-            // Parallel.ForEach(connectionManager.connections.Values, connection =>
-            // {
-            //     Task.Run(() =>
-            //     {
-            //         IServiceProvider requestServiceProvider = null;
-            //
-            //         try
-            //         {
-            //             requestServiceProvider = connection.HttpContext?.RequestServices;
-            //         }
-            //         catch (ObjectDisposedException)
-            //         {
-            //             connectionManager.RemoveConnection(connection);
-            //             return;
-            //         }
-            //
-            //         requestServiceProvider ??= serviceProvider;
-            //
-            //         HandleCollections(connection, contextName, dbContextType, changes, requestServiceProvider);
-            //     });
-            // });
         }
 
         private void HandleChangesOfCollection(Type dbContextType, IGrouping<string, ChangeResponse> collectionChanges,
-            string contextName, List<ChangeResponse> changes)
+            string contextName, List<ChangeResponse> changes, Guid handlingId)
         {
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(collectionChanges.Key);
             ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
-            Dictionary<string, List<CollectionSubscription>> equalCollectionSubscriptionsGrouping =
+            Dictionary<PrefilterContainer, List<CollectionSubscription>> equalCollectionSubscriptionsGrouping =
                 subscriptionManager.GetSubscriptions(contextName, collectionChanges.Key);
-
-            // TODO: Group subscriptions by prefilters directly and store prefilters only in Grouping instead of subscription
 
             if (equalCollectionSubscriptionsGrouping == null)
             {
                 return;
             }
 
-            Parallel.ForEach(equalCollectionSubscriptionsGrouping.Values, equalCollectionSubscriptions =>
+            Parallel.ForEach(equalCollectionSubscriptionsGrouping, equalCollectionSubscriptions =>
             {
-                if (!equalCollectionSubscriptions.Any())
-                {
-                    return;
-                }
-
                 Task.Run(() =>
                 {
-                    HandleEqualCollectionSubscriptions(equalCollectionSubscriptions, collectionChanges, dbContextType,
-                        changes, property, modelAttributesInfo); 
+                    HandleEqualCollectionSubscriptions(equalCollectionSubscriptions.Key,
+                        equalCollectionSubscriptions.Value, collectionChanges, dbContextType, changes, property,
+                        modelAttributesInfo, handlingId);
                 });
 
                 // TODO: Test query function
@@ -111,27 +80,46 @@ namespace SapphireDb.Connection
             });
         }
 
-        private void HandleEqualCollectionSubscriptions(List<CollectionSubscription> equalCollectionSubscriptions,
-            IGrouping<string, ChangeResponse> collectionChanges, Type dbContextType, List<ChangeResponse> changes,
-            KeyValuePair<Type, string> property, ModelAttributesInfo modelAttributesInfo)
+        private void HandleSubscriptionsWithAffectedInclude(Type dbContextType, string contextName,
+            IGrouping<string, ChangeResponse> collectionChanges, Guid handlingId)
         {
-            CollectionSubscription firstCollectionSubscription = equalCollectionSubscriptions.FirstOrDefault();
+            List<CollectionSubscriptionsContainer> equalCollectionSubscriptions =
+                subscriptionManager.GetSubscriptionsWithInclude(contextName, collectionChanges.Key);
 
-            if (firstCollectionSubscription == null)
+            if (equalCollectionSubscriptions == null)
             {
                 return;
             }
 
-            List<IPrefilterBase> prefilters = firstCollectionSubscription.Prefilters;
+            Parallel.ForEach(equalCollectionSubscriptions, collectionSubscriptions =>
+            {
+                Task.Run(() =>
+                {
+                    KeyValuePair<Type, string> property =
+                        dbContextType.GetDbSetType(collectionSubscriptions.CollectionName);
+
+                    Parallel.ForEach(collectionSubscriptions.Subscriptions, subscriptionGroupings =>
+                    {
+                        HandleReloadOfCollectionData(dbContextType, property, subscriptionGroupings.Key,
+                            subscriptionGroupings.Value, handlingId);
+                    });
+                });
+            });
+        }
+
+        private void HandleEqualCollectionSubscriptions(PrefilterContainer prefilterContainer,
+            List<CollectionSubscription> equalCollectionSubscriptions,
+            IGrouping<string, ChangeResponse> collectionChanges, Type dbContextType, List<ChangeResponse> changes,
+            KeyValuePair<Type, string> property, ModelAttributesInfo modelAttributesInfo, Guid handlingId)
+        {
+            List<IPrefilterBase> prefilters = prefilterContainer.Prefilters;
 
             if (prefilters.Any(prefilter =>
-                    prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter ||
-                    prefilter is SkipPrefilter)
-                || HasIncludePrefilterWithChange(prefilters, collectionChanges.Key, changes))
+                prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter ||
+                prefilter is SkipPrefilter || prefilter is IncludePrefilter))
             {
-                // TODO: Get all subscriptions of same context with include prefilter
-
-                HandleReloadOfCollectionData(dbContextType, property, prefilters, equalCollectionSubscriptions);
+                HandleReloadOfCollectionData(dbContextType, property, prefilterContainer, equalCollectionSubscriptions,
+                    handlingId);
             }
             else
             {
@@ -153,8 +141,6 @@ namespace SapphireDb.Connection
 
             Parallel.ForEach(equalCollectionSubscriptions, subscription =>
             {
-                // TODO: Check if use of requestServiceProvider is required
-
                 Task.Run(() =>
                 {
                     List<ChangeResponse> connectionChanges =
@@ -183,77 +169,68 @@ namespace SapphireDb.Connection
         }
 
         private void HandleReloadOfCollectionData(Type dbContextType, KeyValuePair<Type, string> property,
-            List<IPrefilterBase> prefilters, List<CollectionSubscription> equalCollectionSubscriptions)
+            PrefilterContainer prefilterContainer,
+            List<CollectionSubscription> equalCollectionSubscriptions, Guid handlingId)
         {
-            SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, serviceProvider);
-
-            IQueryable<object> collectionValues =
-                db.GetCollectionValues(serviceProvider, property, prefilters);
-
-            IAfterQueryPrefilter afterQueryPrefilter =
-                prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
-
-            if (afterQueryPrefilter != null)
+            try
             {
-                afterQueryPrefilter.Initialize(property.Key);
-                object result = afterQueryPrefilter.Execute(collectionValues);
-
-                Parallel.ForEach(equalCollectionSubscriptions, subscription =>
+                if (!prefilterContainer.StartHandling(handlingId))
                 {
-                    Task.Run(() =>
+                    return;
+                }
+
+                SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, serviceProvider);
+
+                IQueryable<object> collectionValues =
+                    db.GetCollectionValues(serviceProvider, property, prefilterContainer.Prefilters);
+
+                IAfterQueryPrefilter afterQueryPrefilter =
+                    prefilterContainer.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+
+                if (afterQueryPrefilter != null)
+                {
+                    afterQueryPrefilter.Initialize(property.Key);
+                    object result = afterQueryPrefilter.Execute(collectionValues);
+
+                    Parallel.ForEach(equalCollectionSubscriptions, subscription =>
                     {
-                        _ = subscription.Connection.Send(new QueryResponse()
+                        Task.Run(() =>
                         {
-                            ReferenceId = subscription.ReferenceId,
-                            Result = result
+                            _ = subscription.Connection.Send(new QueryResponse()
+                            {
+                                ReferenceId = subscription.ReferenceId,
+                                Result = result
+                            });
                         });
                     });
-                });
-            }
-            else
-            {
-                List<object> values = collectionValues.ToList();
-
-                Parallel.ForEach(equalCollectionSubscriptions, subscription =>
+                }
+                else
                 {
-                    Task.Run(() =>
+                    List<object> values = collectionValues.ToList();
+
+                    Parallel.ForEach(equalCollectionSubscriptions, subscription =>
                     {
-                        _ = subscription.Connection.Send(new QueryResponse()
+                        Task.Run(() =>
                         {
-                            ReferenceId = subscription.ReferenceId,
-                            Result = values
-                                .Where(v => property.Key.CanQueryEntry(subscription.Connection.Information,
-                                    serviceProvider, v))
-                                .Select(v =>
-                                    v.GetAuthenticatedQueryModel(subscription.Connection.Information,
-                                        serviceProvider))
-                                .ToList()
+                            _ = subscription.Connection.Send(new QueryResponse()
+                            {
+                                ReferenceId = subscription.ReferenceId,
+                                Result = values
+                                    .Where(v => property.Key.CanQueryEntry(subscription.Connection.Information,
+                                        serviceProvider, v))
+                                    .Select(v =>
+                                        v.GetAuthenticatedQueryModel(subscription.Connection.Information,
+                                            serviceProvider))
+                                    .ToList()
+                            });
                         });
                     });
-                });
+                }
             }
-        }
-
-        private bool HasIncludePrefilterWithChange(List<IPrefilterBase> prefilters, string collectionName,
-            List<ChangeResponse> allChanges)
-        {
-            List<IncludePrefilter> includePrefilters = prefilters.OfType<IncludePrefilter>().ToList();
-
-            if (!includePrefilters.Any())
+            finally
             {
-                return false;
+                prefilterContainer.FinishHandling();
             }
-
-            List<string> affectedCollections = includePrefilters
-                .SelectMany(prefilter => prefilter.AffectedCollectionNames)
-                .Distinct()
-                .ToList();
-
-            return allChanges.Any(change =>
-                       change.CollectionName.Equals(collectionName,
-                           StringComparison.InvariantCultureIgnoreCase)) ||
-                   affectedCollections.Any(cName => allChanges.Any(change =>
-                       change.CollectionName.Equals(cName, StringComparison.InvariantCultureIgnoreCase)));
         }
     }
 }
