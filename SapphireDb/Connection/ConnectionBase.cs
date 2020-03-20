@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SapphireDb.Command;
 using SapphireDb.Command.SubscribeMessage;
-using SapphireDb.Command.Unsubscribe;
 using SapphireDb.Command.UnsubscribeMessage;
 using SapphireDb.Models;
 

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using SapphireDb.Connection;
-using SapphireDb.Internal.Prefilter;
+﻿using SapphireDb.Connection;
 
 namespace SapphireDb.Models
 {
