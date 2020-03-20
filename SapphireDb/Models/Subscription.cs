@@ -2,7 +2,7 @@
 
 namespace SapphireDb.Models
 {
-    public class CollectionSubscription
+    public class Subscription
     {
         public string ReferenceId { get; set; }
         

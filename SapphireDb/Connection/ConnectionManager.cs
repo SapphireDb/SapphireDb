@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +12,14 @@ namespace SapphireDb.Connection
     public class ConnectionManager
     {
         private readonly SubscriptionManager subscriptionManager;
+        private readonly MessageSubscriptionManager messageSubscriptionManager;
         public ConcurrentDictionary<Guid, ConnectionBase> connections;
 
-        public ConnectionManager(SubscriptionManager subscriptionManager)
+        public ConnectionManager(SubscriptionManager subscriptionManager,
+            MessageSubscriptionManager messageSubscriptionManager)
         {
             this.subscriptionManager = subscriptionManager;
+            this.messageSubscriptionManager = messageSubscriptionManager;
             connections = new ConcurrentDictionary<Guid, ConnectionBase>();
         }
 
@@ -31,14 +33,16 @@ namespace SapphireDb.Connection
             Guid connectionId = connection.Id;
             connections.TryRemove(connectionId, out _);
             subscriptionManager.RemoveConnectionSubscriptions(connectionId);
+            messageSubscriptionManager.RemoveConnectionSubscriptions(connectionId);
             connection.Dispose();
         }
 
         public void CheckExistingConnections()
         {
-            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in connections.Where(c => c.Value is PollConnection))
+            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in connections.Where(c =>
+                c.Value is PollConnection))
             {
-                PollConnection pollConnection = (PollConnection)connectionValue.Value;
+                PollConnection pollConnection = (PollConnection) connectionValue.Value;
 
                 if (pollConnection.lastPoll < DateTime.UtcNow.AddMinutes(-2d))
                 {

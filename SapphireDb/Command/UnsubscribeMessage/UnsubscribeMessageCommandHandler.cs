@@ -5,20 +5,23 @@ using SapphireDb.Models;
 
 namespace SapphireDb.Command.UnsubscribeMessage
 {
-    class UnsubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeMessageCommand>, INeedsConnection
+    class UnsubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<UnsubscribeMessageCommand>,
+        INeedsConnection
     {
+        private readonly MessageSubscriptionManager subscriptionManager;
         public ConnectionBase Connection { get; set; }
 
-        public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor)
+        public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor,
+            MessageSubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
-
+            this.subscriptionManager = subscriptionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, UnsubscribeMessageCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, UnsubscribeMessageCommand command)
         {
-            await Connection.RemoveMessageSubscription(command);
-            return null;
+            subscriptionManager.RemoveSubscription(command.ReferenceId);
+            return Task.FromResult<ResponseBase>(null);
         }
     }
 }

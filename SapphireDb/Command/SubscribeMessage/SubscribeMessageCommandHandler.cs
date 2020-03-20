@@ -10,21 +10,24 @@ namespace SapphireDb.Command.SubscribeMessage
     {
         public ConnectionBase Connection { get; set; }
         private SapphireDatabaseOptions options;
+        private readonly MessageSubscriptionManager subscriptionManager;
 
-        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, SapphireDatabaseOptions options)
+        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, SapphireDatabaseOptions options,
+            MessageSubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
             this.options = options;
+            this.subscriptionManager = subscriptionManager;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command)
         {
             if (!options.IsAllowedForTopicSubscribe(context, command.Topic))
             {
-                return command.CreateExceptionResponse<ResponseBase>("Not allowed to subscribe this topic");
+                return Task.FromResult(command.CreateExceptionResponse<ResponseBase>("Not allowed to subscribe this topic"));
             }
 
-            await Connection.AddMessageSubscription(command);
+            subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);
 
             if (SapphireMessageSender.RetainedTopicMessages.TryGetValue(command.Topic, out object retainedMessage))
             {
@@ -34,8 +37,8 @@ namespace SapphireDb.Command.SubscribeMessage
                     Message = retainedMessage
                 });
             }
-            
-            return null;
+
+            return Task.FromResult<ResponseBase>(null);
         }
     }
 }

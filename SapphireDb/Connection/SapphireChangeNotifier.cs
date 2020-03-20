@@ -58,7 +58,7 @@ namespace SapphireDb.Connection
         {
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(collectionChanges.Key);
             ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
-            Dictionary<PrefilterContainer, List<CollectionSubscription>> equalCollectionSubscriptionsGrouping =
+            Dictionary<PrefilterContainer, List<Subscription>> equalCollectionSubscriptionsGrouping =
                 subscriptionManager.GetSubscriptions(contextName, collectionChanges.Key);
 
             if (equalCollectionSubscriptionsGrouping == null)
@@ -105,7 +105,7 @@ namespace SapphireDb.Connection
         }
 
         private void HandleEqualCollectionSubscriptions(PrefilterContainer prefilterContainer,
-            List<CollectionSubscription> equalCollectionSubscriptions,
+            List<Subscription> equalCollectionSubscriptions,
             IGrouping<string, ChangeResponse> collectionChanges, Type dbContextType, List<ChangeResponse> changes,
             KeyValuePair<Type, string> property, ModelAttributesInfo modelAttributesInfo, Guid handlingId)
         {
@@ -127,7 +127,7 @@ namespace SapphireDb.Connection
 
         private void HandleRelativeChangesOfCollection(ModelAttributesInfo modelAttributesInfo,
             KeyValuePair<Type, string> property, IGrouping<string, ChangeResponse> collectionChanges,
-            List<IPrefilterBase> prefilters, List<CollectionSubscription> equalCollectionSubscriptions)
+            List<IPrefilterBase> prefilters, List<Subscription> equalCollectionSubscriptions)
         {
             List<ChangeResponse> completeChanges = CollectionChangeHelper.CalculateRelativeChanges(prefilters,
                 collectionChanges.ToList(), property);
@@ -163,7 +163,7 @@ namespace SapphireDb.Connection
 
         private void HandleReloadOfCollectionData(Type dbContextType, KeyValuePair<Type, string> property,
             PrefilterContainer prefilterContainer,
-            List<CollectionSubscription> equalCollectionSubscriptions, Guid handlingId)
+            List<Subscription> equalCollectionSubscriptions, Guid handlingId)
         {
             try
             {

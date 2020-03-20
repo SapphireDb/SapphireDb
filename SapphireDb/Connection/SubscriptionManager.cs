@@ -10,8 +10,8 @@ namespace SapphireDb.Connection
     public class SubscriptionManager
     {
         private readonly ReaderWriterLockSlim readerWriterLockSlim = new ReaderWriterLockSlim();
-        private readonly Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>> subscriptions =
-            new Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>> subscriptions =
+            new Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>>(StringComparer.InvariantCultureIgnoreCase);
 
         public void AddSubscription(string contextName, string collectionName, List<IPrefilterBase> prefilters,
             ConnectionBase connection, string referenceId)
@@ -24,32 +24,32 @@ namespace SapphireDb.Connection
                 readerWriterLockSlim.EnterWriteLock();
 
                 if (!subscriptions.TryGetValue(contextName,
-                    out Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>
+                    out Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>
                         subscriptionsOfContext))
                 {
                     subscriptionsOfContext =
-                        new Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>(
+                        new Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>(
                             StringComparer.InvariantCultureIgnoreCase);
                     subscriptions.Add(contextName, subscriptionsOfContext);
                 }
 
                 if (!subscriptionsOfContext.TryGetValue(collectionName,
-                    out Dictionary<PrefilterContainer, List<CollectionSubscription>> subscriptionsOfCollection))
+                    out Dictionary<PrefilterContainer, List<Subscription>> subscriptionsOfCollection))
                 {
-                    subscriptionsOfCollection = new Dictionary<PrefilterContainer, List<CollectionSubscription>>();
+                    subscriptionsOfCollection = new Dictionary<PrefilterContainer, List<Subscription>>();
                     subscriptionsOfContext.Add(collectionName, subscriptionsOfCollection);
                 }
 
                 PrefilterContainer prefilterContainer = new PrefilterContainer(prefilters);
 
                 if (!subscriptionsOfCollection.TryGetValue(prefilterContainer,
-                    out List<CollectionSubscription> equalCollectionSubscriptions))
+                    out List<Subscription> equalCollectionSubscriptions))
                 {
-                    equalCollectionSubscriptions = new List<CollectionSubscription>();
+                    equalCollectionSubscriptions = new List<Subscription>();
                     subscriptionsOfCollection.Add(prefilterContainer, equalCollectionSubscriptions);
                 }
 
-                CollectionSubscription subscription = new CollectionSubscription()
+                Subscription subscription = new Subscription()
                 {
                     Connection = connection,
                     ReferenceId = referenceId
@@ -114,17 +114,17 @@ namespace SapphireDb.Connection
             }
         }
 
-        public Dictionary<PrefilterContainer, List<CollectionSubscription>> GetSubscriptions(string contextName, string collectionName)
+        public Dictionary<PrefilterContainer, List<Subscription>> GetSubscriptions(string contextName, string collectionName)
         {
             try
             {
                 readerWriterLockSlim.EnterReadLock();
             
                 if (subscriptions.TryGetValue(contextName,
-                    out Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>> subscriptionsOfContext))
+                    out Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>> subscriptionsOfContext))
                 {
                     if (subscriptionsOfContext.TryGetValue(collectionName,
-                        out Dictionary<PrefilterContainer, List<CollectionSubscription>> subscriptionsOfCollection))
+                        out Dictionary<PrefilterContainer, List<Subscription>> subscriptionsOfCollection))
                     {
                         return subscriptionsOfCollection;
                     }
@@ -170,9 +170,9 @@ namespace SapphireDb.Connection
             }
         }
         
-        private void CleanupSubscriptionGrouping(KeyValuePair<PrefilterContainer, List<CollectionSubscription>> equalSubscriptions,
-            KeyValuePair<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>> collectionSubscriptions,
-            KeyValuePair<string, Dictionary<string, Dictionary<PrefilterContainer, List<CollectionSubscription>>>> contextSubscriptions)
+        private void CleanupSubscriptionGrouping(KeyValuePair<PrefilterContainer, List<Subscription>> equalSubscriptions,
+            KeyValuePair<string, Dictionary<PrefilterContainer, List<Subscription>>> collectionSubscriptions,
+            KeyValuePair<string, Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>> contextSubscriptions)
         {
             if (!equalSubscriptions.Value.Any())
             {

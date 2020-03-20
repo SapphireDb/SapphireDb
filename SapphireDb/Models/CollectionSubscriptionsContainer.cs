@@ -6,6 +6,6 @@ namespace SapphireDb.Models
     {
         public string CollectionName { get; set; }
 
-        public IEnumerable<KeyValuePair<PrefilterContainer, List<CollectionSubscription>>> Subscriptions { get; set; }
+        public IEnumerable<KeyValuePair<PrefilterContainer, List<Subscription>>> Subscriptions { get; set; }
     }
 }

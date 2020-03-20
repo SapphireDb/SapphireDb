@@ -18,11 +18,14 @@ namespace SapphireDb.Connection
         
         private readonly ConnectionManager connectionManager;
         private readonly SyncManager syncManager;
+        private readonly MessageSubscriptionManager messageSubscriptionManager;
 
-        public SapphireMessageSender(ConnectionManager connectionManager, SyncManager syncManager)
+        public SapphireMessageSender(ConnectionManager connectionManager, SyncManager syncManager,
+            MessageSubscriptionManager messageSubscriptionManager)
         {
             this.connectionManager = connectionManager;
             this.syncManager = syncManager;
+            this.messageSubscriptionManager = messageSubscriptionManager;
         }
 
         public void Send(object message, string filter = null, object[] filterParameters = null, bool sync = true)
@@ -49,19 +52,22 @@ namespace SapphireDb.Connection
 
             Parallel.ForEach(connectionManager.connections.Values, connection =>
             {
-                if (filterFunctionNoParameters != null && !filterFunctionNoParameters(connection.Information))
+                Task.Run(() =>
                 {
-                    return;
-                }
+                    if (filterFunctionNoParameters != null && !filterFunctionNoParameters(connection.Information))
+                    {
+                        return;
+                    }
                 
-                if (filterFunctionParameters != null && !filterFunctionParameters(connection.Information, filterParameters))
-                {
-                    return;
-                }
+                    if (filterFunctionParameters != null && !filterFunctionParameters(connection.Information, filterParameters))
+                    {
+                        return;
+                    }
                 
-                _ = connection.Send(new MessageResponse()
-                {
-                    Data = message
+                    _ = connection.Send(new MessageResponse()
+                    {
+                        Data = message
+                    });
                 });
             });
         }
@@ -78,21 +84,23 @@ namespace SapphireDb.Connection
                 syncManager.SendPublish(topic, message, retain);
             }
 
-            Parallel.ForEach(connectionManager.connections.Values, connection =>
-            {
-                if (!connection.MessageSubscriptions.ContainsValue(topic))
-                {
-                    return;
-                }
+            List<Subscription> topicSubscriptions = messageSubscriptionManager.GetTopicSubscriptions(topic);
 
-                foreach (KeyValuePair<string,string> subscription in connection.MessageSubscriptions.Where(s => s.Value == topic))
+            if (topicSubscriptions == null)
+            {
+                return;
+            }
+            
+            Parallel.ForEach(topicSubscriptions, subscription =>
+            {
+                Task.Run(() =>
                 {
-                    _ = connection.Send(new TopicResponse()
+                    _ = subscription.Connection.Send(new TopicResponse()
                     {
-                        ReferenceId = subscription.Key,
+                        ReferenceId = subscription.ReferenceId,
                         Message = message
-                    });   
-                }
+                    });     
+                });
             });
         }
     }
