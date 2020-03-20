@@ -8,24 +8,11 @@ namespace WebUI.Data.Models
 {
     [CreateEvent("BeforeCreate")]
     [UpdateEvent("BeforeUpdate")]
-    [QueryFunction("QueryFunction")]
     public class Message : Base
     {
         public Message()
         {
             CreatedOn = DateTime.UtcNow;
-        }
-
-        public static Func<Message, bool> QueryFunction(HttpContext context)
-        {
-            string userId = context.User.Claims.FirstOrDefault(cl => cl.Type == "Id")?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return (m) => false;
-            }
-
-            return (m) => m.UserId == userId || m.ToId == userId;
         }
 
         public void BeforeCreate(HttpInformation context)

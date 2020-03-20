@@ -10,9 +10,9 @@ namespace SapphireDb.Helper
 {
     static class CollectionHelper
     {
-        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, IServiceProvider serviceProvider, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
+        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
         {
-            IQueryable<object> collectionSet = db.GetValues(property, serviceProvider);
+            IQueryable<object> collectionSet = db.GetValues(property);
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
@@ -37,7 +37,7 @@ namespace SapphireDb.Helper
                         "Not allowed to query values from collection");
                 }
                 
-                IQueryable<object> collectionValues = db.GetCollectionValues(serviceProvider, property, command.Prefilters);
+                IQueryable<object> collectionValues = db.GetCollectionValues(property, command.Prefilters);
 
                 QueryResponse queryResponse = new QueryResponse()
                 {

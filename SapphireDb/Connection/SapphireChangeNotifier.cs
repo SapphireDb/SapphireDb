@@ -74,9 +74,6 @@ namespace SapphireDb.Connection
                         equalCollectionSubscriptions.Value, collectionChanges, dbContextType, changes, property,
                         modelAttributesInfo, handlingId);
                 });
-
-                // TODO: Test query function
-                // TODO: Test authentication
             });
         }
 
@@ -132,12 +129,8 @@ namespace SapphireDb.Connection
             KeyValuePair<Type, string> property, IGrouping<string, ChangeResponse> collectionChanges,
             List<IPrefilterBase> prefilters, List<CollectionSubscription> equalCollectionSubscriptions)
         {
-            List<ChangeResponse> completeChanges =
-                CollectionChangeHelper.CalculateRelativeChangesWithQueryFunction(modelAttributesInfo,
-                    property, collectionChanges.ToList(), serviceProvider);
-
-            completeChanges = CollectionChangeHelper.CalculateRelativeChanges(prefilters, completeChanges,
-                property);
+            List<ChangeResponse> completeChanges = CollectionChangeHelper.CalculateRelativeChanges(prefilters,
+                collectionChanges.ToList(), property);
 
             Parallel.ForEach(equalCollectionSubscriptions, subscription =>
             {
@@ -182,7 +175,7 @@ namespace SapphireDb.Connection
                 SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, serviceProvider);
 
                 IQueryable<object> collectionValues =
-                    db.GetCollectionValues(serviceProvider, property, prefilterContainer.Prefilters);
+                    db.GetCollectionValues(property, prefilterContainer.Prefilters);
 
                 IAfterQueryPrefilter afterQueryPrefilter =
                     prefilterContainer.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();

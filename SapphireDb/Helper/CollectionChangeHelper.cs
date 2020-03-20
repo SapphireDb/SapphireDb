@@ -48,8 +48,7 @@ namespace SapphireDb.Helper
                             return newChangeResponse;
                         })
                 );
-
-                // TODO: Test with multiple filters 
+                
                 completeChanges = completeChanges
                     .Where((change) =>
                         wherePrefilter.WhereExpressionCompiled(change.Value) &&
@@ -64,69 +63,6 @@ namespace SapphireDb.Helper
                 .Select(g => g.LastOrDefault());
 
             return completeChanges.Concat(changesForWherePrefilter).ToList();
-        }
-
-        public static List<ChangeResponse> CalculateRelativeChangesWithQueryFunction(
-            ModelAttributesInfo modelAttributesInfo, KeyValuePair<Type, string> property,
-            List<ChangeResponse> collectionChanges, IServiceProvider serviceProvider)
-        {
-            if (modelAttributesInfo.QueryFunctionAttribute == null)
-            {
-                return collectionChanges;
-            }
-
-            Func<object, bool> filterFunction = null;
-
-            if (modelAttributesInfo.QueryFunctionAttribute.FunctionBuilder != null)
-            {
-                filterFunction = modelAttributesInfo.QueryFunctionAttribute
-                    .GetLambda(null, property.Key).Compile();
-            }
-            else if (modelAttributesInfo.QueryFunctionAttribute.FunctionInfo != null)
-            {
-                object[] methodParameters =
-                    modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.CreateParameters(
-                        null, serviceProvider);
-                dynamic queryFunctionExpression =
-                    ((dynamic) modelAttributesInfo.QueryFunctionAttribute.FunctionInfo.Invoke(null,
-                        methodParameters)).Compile();
-
-                filterFunction = changeValue => queryFunctionExpression(changeValue);
-            }
-
-            if (filterFunction == null)
-            {
-                return collectionChanges;
-            }
-
-            IEnumerable<ChangeResponse> totalChanges = collectionChanges
-                .Where(change =>
-                    filterFunction(change.Value) &&
-                    (change.State != ChangeResponse.ChangeState.Modified || filterFunction(change.OriginalValue)));
-
-            IEnumerable<ChangeResponse> oldLoadedNotMatching = collectionChanges
-                .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
-                                 !filterFunction(change.Value) &&
-                                 filterFunction(change.OriginalValue))
-                .Select(change =>
-                {
-                    ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
-                    newChangeResponse.State = ChangeResponse.ChangeState.Deleted;
-                    return newChangeResponse;
-                });
-
-            IEnumerable<ChangeResponse> notLoadedNewMatching = collectionChanges
-                .Where(change => change.State == ChangeResponse.ChangeState.Modified &&
-                                 filterFunction(change.Value) &&
-                                 !filterFunction(change.OriginalValue))
-                .Select(change =>
-                {
-                    ChangeResponse newChangeResponse = change.CreateResponse(null, change.Value);
-                    newChangeResponse.State = ChangeResponse.ChangeState.Added;
-                    return newChangeResponse;
-                });
-
-            return totalChanges.Concat(oldLoadedNotMatching).Concat(notLoadedNewMatching).ToList();
         }
 
         public static List<ChangeResponse> CalculateRelativeAuthenticatedChanges(

@@ -176,34 +176,10 @@ namespace SapphireDb.Helper
             return mergeErrors;
         }
 
-        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property,
-            IServiceProvider serviceProvider)
+        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property)
         {
             IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
-            values = values?.AsNoTracking();
-
-            QueryFunctionAttribute queryFunctionAttribute =
-                property.Key.GetModelAttributesInfo().QueryFunctionAttribute;
-            if (queryFunctionAttribute != null)
-            {
-                if (queryFunctionAttribute.FunctionBuilder != null)
-                {
-                    values = values?.Where(queryFunctionAttribute.GetLambda(null, property.Key));
-                }
-                else if (queryFunctionAttribute.FunctionInfo != null)
-                {
-                    object[] methodParameters =
-                        queryFunctionAttribute.FunctionInfo.CreateParameters(null, serviceProvider);
-                    Expression queryFunctionExpression =
-                        (Expression) queryFunctionAttribute.FunctionInfo.Invoke(null, methodParameters);
-
-                    MethodInfo whereMethodInfo = ReflectionMethodHelper.GetGenericWhere(property.Key);
-                    values = (IQueryable<object>) whereMethodInfo?.Invoke(values,
-                        new object[] {values, queryFunctionExpression});
-                }
-            }
-
-            return values;
+            return values?.AsNoTracking();
         }
 
         public static void ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,

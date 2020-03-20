@@ -16,19 +16,6 @@ namespace SapphireDb.Models.SapphireApiBuilder
             attributesInfo = typeof(T).GetModelAttributesInfo();
         }
 
-        public SapphireModelBuilder<T> SetQueryFunction(
-            Func<HttpInformation, Expression<Func<T, bool>>> expressionBuilder)
-        {
-            if (attributesInfo.QueryFunctionAttribute == null)
-            {
-                attributesInfo.QueryFunctionAttribute = new QueryFunctionAttribute(null);
-            }
-
-            attributesInfo.QueryFunctionAttribute.FunctionBuilder = expressionBuilder;
-
-            return this;
-        }
-
         public SapphireModelBuilder<T> AddQueryAuth(string policies = null,
             Func<HttpInformation, T, bool> function = null)
         {

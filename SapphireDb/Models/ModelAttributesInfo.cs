@@ -23,9 +23,7 @@ namespace SapphireDb.Models
         public List<UpdateEventAttribute> UpdateEventAttributes { get; set; }
         
         public List<RemoveEventAttribute> RemoveEventAttributes { get; set; }
-        
-        public QueryFunctionAttribute QueryFunctionAttribute { get; set; }
-        
+
         public UpdatableAttribute UpdatableAttribute { get; set; }
         
         public ModelAttributesInfo(Type modelType)
@@ -39,9 +37,6 @@ namespace SapphireDb.Models
             CreateEventAttributes = GetHookAttributeOfClassAndTopClasses<CreateEventAttribute>(modelType);
             UpdateEventAttributes = GetHookAttributeOfClassAndTopClasses<UpdateEventAttribute>(modelType);
             RemoveEventAttributes = GetHookAttributeOfClassAndTopClasses<RemoveEventAttribute>(modelType);
-
-            QueryFunctionAttribute = modelType.GetCustomAttribute<QueryFunctionAttribute>(false);
-            QueryFunctionAttribute?.Compile(modelType);
 
             UpdatableAttribute = modelType.GetCustomAttribute<UpdatableAttribute>(false);
         }
