@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using SapphireDb.Connection.Poll;
 using SapphireDb.Models;
@@ -13,42 +15,74 @@ namespace SapphireDb.Connection
     {
         private readonly SubscriptionManager subscriptionManager;
         private readonly MessageSubscriptionManager messageSubscriptionManager;
-        public ConcurrentDictionary<Guid, ConnectionBase> connections;
+        
+        private readonly ReaderWriterLockSlim connectionsLock = new ReaderWriterLockSlim();
+        public readonly Dictionary<Guid, ConnectionBase> connections = new Dictionary<Guid, ConnectionBase>();
 
         public ConnectionManager(SubscriptionManager subscriptionManager,
             MessageSubscriptionManager messageSubscriptionManager)
         {
             this.subscriptionManager = subscriptionManager;
             this.messageSubscriptionManager = messageSubscriptionManager;
-            connections = new ConcurrentDictionary<Guid, ConnectionBase>();
         }
 
         public void AddConnection(ConnectionBase connection)
         {
-            connections.TryAdd(connection.Id, connection);
+            CheckExistingConnections();
+            
+            try
+            {
+                connectionsLock.EnterWriteLock();
+                connections.TryAdd(connection.Id, connection);
+            }
+            finally
+            {
+                connectionsLock.ExitWriteLock();
+            }
         }
 
         public void RemoveConnection(ConnectionBase connection)
         {
-            Guid connectionId = connection.Id;
-            connections.TryRemove(connectionId, out _);
-            subscriptionManager.RemoveConnectionSubscriptions(connectionId);
-            messageSubscriptionManager.RemoveConnectionSubscriptions(connectionId);
-            connection.Dispose();
+            try
+            {
+                connectionsLock.EnterWriteLock();
+                Guid connectionId = connection.Id;
+                connections.Remove(connectionId);
+                subscriptionManager.RemoveConnectionSubscriptions(connectionId);
+                messageSubscriptionManager.RemoveConnectionSubscriptions(connectionId);
+                connection.Dispose();
+            }
+            finally
+            {
+                connectionsLock.ExitWriteLock();
+            }
+
         }
 
         public void CheckExistingConnections()
         {
-            foreach (KeyValuePair<Guid, ConnectionBase> connectionValue in connections.Where(c =>
-                c.Value is PollConnection))
+            List<ConnectionBase> connectionsCopy;
+            
+            try
             {
-                PollConnection pollConnection = (PollConnection) connectionValue.Value;
-
-                if (pollConnection.lastPoll < DateTime.UtcNow.AddMinutes(-2d))
-                {
-                    RemoveConnection(pollConnection);
-                }
+                connectionsLock.EnterReadLock();
+                connectionsCopy = connections.Values.ToList();
             }
+            finally
+            {
+                connectionsLock.ExitReadLock();
+            }
+            
+            Parallel.ForEach(connectionsCopy, connection =>
+            {
+                if (connection is PollConnection pollConnection)
+                {
+                    if (pollConnection.ShouldRemove())
+                    {
+                        RemoveConnection(pollConnection);
+                    }
+                }
+            });
         }
 
         public ConnectionBase GetConnection(HttpContext context)
@@ -59,7 +93,19 @@ namespace SapphireDb.Connection
             {
                 Guid connectionId = Guid.Parse(context.Request.Headers["connectionId"]);
 
-                if (connections.TryGetValue(connectionId, out connection))
+                bool connectionFound;
+                
+                try
+                {
+                    connectionsLock.EnterReadLock();
+                    connectionFound = connections.TryGetValue(connectionId, out connection);
+                }
+                finally
+                {
+                    connectionsLock.ExitReadLock();
+                }
+                
+                if (connectionFound)
                 {
                     // Compare user Information of the request and the found connection
                     if (connection.Information.User.Identity.IsAuthenticated)

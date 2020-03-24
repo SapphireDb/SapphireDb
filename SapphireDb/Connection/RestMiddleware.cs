@@ -18,8 +18,7 @@ namespace SapphireDb.Connection
         private readonly SapphireDatabaseOptions options;
         private readonly ConnectionManager connectionManager;
         private readonly ILogger<RestMiddleware> logger;
-
-        // ReSharper disable once UnusedParameter.Local
+        
         public RestMiddleware(RequestDelegate next, SapphireDatabaseOptions options, ConnectionManager connectionManager, ILogger<RestMiddleware> logger)
         {
             this.next = next;
@@ -30,8 +29,6 @@ namespace SapphireDb.Connection
 
         public async Task Invoke(HttpContext context, IServiceProvider serviceProvider, CommandExecutor commandExecutor)
         {
-            connectionManager.CheckExistingConnections();
-
             string requestPath = context.Request.Path.Value.Substring(1).ToLowerInvariant();
 
             if (context.Request.Method != "POST" || string.IsNullOrEmpty(requestPath))

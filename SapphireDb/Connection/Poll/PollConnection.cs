@@ -20,24 +20,52 @@ namespace SapphireDb.Connection.Poll
         }
 
         private readonly ConcurrentQueue<ResponseBase> messages = new ConcurrentQueue<ResponseBase>();
+
+        public bool pollInProgress;
         public DateTime lastPoll;
 
         public override string Type => "Poll";
 
-        private SemaphoreSlim MessageLock = new SemaphoreSlim(0, 1);
+        private readonly SemaphoreSlim messageLock = new SemaphoreSlim(0, 1);
+        private readonly SemaphoreSlim lastPollLock = new SemaphoreSlim(1, 1);
         
         public override Task Send(ResponseBase message)
         {
             messages.Enqueue(message);
-            try { MessageLock.Release(); } catch (SemaphoreFullException) { }
+            try { messageLock.Release(); } catch (SemaphoreFullException) { }
             return Task.CompletedTask;
         }
 
-        public async Task<IEnumerable<object>> GetMessages()
+        public async Task<IEnumerable<object>> GetMessages(CancellationToken requestAborted)
         {
-            await MessageLock.WaitAsync();
-            lastPoll = DateTime.UtcNow;
-            return messages.DequeueChunk();
+            try
+            {
+                try
+                {
+                    lastPollLock.Wait();
+                    pollInProgress = true;
+                }
+                finally
+                {
+                    lastPollLock.Release();
+                }
+                
+                await messageLock.WaitAsync(requestAborted);
+                return messages.DequeueChunk();
+            }
+            finally
+            {
+                try
+                {
+                    lastPollLock.Wait();
+                    pollInProgress = false;
+                    lastPoll = DateTime.UtcNow;
+                }
+                finally
+                {
+                    lastPollLock.Release();
+                }
+            }
         }
 
         public override Task Close()
@@ -48,6 +76,19 @@ namespace SapphireDb.Connection.Poll
         public new void Dispose()
         {
             base.Dispose();
+        }
+
+        public bool ShouldRemove()
+        {
+            try
+            {
+                lastPollLock.Wait();
+                return !pollInProgress && lastPoll < DateTime.UtcNow.AddSeconds(-5d);
+            }
+            finally
+            {
+                lastPollLock.Release();
+            }
         }
     }
 }

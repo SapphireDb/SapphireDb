@@ -29,8 +29,6 @@ namespace SapphireDb.Connection.Poll
 
         public async Task Invoke(HttpContext context, ILogger<PollConnection> logger)
         {
-            connectionManager.CheckExistingConnections();
-
             if (!AuthHelper.CheckApiAuth(context.Request.Headers["key"], context.Request.Headers["secret"], options))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -66,7 +64,7 @@ namespace SapphireDb.Connection.Poll
 
                 if (connection != null)
                 {
-                    IEnumerable<object> messages =  await connection.GetMessages();
+                    IEnumerable<object> messages =  await connection.GetMessages(context.RequestAborted);
                     await context.Response.WriteAsync(JsonHelper.Serialize(messages));
                 }
                 else
