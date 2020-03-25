@@ -49,9 +49,14 @@ namespace SapphireDb.Connection.Poll
                 {
                     lastPollLock.Release();
                 }
-                
+
                 await messageLock.WaitAsync(requestAborted);
                 return messages.DequeueChunk();
+            }
+            catch (OperationCanceledException)
+            {
+                // TODO: Check if removing of connection is possible?
+                return null;
             }
             finally
             {

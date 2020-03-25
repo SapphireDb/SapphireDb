@@ -61,27 +61,30 @@ namespace SapphireDb.Connection
 
         public void CheckExistingConnections()
         {
-            List<ConnectionBase> connectionsCopy;
-            
-            try
+            Task.Run(() =>
             {
-                connectionsLock.EnterReadLock();
-                connectionsCopy = connections.Values.ToList();
-            }
-            finally
-            {
-                connectionsLock.ExitReadLock();
-            }
-            
-            Parallel.ForEach(connectionsCopy, connection =>
-            {
-                if (connection is PollConnection pollConnection)
+                List<ConnectionBase> connectionsCopy;
+
+                try
                 {
-                    if (pollConnection.ShouldRemove())
-                    {
-                        RemoveConnection(pollConnection);
-                    }
+                    connectionsLock.EnterReadLock();
+                    connectionsCopy = connections.Values.ToList();
                 }
+                finally
+                {
+                    connectionsLock.ExitReadLock();
+                }
+
+                Parallel.ForEach(connectionsCopy, connection =>
+                {
+                    if (connection is PollConnection pollConnection)
+                    {
+                        if (pollConnection.ShouldRemove())
+                        {
+                            RemoveConnection(pollConnection);
+                        }
+                    }
+                });
             });
         }
 
@@ -89,9 +92,11 @@ namespace SapphireDb.Connection
         {
             ConnectionBase connection = null;
 
-            if (!string.IsNullOrEmpty(context.Request.Headers["connectionId"]))
+            string connectionIdHeaderValue = context.Request.Headers["connectionId"];
+            
+            if (!string.IsNullOrEmpty(connectionIdHeaderValue))
             {
-                Guid connectionId = Guid.Parse(context.Request.Headers["connectionId"]);
+                Guid connectionId = Guid.Parse(connectionIdHeaderValue);
 
                 bool connectionFound;
                 
