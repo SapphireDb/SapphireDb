@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace WebUI
 {
@@ -19,6 +20,11 @@ namespace WebUI
 
             return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)
+                .ConfigureLogging(builder =>
+                {
+                    builder
+                        .AddFilter("SapphireDb", LogLevel.Debug);
+                })
                 .UseStartup<Startup>();
         }
 

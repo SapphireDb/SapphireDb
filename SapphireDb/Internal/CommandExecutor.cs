@@ -57,7 +57,7 @@ namespace SapphireDb.Internal
 
             if (handler != null)
             {
-                logger.LogInformation("Handling " + command.GetType().Name + " with " + handler.GetType().Name);
+                logger.LogInformation("Handling {0} with {1}", command.GetType().Name, handler.GetType().Name);
                 try
                 {
                     if (handler is INeedsConnection handlerWithConnection)
@@ -68,7 +68,7 @@ namespace SapphireDb.Internal
                         }
                         else
                         {
-                            logger.LogError("Cannot handle " + command.GetType().Name + " without realtime connection");
+                            logger.LogWarning("Cannot handle {0} without realtime connection", command.GetType().Name);
                             return command.CreateExceptionResponse<ResponseBase>("Cannot handle this command without realtime connection");
                         }
                     }
@@ -76,25 +76,24 @@ namespace SapphireDb.Internal
                     ResponseBase response = await (dynamic)handlerType.GetHandlerHandleMethod()
                         .Invoke(handler, new object[] { information, command });
 
-                    logger.LogInformation("Handled " + command.GetType().Name);
+                    logger.LogInformation("Handled {0}", command.GetType().Name);
 
                     if (response?.Error != null)
                     {
-                        logger.LogWarning("The handler returned an error for " + command.GetType().Name, response.Error);
+                        logger.LogWarning("The handler returned an error for {0}. Error:\n{1}", command.GetType().Name, response.Error);
                     }
 
                     return response;
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("Error handling " + command.GetType().Name);
-                    logger.LogError(ex.Message);
+                    logger.LogError("Error handling {0}. Error:\n{1}", command.GetType().Name, ex.Message);
                     return command.CreateExceptionResponse<ResponseBase>(ex);
                 }
             }
             else
             {
-                logger.LogError("No handler was found to handle " + command.GetType().Name);
+                logger.LogWarning("No handler was found to handle {0}", command.GetType().Name);
                 return command.CreateExceptionResponse<ResponseBase>("No handler was found for command");
             }
         }

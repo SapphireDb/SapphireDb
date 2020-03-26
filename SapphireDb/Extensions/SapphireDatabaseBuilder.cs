@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Connection;
+using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
@@ -48,6 +49,14 @@ namespace SapphireDb.Extensions
             return this;
         }
 
+        public SapphireDatabaseBuilder AddTopicConfiguration(string topic, Func<HttpInformation, bool> canSubscribe,
+            Func<HttpInformation, bool> canPublish)
+        {
+            MessageTopicHelper.RegisteredTopicAuthFunctions.Add(topic, new Tuple<Func<HttpInformation, bool>,
+                Func<HttpInformation, bool>>(canSubscribe, canPublish));
+            return this;
+        }
+        
         public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, object[], bool> filter)
         {
             SapphireMessageSender.RegisteredMessageFilter.Add(name.ToLowerInvariant(), filter);

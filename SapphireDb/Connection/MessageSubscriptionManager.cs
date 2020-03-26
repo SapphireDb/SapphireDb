@@ -9,7 +9,6 @@ namespace SapphireDb.Connection
     public class MessageSubscriptionManager
     {
         private readonly ReaderWriterLockSlim readerWriterLockSlim = new ReaderWriterLockSlim();
-
         private readonly Dictionary<string, List<Subscription>> subscriptions =
             new Dictionary<string, List<Subscription>>(StringComparer.InvariantCultureIgnoreCase);
 

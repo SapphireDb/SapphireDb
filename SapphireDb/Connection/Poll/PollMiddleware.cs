@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using SapphireDb.Command.Connection;
-using SapphireDb.Connection.SSE;
 using SapphireDb.Helper;
-using SapphireDb.Internal;
 using SapphireDb.Models;
 
 namespace SapphireDb.Connection.Poll
@@ -18,8 +12,7 @@ namespace SapphireDb.Connection.Poll
         private readonly RequestDelegate next;
         private readonly ConnectionManager connectionManager;
         private readonly SapphireDatabaseOptions options;
-
-        // ReSharper disable once UnusedParameter.Local
+        
         public PollMiddleware(RequestDelegate next, ConnectionManager connectionManager, SapphireDatabaseOptions options)
         {
             this.next = next;
@@ -27,7 +20,7 @@ namespace SapphireDb.Connection.Poll
             this.options = options;
         }
 
-        public async Task Invoke(HttpContext context, ILogger<PollConnection> logger)
+        public async Task Invoke(HttpContext context)
         {
             if (!AuthHelper.CheckApiAuth(context.Request.Headers["key"], context.Request.Headers["secret"], options))
             {
@@ -54,9 +47,6 @@ namespace SapphireDb.Connection.Poll
                 {
                     ConnectionId = connection.Id
                 }));
-
-                logger.LogInformation("Created new poll connection");
-
             }
             else
             {

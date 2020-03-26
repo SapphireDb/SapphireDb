@@ -55,7 +55,6 @@ namespace SapphireDb.Connection.Poll
             }
             catch (OperationCanceledException)
             {
-                // TODO: Check if removing of connection is possible?
                 return null;
             }
             finally

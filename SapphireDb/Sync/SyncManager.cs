@@ -26,7 +26,7 @@ namespace SapphireDb.Sync
                     {
                         return;
                     }
-                    
+
                     if (request.Propagate)
                     {
                         Publish(request);
@@ -39,22 +39,40 @@ namespace SapphireDb.Sync
 
                         if (dbType != null)
                         {
-                            SapphireChangeNotifier changeNotifier = (SapphireChangeNotifier) serviceProvider.GetService(typeof(SapphireChangeNotifier));
+                            SapphireChangeNotifier changeNotifier =
+                                (SapphireChangeNotifier) serviceProvider.GetService(typeof(SapphireChangeNotifier));
                             logger.LogInformation("Handling changes from other server");
+                            logger.LogDebug(
+                                "Handling {0} changes of '{1}' from server with OriginId '{2}'. Propagate: {3}",
+                                sendChangesRequest.Changes.Count, sendChangesRequest.DbType,
+                                sendChangesRequest.OriginId, sendChangesRequest.Propagate);
+                            
                             changeNotifier.HandleChanges(sendChangesRequest.Changes, dbType);
                         }
                     }
                     else if (request is SendMessageRequest sendMessageRequest)
                     {
-                        SapphireMessageSender sender = (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
+                        SapphireMessageSender sender =
+                            (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
                         logger.LogInformation("Handling message from other server");
-                        sender.Send(sendMessageRequest.Message, sendMessageRequest.Filter, sendMessageRequest.FilterParameters, false);
+                        logger.LogDebug(
+                            "Handling message for filter '{0}' from server with OriginId '{1}'. Propagate: {2}",
+                            sendMessageRequest.Filter, sendMessageRequest.OriginId, sendMessageRequest.Propagate);
+                        
+                        sender.Send(sendMessageRequest.Message, sendMessageRequest.Filter,
+                            sendMessageRequest.FilterParameters, false);
                     }
                     else if (request is SendPublishRequest sendPublishRequest)
                     {
-                        SapphireMessageSender sender = (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
+                        SapphireMessageSender sender =
+                            (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
                         logger.LogInformation("Handling publish from other server");
-                        sender.Publish(sendPublishRequest.Topic, sendPublishRequest.Message, sendPublishRequest.Retain, false);
+                        logger.LogDebug(
+                            "Handling publish to topic '{0}' from server with OriginId '{1}'. Retain: {2}, Propagate: {3}",
+                            sendPublishRequest.Topic, sendPublishRequest.OriginId, sendPublishRequest.Retain, sendPublishRequest.Propagate);
+                        
+                        sender.Publish(sendPublishRequest.Topic, sendPublishRequest.Message, sendPublishRequest.Retain,
+                            false);
                     }
                 };
             }

@@ -14,7 +14,7 @@ namespace SapphireDb.Connection
     public class SapphireMessageSender
     {
         public static readonly ConcurrentDictionary<string, object> RetainedTopicMessages = new ConcurrentDictionary<string, object>();
-        public static readonly Dictionary<string, object> RegisteredMessageFilter = new Dictionary<string, object>();
+        public static readonly Dictionary<string, object> RegisteredMessageFilter = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
         
         private readonly ConnectionManager connectionManager;
         private readonly SyncManager syncManager;

@@ -9,20 +9,17 @@ namespace SapphireDb.Command.SubscribeMessage
     class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>, INeedsConnection
     {
         public ConnectionBase Connection { get; set; }
-        private SapphireDatabaseOptions options;
         private readonly MessageSubscriptionManager subscriptionManager;
 
-        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, SapphireDatabaseOptions options,
-            MessageSubscriptionManager subscriptionManager)
+        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, MessageSubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
-            this.options = options;
             this.subscriptionManager = subscriptionManager;
         }
 
         public Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command)
         {
-            if (!options.IsAllowedForTopicSubscribe(context, command.Topic))
+            if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
             {
                 return Task.FromResult(command.CreateExceptionResponse<ResponseBase>("Not allowed to subscribe this topic"));
             }

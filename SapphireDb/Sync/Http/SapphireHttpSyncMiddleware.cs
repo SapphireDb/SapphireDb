@@ -43,7 +43,7 @@ namespace SapphireDb.Sync.Http
             if (context.Request.Headers["Secret"].ToString().ComputeHash() != options.Sync.Secret ||
                 options.Sync.Entries.All(e => e.Id != originId))
             {
-                logger.LogError("Prevented unauthorized access to nlb sync methods");
+                logger.LogWarning("Prevented unauthorized access to sync methods");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("You are not allowed to access this endpoint");
                 return;

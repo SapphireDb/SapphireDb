@@ -14,15 +14,11 @@ namespace SapphireDb.Models
             {
                 CanExecuteCommand = (command, context) => context.User.Identity.IsAuthenticated;
                 IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
-                IsAllowedForTopicSubscribe = (context, topic) => context.User.Identity.IsAuthenticated;
-                IsAllowedForTopicPublish = (context, topic) => context.User.Identity.IsAuthenticated;
             }
             else
             {
                 CanExecuteCommand = (command, context) => true;
                 IsAllowedToSendMessages = (context) => true;
-                IsAllowedForTopicSubscribe = (context, topic) => true;
-                IsAllowedForTopicPublish = (context, topic) => true;
             }
         }
 
@@ -41,11 +37,7 @@ namespace SapphireDb.Models
         public Func<CommandBase, HttpInformation, bool> CanExecuteCommand { get; set; }
 
         public Func<HttpInformation, bool> IsAllowedToSendMessages { get; set; }
-
-        public Func<HttpInformation, string, bool> IsAllowedForTopicSubscribe { get; set; }
-
-        public Func<HttpInformation, string, bool> IsAllowedForTopicPublish { get; set; }
-
+        
         public bool ServerSentEventsInterface { get; set; } = true;
 
         public bool WebsocketInterface { get; set; } = true;

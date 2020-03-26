@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using SapphireDb.Connection.Poll;
 using SapphireDb.Models;
 
@@ -15,15 +16,18 @@ namespace SapphireDb.Connection
     {
         private readonly SubscriptionManager subscriptionManager;
         private readonly MessageSubscriptionManager messageSubscriptionManager;
-        
+        private readonly ILogger<ConnectionManager> logger;
+
         private readonly ReaderWriterLockSlim connectionsLock = new ReaderWriterLockSlim();
         public readonly Dictionary<Guid, ConnectionBase> connections = new Dictionary<Guid, ConnectionBase>();
 
         public ConnectionManager(SubscriptionManager subscriptionManager,
-            MessageSubscriptionManager messageSubscriptionManager)
+            MessageSubscriptionManager messageSubscriptionManager,
+            ILogger<ConnectionManager> logger)
         {
             this.subscriptionManager = subscriptionManager;
             this.messageSubscriptionManager = messageSubscriptionManager;
+            this.logger = logger;
         }
 
         public void AddConnection(ConnectionBase connection)
@@ -34,6 +38,10 @@ namespace SapphireDb.Connection
             {
                 connectionsLock.EnterWriteLock();
                 connections.TryAdd(connection.Id, connection);
+                
+                logger.LogInformation("Added new {0}", connection);
+                logger.LogDebug("Added new {0} with ConnectionId '{1}'", connection, connection.Id);
+                logger.LogDebug("Connection count: {0}", connections.Count);
             }
             finally
             {
@@ -51,6 +59,10 @@ namespace SapphireDb.Connection
                 subscriptionManager.RemoveConnectionSubscriptions(connectionId);
                 messageSubscriptionManager.RemoveConnectionSubscriptions(connectionId);
                 connection.Dispose();
+                
+                logger.LogInformation("Removed {0}", connection);
+                logger.LogDebug("Removed {0} with ConnectionId '{1}'", connection, connection.Id);
+                logger.LogDebug("Connection count: {0}", connections.Count);
             }
             finally
             {
