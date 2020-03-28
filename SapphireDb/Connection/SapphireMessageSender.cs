@@ -30,43 +30,46 @@ namespace SapphireDb.Connection
 
         public void Send(object message, string filter = null, object[] filterParameters = null, bool sync = true)
         {
-            if (sync)
+            Task.Run(() =>
             {
-                syncManager.SendMessage(message, filter, filterParameters);
-            }
-            
-            Func<HttpInformation, bool> filterFunctionNoParameters = null;
-            Func<HttpInformation, object[], bool> filterFunctionParameters = null;
-            
-            if (!string.IsNullOrEmpty(filter) && RegisteredMessageFilter.TryGetValue(filter, out object filterFunction))
-            {
-                if (filterFunction is Func<HttpInformation, bool> filterFunctionNoParametersTemp)
+                if (sync)
                 {
-                    filterFunctionNoParameters = filterFunctionNoParametersTemp;
+                    syncManager.SendMessage(message, filter, filterParameters);
                 }
-                else if (filterFunction is Func<HttpInformation, object[], bool> filterFunctionParametersTemp)
+            
+                Func<HttpInformation, bool> filterFunctionNoParameters = null;
+                Func<HttpInformation, object[], bool> filterFunctionParameters = null;
+            
+                if (!string.IsNullOrEmpty(filter) && RegisteredMessageFilter.TryGetValue(filter, out object filterFunction))
                 {
-                    filterFunctionParameters = filterFunctionParametersTemp;
+                    if (filterFunction is Func<HttpInformation, bool> filterFunctionNoParametersTemp)
+                    {
+                        filterFunctionNoParameters = filterFunctionNoParametersTemp;
+                    }
+                    else if (filterFunction is Func<HttpInformation, object[], bool> filterFunctionParametersTemp)
+                    {
+                        filterFunctionParameters = filterFunctionParametersTemp;
+                    }
                 }
-            }
 
-            Parallel.ForEach(connectionManager.connections.Values, connection =>
-            {
-                Task.Run(() =>
+                Parallel.ForEach(connectionManager.connections.Values, connection =>
                 {
-                    if (filterFunctionNoParameters != null && !filterFunctionNoParameters(connection.Information))
+                    Task.Run(() =>
                     {
-                        return;
-                    }
+                        if (filterFunctionNoParameters != null && !filterFunctionNoParameters(connection.Information))
+                        {
+                            return;
+                        }
                 
-                    if (filterFunctionParameters != null && !filterFunctionParameters(connection.Information, filterParameters))
-                    {
-                        return;
-                    }
+                        if (filterFunctionParameters != null && !filterFunctionParameters(connection.Information, filterParameters))
+                        {
+                            return;
+                        }
                 
-                    _ = connection.Send(new MessageResponse()
-                    {
-                        Data = message
+                        _ = connection.Send(new MessageResponse()
+                        {
+                            Data = message
+                        });
                     });
                 });
             });
@@ -74,32 +77,35 @@ namespace SapphireDb.Connection
 
         public void Publish(string topic, object message, bool retain, bool sync = true)
         {
-            if (retain)
+            Task.Run(() =>
             {
-                RetainedTopicMessages.AddOrUpdate(topic, message, ((s, o) => message));
-            }
-            
-            if (sync)
-            {
-                syncManager.SendPublish(topic, message, retain);
-            }
-
-            List<Subscription> topicSubscriptions = messageSubscriptionManager.GetTopicSubscriptions(topic);
-
-            if (topicSubscriptions == null)
-            {
-                return;
-            }
-            
-            Parallel.ForEach(topicSubscriptions, subscription =>
-            {
-                Task.Run(() =>
+                if (retain)
                 {
-                    _ = subscription.Connection.Send(new TopicResponse()
+                    RetainedTopicMessages.AddOrUpdate(topic, message, ((s, o) => message));
+                }
+            
+                if (sync)
+                {
+                    syncManager.SendPublish(topic, message, retain);
+                }
+
+                List<Subscription> topicSubscriptions = messageSubscriptionManager.GetTopicSubscriptions(topic);
+
+                if (topicSubscriptions == null)
+                {
+                    return;
+                }
+            
+                Parallel.ForEach(topicSubscriptions, subscription =>
+                {
+                    Task.Run(() =>
                     {
-                        ReferenceId = subscription.ReferenceId,
-                        Message = message
-                    });     
+                        _ = subscription.Connection.Send(new TopicResponse()
+                        {
+                            ReferenceId = subscription.ReferenceId,
+                            Message = message
+                        });     
+                    });
                 });
             });
         }

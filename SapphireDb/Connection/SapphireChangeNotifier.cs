@@ -97,8 +97,11 @@ namespace SapphireDb.Connection
 
                     Parallel.ForEach(collectionSubscriptions.Subscriptions, subscriptionGroupings =>
                     {
-                        HandleReloadOfCollectionData(dbContextType, property, subscriptionGroupings.Key,
-                            subscriptionGroupings.Value, handlingId);
+                        Task.Run(() =>
+                        {
+                            HandleReloadOfCollectionData(dbContextType, property, subscriptionGroupings.Key,
+                                subscriptionGroupings.Value, handlingId);
+                        });
                     });
                 });
             });
