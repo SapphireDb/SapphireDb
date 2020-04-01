@@ -13,5 +13,12 @@ namespace SapphireDb.Helper
         {
             return input.Round(TimeSpan.FromMilliseconds(accuracy));
         }
+
+        public static bool EqualWithTolerance(this DateTime input1, DateTime input2)
+        {
+            long input1Ticks = input1.Ticks;
+            long input2Ticks = input2.Ticks;
+            return input1Ticks / 10 == input2Ticks / 10;
+        }
     }
 }

@@ -116,8 +116,7 @@ namespace SapphireDb.Command.UpdateRange
             if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
                 updateValue is SapphireOfflineEntity updateOfflineEntity &&
                 previousValue != null && previousValue is SapphireOfflineEntity previousValueOfflineEntity &&
-                dbValueOfflineEntity.ModifiedOn.RoundToMilliseconds() !=
-                updateOfflineEntity.ModifiedOn.RoundToMilliseconds())
+                !dbValueOfflineEntity.ModifiedOn.EqualWithTolerance(updateOfflineEntity.ModifiedOn))
             {
                 mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
                     previousValueOfflineEntity, context, serviceProvider);

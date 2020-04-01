@@ -9,7 +9,7 @@ namespace SapphireDb.Models.SapphireApiBuilder
     public class SapphirePropertyBuilder<TModel, TProperty>
     {
         private readonly PropertyAttributesInfo attributesInfo;
-        
+
         public SapphirePropertyBuilder(PropertyInfo propertyInfo)
         {
             attributesInfo = typeof(TModel).GetPropertyAttributesInfos()
@@ -21,20 +21,20 @@ namespace SapphireDb.Models.SapphireApiBuilder
             attributesInfo.UpdatableAttribute = new UpdatableAttribute();
             return this;
         }
-        
+
         public SapphirePropertyBuilder<TModel, TProperty> MakeNonCreatable()
         {
             attributesInfo.NonCreatableAttribute = new NonCreatableAttribute();
             return this;
         }
-        
+
         public SapphirePropertyBuilder<TModel, TProperty> AddQueryAuth(string policies = null,
             Func<HttpInformation, TModel, bool> function = null)
         {
             attributesInfo.QueryAuthAttributes.Add(CreateAuthAttribute<QueryAuthAttribute>(policies, function));
             return this;
         }
-        
+
         public SapphirePropertyBuilder<TModel, TProperty> AddUpdateAuth(string policies = null,
             Func<HttpInformation, TModel, bool> function = null)
         {
@@ -42,11 +42,20 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return this;
         }
 
+        public SapphirePropertyBuilder<TModel, TProperty> SetMergeConflictResolutionMode(
+            MergeConflictResolutionMode mergeConflictResolutionConflictResolutionMode)
+        {
+            attributesInfo.MergeConflictResolutionModeAttribute =
+                new MergeConflictResolutionModeAttribute(mergeConflictResolutionConflictResolutionMode);
+            return this;
+        }
+
         private TAttributeType CreateAuthAttribute<TAttributeType>(string policies,
             Func<HttpInformation, TModel, bool> function) where TAttributeType : AuthAttributeBase
         {
-            TAttributeType attribute = (TAttributeType) Activator.CreateInstance(typeof(TAttributeType), policies, null);
-            
+            TAttributeType attribute =
+                (TAttributeType) Activator.CreateInstance(typeof(TAttributeType), policies, null);
+
             if (function != null)
             {
                 attribute.FunctionLambda = (information, model) => function(information, (TModel) model);
