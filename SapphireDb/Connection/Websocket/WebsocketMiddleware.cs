@@ -87,7 +87,7 @@ namespace SapphireDb.Connection.Websocket
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex.Message);
+                        logger.LogError(ex, ex.Message);
                     }
                 }
 

@@ -11,6 +11,7 @@ using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.Execute
 {
@@ -21,7 +22,8 @@ namespace SapphireDb.Command.Execute
         private readonly ILogger<ExecuteCommandHandler> logger;
         public ConnectionBase Connection { get; set; }
 
-        public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper, IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
+        public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper,
+            IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccessor)
         {
             this.actionMapper = actionMapper;
@@ -51,12 +53,13 @@ namespace SapphireDb.Command.Execute
 
             if (actionParts == null || actionParts.Length != 2)
             {
-                return command.CreateExceptionResponse<ExecuteResponse>("The format the action name was false.");
+                return command.CreateExceptionResponse<ExecuteResponse>(
+                    new FormatException("Wrong format of action name."));
             }
-            
+
             string actionHandlerName = actionParts[0];
             string actionName = actionParts[1];
-            
+
             Type actionHandlerType = actionMapper.GetHandler(actionHandlerName);
 
             if (actionHandlerType != null)
@@ -65,7 +68,7 @@ namespace SapphireDb.Command.Execute
 
                 if (actionMethod != null)
                 {
-                    ActionHandlerBase actionHandler = (ActionHandlerBase)serviceProvider.GetService(actionHandlerType);
+                    ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);
 
                     if (actionHandler != null)
                     {
@@ -75,33 +78,35 @@ namespace SapphireDb.Command.Execute
                         if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
                         {
                             return command.CreateExceptionResponse<ExecuteResponse>(
-                                "User is not allowed to execute actions of this handler.");
+                                new UnauthorizedException("User is not allowed to execute actions of this handler"));
                         }
 
                         if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
                         {
-                            return command.CreateExceptionResponse<ExecuteResponse>("User is not allowed to execute action.");
+                            return command.CreateExceptionResponse<ExecuteResponse>(
+                                new UnauthorizedException("User is not allowed to execute action"));
                         }
 
                         return await ExecuteAction(actionHandler, command, actionMethod);
                     }
 
-                    return command.CreateExceptionResponse<ExecuteResponse>("No handler was found.");
+                    return command.CreateExceptionResponse<ExecuteResponse>(new HandlerNotFoundException());
                 }
 
-                return command.CreateExceptionResponse<ExecuteResponse>("No action to execute was found.");
+                return command.CreateExceptionResponse<ExecuteResponse>(new ActionNotFoundException());
             }
 
-            return command.CreateExceptionResponse<ExecuteResponse>("No action handler type was matching");
+            return command.CreateExceptionResponse<ExecuteResponse>(new ActionHandlerNotFoundException());
         }
 
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            logger.LogInformation("Execution of {0}.{1} started", actionMethod.DeclaringType?.FullName, actionMethod.Name);
+            logger.LogInformation("Execution of {0}.{1} started", actionMethod.DeclaringType?.FullName,
+                actionMethod.Name);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
-            
+
             if (result != null)
             {
                 if (ActionHelper.HandleAsyncEnumerable(result, actionHandler.AsyncResult))
@@ -120,12 +125,13 @@ namespace SapphireDb.Command.Execute
             {
                 ReferenceId = command.ReferenceId,
                 Result = result
-            };   
+            };
         }
 
         private object[] GetParameters(MethodInfo actionMethod, ExecuteCommand command)
         {
-            return actionMethod.GetParameters().Select(parameter => {
+            return actionMethod.GetParameters().Select(parameter =>
+            {
                 if (parameter.Position >= command.Parameters.Length)
                 {
                     return null;
@@ -134,7 +140,8 @@ namespace SapphireDb.Command.Execute
                 if (parameter.ParameterType.IsGenericType &&
                     parameter.ParameterType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
                 {
-                    SapphireStreamHelper streamHelper = (SapphireStreamHelper)serviceProvider.GetService(typeof(SapphireStreamHelper));
+                    SapphireStreamHelper streamHelper =
+                        (SapphireStreamHelper) serviceProvider.GetService(typeof(SapphireStreamHelper));
                     return streamHelper.OpenStreamChannel(Connection, command, parameter.ParameterType);
                 }
 

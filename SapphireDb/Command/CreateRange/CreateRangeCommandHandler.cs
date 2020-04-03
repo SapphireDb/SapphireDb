@@ -7,6 +7,7 @@ using SapphireDb.Attributes;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.CreateRange
 {
@@ -14,7 +15,7 @@ namespace SapphireDb.Command.CreateRange
     {
         private readonly IServiceProvider serviceProvider;
 
-        public CreateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider) 
+        public CreateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
             : base(contextAccessor)
         {
             this.serviceProvider = serviceProvider;
@@ -37,12 +38,15 @@ namespace SapphireDb.Command.CreateRange
                 }
             }
 
-            return Task.FromResult(command.CreateExceptionResponse<CreateRangeResponse>("No set for collection was found."));
+            return Task.FromResult(
+                command.CreateExceptionResponse<CreateRangeResponse>(new CollectionNotFoundException()));
         }
 
-        private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property, HttpInformation context, SapphireDbContext db)
+        private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,
+            HttpInformation context, SapphireDbContext db)
         {
-            object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key)).ToArray();
+            object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key))
+                .ToArray();
 
             CreateRangeResponse response = new CreateRangeResponse
             {
@@ -51,11 +55,12 @@ namespace SapphireDb.Command.CreateRange
                 {
                     if (!property.Key.CanCreate(context, value, serviceProvider))
                     {
-                        return (CreateResponse)command.CreateExceptionResponse<CreateResponse>(
-                            "The user is not authorized for this action.");
+                        return (CreateResponse) command.CreateExceptionResponse<CreateResponse>(
+                            new UnauthorizedException("The user is not authorized for this action"));
                     }
 
-                    return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context, serviceProvider);
+                    return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context,
+                        serviceProvider);
                 }).ToList()
             };
 
@@ -63,18 +68,22 @@ namespace SapphireDb.Command.CreateRange
 
             foreach (object value in newValues)
             {
-                property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
+                    value, context, serviceProvider);
             }
 
             return response;
         }
 
-        public static CreateResponse SetPropertiesAndValidate<TEventAttribute>(SapphireDbContext db, KeyValuePair<Type, string> property, object newValue,
-            HttpInformation context, IServiceProvider serviceProvider) where TEventAttribute : ModelStoreEventAttributeBase
+        public static CreateResponse SetPropertiesAndValidate<TEventAttribute>(SapphireDbContext db,
+            KeyValuePair<Type, string> property, object newValue,
+            HttpInformation context, IServiceProvider serviceProvider)
+            where TEventAttribute : ModelStoreEventAttributeBase
         {
             object newEntityObject = property.Key.SetFields(newValue);
-            
-            if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider, out Dictionary<string, List<string>> validationResults))
+
+            if (!ValidationHelper.ValidateModel(newEntityObject, serviceProvider,
+                out Dictionary<string, List<string>> validationResults))
             {
                 return new CreateResponse()
                 {
@@ -83,12 +92,14 @@ namespace SapphireDb.Command.CreateRange
                 };
             }
 
-            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, newEntityObject, context, serviceProvider);
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
+                newEntityObject, context, serviceProvider);
 
             db.Add(newEntityObject);
 
-            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, newEntityObject, context, serviceProvider);
-            
+            property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave,
+                newEntityObject, context, serviceProvider);
+
             return new CreateResponse()
             {
                 Value = newEntityObject,

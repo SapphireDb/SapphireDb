@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.Info
 {
@@ -32,7 +33,7 @@ namespace SapphireDb.Command.Info
                 return Task.FromResult<ResponseBase>(infoResponse);
             }
 
-            return Task.FromResult(command.CreateExceptionResponse<InfoResponse>("No set for collection was found."));
+            return Task.FromResult(command.CreateExceptionResponse<InfoResponse>(new CollectionNotFoundException()));
         }
     }
 }

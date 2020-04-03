@@ -9,6 +9,7 @@ using SapphireDb.Command.Execute;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Internal
 {
@@ -24,10 +25,11 @@ namespace SapphireDb.Internal
             commandHandlerTypes = GetHandlerTypes(typeof(CommandHandlerBase));
         }
 
-        public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider, HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
+        public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider,
+            HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
         {
             string commandTypeName = command.GetType().Name;
-            
+
             if (commandHandlerTypes.TryGetValue(commandTypeName, out Type handlerType))
             {
                 ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, information, command);
@@ -47,10 +49,12 @@ namespace SapphireDb.Internal
         {
             return Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.Name.EndsWith("Handler") && t.IsSubclassOf(type))
-                .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)), t => t);
+                .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)),
+                    t => t);
         }
 
-        private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider, CommandBase command, ILogger<T> logger,
+        private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider,
+            CommandBase command, ILogger<T> logger,
             HttpInformation information, ConnectionBase connection)
         {
             object handler = serviceProvider.GetService(handlerType);
@@ -69,40 +73,45 @@ namespace SapphireDb.Internal
                         else
                         {
                             logger.LogWarning("Cannot handle {0} without realtime connection", command.GetType().Name);
-                            return command.CreateExceptionResponse<ResponseBase>("Cannot handle this command without realtime connection");
+                            return command.CreateExceptionResponse<ResponseBase>(
+                                new MissingRealtimeConnectionException());
                         }
                     }
-                    
-                    ResponseBase response = await (dynamic)handlerType.GetHandlerHandleMethod()
-                        .Invoke(handler, new object[] { information, command });
+
+                    ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
+                        .Invoke(handler, new object[] {information, command});
 
                     logger.LogInformation("Handled {0}", command.GetType().Name);
 
                     if (response?.Error != null)
                     {
-                        logger.LogWarning("The handler returned an error for {0}. Error:\n{1}", command.GetType().Name, response.Error);
+                        logger.LogWarning("The handler returned an error for {0}. Error: {1}, Message: {2}",
+                            command.GetType().Name, response.Error.Type, response.Error.Message);
                     }
 
                     return response;
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError("Error handling {0}. Error:\n{1}", command.GetType().Name, ex.Message);
+                    logger.LogError("Error handling {0}. Error:{1}\n{2}", command.GetType().Name, ex.GetType().Name,
+                        ex.Message);
                     return command.CreateExceptionResponse<ResponseBase>(ex);
                 }
             }
             else
             {
                 logger.LogWarning("No handler was found to handle {0}", command.GetType().Name);
-                return command.CreateExceptionResponse<ResponseBase>("No handler was found for command");
+                return command.CreateExceptionResponse<ResponseBase>(new HandlerNotFoundException());
             }
         }
 
-        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpInformation information, CommandBase command)
+        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpInformation information,
+            CommandBase command)
         {
             if (!options.CanExecuteCommand(command, information))
             {
-                return command.CreateExceptionResponse<ResponseBase>("You are not allowed to execute this command");
+                return command.CreateExceptionResponse<ResponseBase>(
+                    new UnauthorizedException("You are not allowed to execute this command"));
             }
 
             return null;

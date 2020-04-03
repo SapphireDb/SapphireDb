@@ -9,6 +9,7 @@ using SapphireDb.Attributes;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.DeleteRange
 {
@@ -39,7 +40,7 @@ namespace SapphireDb.Command.DeleteRange
                     do
                     {
                         updateRejected = false;
-                        
+
                         response = new DeleteRangeResponse
                         {
                             ReferenceId = command.ReferenceId,
@@ -55,17 +56,19 @@ namespace SapphireDb.Command.DeleteRange
                                     {
                                         DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
 
-                                        if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn, db.Database.ProviderName))
+                                        if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
+                                            db.Database.ProviderName))
                                         {
                                             return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                                "Deletion rejected. The object state has changed.");
+                                                new OperationRejectedException(
+                                                    "Deletion rejected. The object state has changed"));
                                         }
                                     }
 
                                     if (!property.Key.CanRemove(context, value, serviceProvider))
                                     {
                                         return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                            "The user is not authorized for this action.");
+                                            new UnauthorizedException("The user is not authorized for this action"));
                                     }
 
                                     property.Key.ExecuteHookMethods<RemoveEventAttribute>(
@@ -87,7 +90,7 @@ namespace SapphireDb.Command.DeleteRange
                                 }
 
                                 return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                    "The value was not found.");
+                                    new ValueNotFoundException());
                             }).ToList()
                         };
 
@@ -101,7 +104,7 @@ namespace SapphireDb.Command.DeleteRange
                             {
                                 await entityEntry.ReloadAsync();
                             }
-                            
+
                             updateRejected = true;
                         }
                     } while (updateRejected);
@@ -120,7 +123,7 @@ namespace SapphireDb.Command.DeleteRange
                 }
             }
 
-            return command.CreateExceptionResponse<DeleteResponse>("No set for collection was found.");
+            return command.CreateExceptionResponse<DeleteResponse>(new CollectionNotFoundException());
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using SapphireDb.Models;
 
 namespace SapphireDb.Command
 {
@@ -13,7 +14,7 @@ namespace SapphireDb.Command
 
         public string ReferenceId { get; set; }
 
-        public Exception Error { get; set; }
+        public SapphireDbError Error { get; set; }
 
         public DateTime Timestamp { get; set; }
     }

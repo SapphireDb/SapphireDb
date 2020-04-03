@@ -77,7 +77,7 @@ namespace SapphireDb.Connection
             else
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Parsing of the command was not successful");
+                await context.Response.WriteAsync("Parsing of command was not successful");
             }
         }
     }

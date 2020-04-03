@@ -3,6 +3,7 @@ using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.SubscribeMessage
 {
@@ -21,7 +22,8 @@ namespace SapphireDb.Command.SubscribeMessage
         {
             if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
             {
-                return Task.FromResult(command.CreateExceptionResponse<ResponseBase>("Not allowed to subscribe this topic"));
+                return Task.FromResult(command.CreateExceptionResponse<ResponseBase>(
+                    new UnauthorizedException("Not allowed to subscribe this topic")));
             }
 
             subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);

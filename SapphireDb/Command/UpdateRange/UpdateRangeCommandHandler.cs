@@ -10,6 +10,7 @@ using SapphireDb.Command.CreateRange;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.UpdateRange
 {
@@ -40,7 +41,7 @@ namespace SapphireDb.Command.UpdateRange
                 }
             }
 
-            return command.CreateExceptionResponse<UpdateRangeResponse>("No set for collection was found.");
+            return command.CreateExceptionResponse<UpdateRangeResponse>(new CollectionNotFoundException());
         }
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
@@ -65,7 +66,7 @@ namespace SapphireDb.Command.UpdateRange
                         if (!property.Key.CanUpdate(context, updateValue, serviceProvider))
                         {
                             return (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
-                                "The user is not authorized for this action.");
+                                new UnauthorizedException("The user is not authorized for this action."));
                         }
 
                         object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, updateValue);

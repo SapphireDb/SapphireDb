@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using SapphireDb.Command;
+using SapphireDb.Models;
 
 namespace SapphireDb.Helper
 {
@@ -13,15 +14,9 @@ namespace SapphireDb.Helper
             T response = Activator.CreateInstance<T>();
             
             response.ReferenceId = command.ReferenceId;
-            response.Error = exception;
+            response.Error = new SapphireDbError(exception);
             
             return response;
-        }
-
-        public static ResponseBase CreateExceptionResponse<T>(this CommandBase command, string exceptionMessage)
-            where T : ResponseBase
-        {
-            return command.CreateExceptionResponse<T>(new Exception(exceptionMessage));
         }
     }
 }

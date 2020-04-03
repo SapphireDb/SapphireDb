@@ -3,6 +3,7 @@ using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.Message
 {
@@ -23,7 +24,7 @@ namespace SapphireDb.Command.Message
             if (!options.IsAllowedToSendMessages(context))
             {
                 return Task.FromResult(
-                    command.CreateExceptionResponse<ResponseBase>("User is not allowed to send messages"));
+                    command.CreateExceptionResponse<ResponseBase>(new UnauthorizedException("User is not allowed to send messages")));
             }
             
             messageSender.Send(command.Data, command.Filter, command.FilterParameters);
