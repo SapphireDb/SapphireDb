@@ -102,7 +102,7 @@ namespace SapphireDb.Command.Execute
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            logger.LogInformation("Execution of {0}.{1} started", actionMethod.DeclaringType?.FullName,
+            logger.LogDebug("Execution of {0}.{1} started", actionMethod.DeclaringType?.FullName,
                 actionMethod.Name);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.Extensions.FileSystemGlobbing;
 using SapphireDb.Actions;
 using WebUI.Data;
 
@@ -84,6 +85,13 @@ namespace WebUI.Actions
             {
                 yield return input + " from server";
             }
+        }
+        
+        public bool MatchesGlobPattern(string input, string globPattern)
+        {
+            Matcher m = new Matcher();
+            m.AddInclude(globPattern);
+            return m.Match(input).HasMatches;
         }
     }
 }

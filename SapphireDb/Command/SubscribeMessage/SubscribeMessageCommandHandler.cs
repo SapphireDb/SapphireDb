@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -7,12 +8,14 @@ using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.SubscribeMessage
 {
-    class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>, INeedsConnection
+    class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>,
+        INeedsConnection
     {
         public ConnectionBase Connection { get; set; }
         private readonly MessageSubscriptionManager subscriptionManager;
 
-        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor, MessageSubscriptionManager subscriptionManager)
+        public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor,
+            MessageSubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
             this.subscriptionManager = subscriptionManager;
@@ -23,20 +26,24 @@ namespace SapphireDb.Command.SubscribeMessage
             if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
             {
                 return Task.FromResult(command.CreateExceptionResponse<ResponseBase>(
-                    new UnauthorizedException("Not allowed to subscribe this topic")));
+                    new UnauthorizedException("Not allowed to subscribe this topic(s)")));
             }
 
             subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);
 
-            if (SapphireMessageSender.RetainedTopicMessages.TryGetValue(command.Topic, out object retainedMessage))
-            {
-                _ = Connection.Send(new TopicResponse()
+            SapphireMessageSender.RetainedTopicMessages
+                .Where(m => m.Key.MatchesGlobPattern(command.Topic))
+                .ToList()
+                .ForEach((retainedMessage) =>
                 {
-                    ReferenceId = command.ReferenceId,
-                    Message = retainedMessage
+                    _ = Connection.Send(new TopicResponse()
+                    {
+                        ReferenceId = command.ReferenceId,
+                        Message = retainedMessage.Value,
+                        Topic = retainedMessage.Key
+                    });
                 });
-            }
-
+            
             return Task.FromResult<ResponseBase>(null);
         }
     }

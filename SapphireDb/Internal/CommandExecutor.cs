@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -95,6 +96,7 @@ namespace SapphireDb.Internal
                 {
                     logger.LogError("Error handling {0}. Error:{1}\n{2}", command.GetType().Name, ex.GetType().Name,
                         ex.Message);
+
                     return command.CreateExceptionResponse<ResponseBase>(ex);
                 }
             }

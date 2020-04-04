@@ -1,10 +1,7 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace SapphireDb.Helper
 {
@@ -21,6 +18,13 @@ namespace SapphireDb.Helper
             SHA512 sha512 = SHA512.Create();
             byte[] hash = sha512.ComputeHash(bytes);
             return BitConverter.ToString(hash).Replace("-", "");
+        }
+        
+        public static bool MatchesGlobPattern(this string input, string globPattern)
+        {
+            Matcher m = new Matcher();
+            m.AddInclude(globPattern);
+            return m.Match(input).HasMatches;
         }
     }
 }

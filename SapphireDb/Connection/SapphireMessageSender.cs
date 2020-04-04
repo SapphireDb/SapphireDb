@@ -103,7 +103,8 @@ namespace SapphireDb.Connection
                         _ = subscription.Connection.Send(new TopicResponse()
                         {
                             ReferenceId = subscription.ReferenceId,
-                            Message = message
+                            Message = message,
+                            Topic = topic
                         });     
                     });
                 });

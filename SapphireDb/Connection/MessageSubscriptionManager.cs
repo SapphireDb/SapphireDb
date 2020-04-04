@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using SapphireDb.Helper;
 using SapphireDb.Models;
 
 namespace SapphireDb.Connection
@@ -80,12 +81,10 @@ namespace SapphireDb.Connection
             {
                 readerWriterLockSlim.EnterReadLock();
 
-                if (subscriptions.TryGetValue(topic, out List<Subscription> topicSubscriptions))
-                {
-                    return topicSubscriptions;
-                }
-
-                return null;
+                return subscriptions
+                    .Where(s => topic.MatchesGlobPattern(s.Key))
+                    .SelectMany(s => s.Value)
+                    .ToList();
             }
             finally
             {
