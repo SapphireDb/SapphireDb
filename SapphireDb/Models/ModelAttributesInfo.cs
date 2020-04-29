@@ -26,6 +26,8 @@ namespace SapphireDb.Models
 
         public UpdatableAttribute UpdatableAttribute { get; set; }
         
+        public DisableAutoMergeAttribute DisableAutoMergeAttribute { get; set; }
+        
         public ModelAttributesInfo(Type modelType)
         {
             QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
@@ -39,6 +41,7 @@ namespace SapphireDb.Models
             RemoveEventAttributes = GetHookAttributeOfClassAndTopClasses<RemoveEventAttribute>(modelType);
 
             UpdatableAttribute = modelType.GetCustomAttribute<UpdatableAttribute>(false);
+            DisableAutoMergeAttribute = modelType.GetCustomAttribute<DisableAutoMergeAttribute>(false);
         }
 
         private List<T> GetAuthAttributesOfClassOrDirectTopClass<T>(Type modelType) where T : AuthAttributeBase

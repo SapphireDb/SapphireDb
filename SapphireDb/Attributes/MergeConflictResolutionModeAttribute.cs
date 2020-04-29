@@ -5,11 +5,11 @@ namespace SapphireDb.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public class MergeConflictResolutionModeAttribute : Attribute
     {
-        public MergeConflictResolutionMode MergeConflictResolutionConflictResolutionMode { get; set; }
+        public MergeConflictResolutionMode MergeConflictResolutionMode { get; set; }
         
-        public MergeConflictResolutionModeAttribute(MergeConflictResolutionMode mergeConflictResolutionConflictResolutionMode)
+        public MergeConflictResolutionModeAttribute(MergeConflictResolutionMode mergeConflictResolutionMode)
         {
-            MergeConflictResolutionConflictResolutionMode = mergeConflictResolutionConflictResolutionMode;
+            MergeConflictResolutionMode = mergeConflictResolutionMode;
         }
     }
     

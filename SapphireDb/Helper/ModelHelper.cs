@@ -151,11 +151,11 @@ namespace SapphireDb.Helper
                     {
                         if (pi.MergeConflictResolutionModeAttribute != null)
                         {
-                            if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionConflictResolutionMode == MergeConflictResolutionMode.Last)
+                            if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.Last)
                             {
                                 pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                             }
-                            else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionConflictResolutionMode == MergeConflictResolutionMode.ConflictMarkers &&
+                            else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.ConflictMarkers &&
                                      dbPropertyValue is string dbPropertyValueString &&
                                      updatedPropertyValue is string updatedPropertyValueString)
                             {

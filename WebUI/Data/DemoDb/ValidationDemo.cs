@@ -5,6 +5,7 @@ using SapphireDb.Models;
 
 namespace WebUI.Data.DemoDb
 {
+    // [DisableAutoMerge]
     public class ValidationDemo : SapphireOfflineEntity
     {
         [Updatable]

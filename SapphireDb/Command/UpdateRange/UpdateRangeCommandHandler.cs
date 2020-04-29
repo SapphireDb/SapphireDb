@@ -44,7 +44,8 @@ namespace SapphireDb.Command.UpdateRange
             return command.CreateExceptionResponse<UpdateRangeResponse>(new CollectionNotFoundException());
         }
 
-        private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command, KeyValuePair<Type, string> property,
+        private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,
+            KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
             List<object> updateValues = command.Entries.Select(e => e.Value)
@@ -57,7 +58,7 @@ namespace SapphireDb.Command.UpdateRange
             do
             {
                 updateRejected = false;
-                
+
                 response = new UpdateRangeResponse
                 {
                     ReferenceId = command.ReferenceId,
@@ -83,7 +84,7 @@ namespace SapphireDb.Command.UpdateRange
                                 serviceProvider);
                     }).ToList()
                 };
-                
+
                 try
                 {
                     db.SaveChanges();
@@ -94,40 +95,56 @@ namespace SapphireDb.Command.UpdateRange
                     {
                         await entityEntry.ReloadAsync();
                     }
-                    
+
                     updateRejected = true;
                 }
             } while (updateRejected);
 
             foreach (object value in updateValues)
             {
-                property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
+                    value, context, serviceProvider);
             }
-            
+
             return response;
         }
 
         private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object dbValue, object updateValue,
             object previousValue, SapphireDbContext db, HttpInformation context)
         {
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before, dbValue, context, serviceProvider);
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
+                dbValue, context, serviceProvider);
 
             List<string> mergeErrors = null;
-            
+
             if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
                 updateValue is SapphireOfflineEntity updateOfflineEntity &&
                 previousValue != null && previousValue is SapphireOfflineEntity previousValueOfflineEntity &&
-                !dbValueOfflineEntity.ModifiedOn.EqualWithTolerance(updateOfflineEntity.ModifiedOn, db.Database.ProviderName))
+                !dbValueOfflineEntity.ModifiedOn.EqualWithTolerance(updateOfflineEntity.ModifiedOn,
+                    db.Database.ProviderName))
             {
-                mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
-                    previousValueOfflineEntity, context, serviceProvider);
+                if (property.Key.GetModelAttributesInfo().DisableAutoMergeAttribute == null)
+                {
+                    mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, updateOfflineEntity,
+                        previousValueOfflineEntity, context, serviceProvider);
+                }
+                else
+                {
+                    return new UpdateResponse()
+                    {
+                        Value = updateValue,
+                        Error = new SapphireDbError(
+                            new OperationRejectedException("Update rejected. The object state has changed"))
+                    };
+                }
             }
             else
             {
                 property.Key.UpdateFields(dbValue, updateValue, context, serviceProvider);
             }
 
-            if (!ValidationHelper.ValidateModel(dbValue, serviceProvider, out Dictionary<string, List<string>> validationResults))
+            if (!ValidationHelper.ValidateModel(dbValue, serviceProvider,
+                out Dictionary<string, List<string>> validationResults))
             {
                 return new UpdateResponse()
                 {
@@ -135,16 +152,18 @@ namespace SapphireDb.Command.UpdateRange
                     ValidationResults = validationResults
                 };
             }
-            
+
             db.Update(dbValue);
 
-            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave, dbValue, context, serviceProvider);
-            
+            property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave,
+                dbValue, context, serviceProvider);
+
             return new UpdateResponse()
             {
                 Value = dbValue,
-                ValidationResults = mergeErrors != null && mergeErrors.Any() ? 
-                    mergeErrors.ToDictionary(v => v, v => new List<string>() { "merge conflict" }) : null
+                ValidationResults = mergeErrors != null && mergeErrors.Any()
+                    ? mergeErrors.ToDictionary(v => v, v => new List<string>() {"merge conflict"})
+                    : null
             };
         }
     }
