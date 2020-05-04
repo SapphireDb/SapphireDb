@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace SapphireDb.Command.UpdateRange
 {
@@ -10,5 +11,7 @@ namespace SapphireDb.Command.UpdateRange
     public class UpdateResponse : ValidatedResponseBase
     {
         public object Value { get; set; }
+
+        public JObject UpdatedProperties { get; set; }
     }
 }

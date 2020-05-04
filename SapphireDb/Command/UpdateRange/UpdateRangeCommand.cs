@@ -12,6 +12,6 @@ namespace SapphireDb.Command.UpdateRange
     {
         public JObject Value { get; set; }
 
-        public JObject Previous { get; set; }
+        public JObject UpdatedProperties { get; set; }
     }
 }

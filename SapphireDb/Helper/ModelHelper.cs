@@ -113,7 +113,7 @@ namespace SapphireDb.Helper
                 .ToList();
         }
         
-        public static void UpdateFields(this Type entityType, object entityObject, object newValues, 
+        public static void UpdateFields(this Type entityType, object entityObject, JObject updatedProperties,
             HttpInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
@@ -121,12 +121,17 @@ namespace SapphireDb.Helper
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
-                pi.PropertyInfo.SetValue(entityObject, pi.PropertyInfo.GetValue(newValues));
+                JToken updatePropertyToken = updatedProperties.GetValue(pi.PropertyInfo.Name.ToCamelCase());
+
+                if (updatePropertyToken != null)
+                {
+                    pi.PropertyInfo.SetValue(entityObject, updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType));
+                }
             }
         }
         
         public static List<string> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
-            SapphireOfflineEntity updatedObject, SapphireOfflineEntity previousObject, HttpInformation information,
+            SapphireOfflineEntity originalOfflineEntity, JObject updatedProperties, HttpInformation information,
             IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
@@ -136,14 +141,15 @@ namespace SapphireDb.Helper
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
-                object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
-                object updatedPropertyValue = pi.PropertyInfo.GetValue(updatedObject);
-                object previousPropertyValue = pi.PropertyInfo.GetValue(previousObject);
+                JToken updatePropertyToken = updatedProperties.GetValue(pi.PropertyInfo.Name.ToCamelCase());
 
-                if (!dbPropertyValue.Equals(updatedPropertyValue) &&
-                    !previousPropertyValue.Equals(updatedPropertyValue))
+                if (updatePropertyToken != null)
                 {
-                    if (dbPropertyValue.Equals(previousPropertyValue))
+                    object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
+                    object originalPropertyValue = pi.PropertyInfo.GetValue(originalOfflineEntity);
+                    object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+                    
+                    if (dbPropertyValue.Equals(originalPropertyValue))
                     {
                         pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                     }
@@ -160,10 +166,10 @@ namespace SapphireDb.Helper
                                      updatedPropertyValue is string updatedPropertyValueString)
                             {
                                 string propertyValueConflictMarkers = "<<<<<<< database\n" +
-                                                       $"{dbPropertyValueString}\n" +
-                                                       "=======\n" +
-                                                       $"{updatedPropertyValueString}\n" +
-                                                       ">>>>>>> update";
+                                                                      $"{dbPropertyValueString}\n" +
+                                                                      "=======\n" +
+                                                                      $"{updatedPropertyValueString}\n" +
+                                                                      ">>>>>>> update";
                                 pi.PropertyInfo.SetValue(dbObject, propertyValueConflictMarkers);
                             }
                         }
