@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Internal;
-using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 
 namespace SapphireDb.Helper
