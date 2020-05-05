@@ -24,10 +24,35 @@ namespace SapphireDb.Helper
                 .Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
         }
 
-        public static object[] GetPrimaryKeyValues(this Type type, SapphireDbContext db, object entityObject)
+        public static object[] GetPrimaryKeyValuesFromJson(this Type type, SapphireDbContext db, JObject jsonObject)
         {
             return type.GetPrimaryKeys(db)
-                .Select(p => p.PropertyInfo.GetValue(entityObject)).ToArray();
+                .Select(p => 
+                    jsonObject.GetValue(p.PropertyInfo.Name.ToCamelCase())
+                        .ToObject(p.PropertyInfo.PropertyType))
+                .ToArray();
+        }
+
+        public static DateTime? GetTimestamp(this JObject jsonObject)
+        {
+            return (DateTime?)jsonObject
+                .GetValue("modifiedOn")?
+                .ToObject(typeof(DateTime));
+        }
+
+        public static bool JsonContainsData(this Type type, SapphireDbContext db, JObject jsonObject)
+        {
+            bool isOfflineEntity = typeof(SapphireOfflineEntity).IsAssignableFrom(type);
+            
+            string[] defaultPropertyList = type.GetPrimaryKeys(db)
+                .Select(p => p.PropertyInfo.Name.ToCamelCase())
+                .Concat(isOfflineEntity ? new [] { "modifiedOn" } : new string[] {})
+                .ToArray();
+            
+            List<JProperty> jsonObjectProperties = jsonObject.Properties().ToList();
+
+            return defaultPropertyList.All(p => jsonObjectProperties.Any(jp => jp.Name == p)) &&
+                   jsonObjectProperties.Count > defaultPropertyList.Length;
         }
 
         public static string[] GetPrimaryKeyNames(this Type type, SapphireDbContext db)
@@ -113,7 +138,7 @@ namespace SapphireDb.Helper
                 .ToList();
         }
         
-        public static void UpdateFields(this Type entityType, object entityObject, JObject updatedProperties,
+        public static void UpdateFields(this Type entityType, object entityObject, JObject originalValue, JObject updatedProperties,
             HttpInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
@@ -122,22 +147,37 @@ namespace SapphireDb.Helper
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
                 JToken updatePropertyToken = updatedProperties.GetValue(pi.PropertyInfo.Name.ToCamelCase());
+                JToken originalPropertyToken = originalValue.GetValue(pi.PropertyInfo.Name.ToCamelCase());
 
                 if (updatePropertyToken != null)
                 {
-                    pi.PropertyInfo.SetValue(entityObject, updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType));
+                    object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+                    
+                    if (originalPropertyToken != null)
+                    {
+                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+
+                        if (!originalPropertyValue.Equals(updatedPropertyValue))
+                        {
+                            pi.PropertyInfo.SetValue(entityObject, updatedPropertyValue);
+                        }
+                    }
+                    else
+                    {
+                        pi.PropertyInfo.SetValue(entityObject, updatedPropertyValue);
+                    }
                 }
             }
         }
         
-        public static List<string> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
-            SapphireOfflineEntity originalOfflineEntity, JObject updatedProperties, HttpInformation information,
+        public static List<Tuple<string, string>> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
+            JObject originalOfflineEntity, JObject updatedProperties, HttpInformation information,
             IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
                 information, serviceProvider);
 
-            List<string> mergeErrors = new List<string>();
+            List<Tuple<string, string>> mergeErrors = new List<Tuple<string, string>>();
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
@@ -146,20 +186,33 @@ namespace SapphireDb.Helper
                 if (updatePropertyToken != null)
                 {
                     object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
-                    object originalPropertyValue = pi.PropertyInfo.GetValue(originalOfflineEntity);
                     object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
                     
-                    if (dbPropertyValue.Equals(originalPropertyValue))
+                    JToken originalPropertyToken = originalOfflineEntity.GetValue(pi.PropertyInfo.Name.ToCamelCase());
+
+                    if (originalPropertyToken != null)
                     {
-                        pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
-                    }
-                    else
-                    {
+                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+
+                        if (originalPropertyValue.Equals(updatedPropertyValue))
+                        {
+                            // Value not updated
+                            continue;
+                        }
+                        
+                        if (dbPropertyValue.Equals(originalPropertyValue))
+                        {
+                            // Value in db equals previous value -> use new value
+                            pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
+                            continue;
+                        }
+                        
                         if (pi.MergeConflictResolutionModeAttribute != null)
                         {
                             if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.Last)
                             {
                                 pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
+                                mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "value updated"));
                             }
                             else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.ConflictMarkers &&
                                      dbPropertyValue is string dbPropertyValueString &&
@@ -171,10 +224,21 @@ namespace SapphireDb.Helper
                                                                       $"{updatedPropertyValueString}\n" +
                                                                       ">>>>>>> update";
                                 pi.PropertyInfo.SetValue(dbObject, propertyValueConflictMarkers);
+                                mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "added conflict markers"));
+                            }
+                            else
+                            {
+                                mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "preserved db value"));
                             }
                         }
-                        
-                        mergeErrors.Add(pi.PropertyInfo.Name);
+                        else
+                        {
+                            mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "no resolution mode active"));
+                        }
+                    }
+                    else
+                    {
+                        mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "missing information"));
                     }
                 }
             }

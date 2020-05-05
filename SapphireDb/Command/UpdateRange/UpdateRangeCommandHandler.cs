@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -48,42 +49,47 @@ namespace SapphireDb.Command.UpdateRange
             KeyValuePair<Type, string> property,
             HttpInformation context, SapphireDbContext db)
         {
-            List<object> originalUpdatedValues = command.Entries.Select(e => e.Value)
-                .Select(value => value.ToObject(property.Key))
-                .ToList();
-
-            UpdateRangeResponse response;
             bool updateRejected;
+
+            List<Tuple<ValidatedResponseBase, object>> updateResults;
 
             do
             {
                 updateRejected = false;
 
-                response = new UpdateRangeResponse
+                updateResults = command.Entries.Select((updateEntry, index) =>
                 {
-                    ReferenceId = command.ReferenceId,
-                    Results = originalUpdatedValues.Select((originalValue, index) =>
+                    object[] primaryKeys = property.Key.GetPrimaryKeyValuesFromJson(db, updateEntry.Value);
+                    object dbValue = db.Find(property.Key, primaryKeys);
+
+                    if (dbValue == null)
                     {
-                        if (!property.Key.CanUpdate(context, originalValue, serviceProvider))
+                        if (property.Key.JsonContainsData(db, updateEntry.Value))
                         {
-                            return (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
-                                new UnauthorizedException("The user is not authorized for this action."));
+                            updateEntry.Value.Merge(updateEntry.UpdatedProperties);
+                            object completeValue = updateEntry.Value.ToObject(property.Key);
+
+                            return new Tuple<ValidatedResponseBase, object>(CreateRangeCommandHandler
+                                .SetPropertiesAndValidate<UpdateEventAttribute>(db, property, completeValue, context,
+                                    serviceProvider), completeValue);
                         }
 
-                        object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, originalValue);
-                        object value = db.Find(property.Key, primaryKeys);
+                        return new Tuple<ValidatedResponseBase, object>(
+                            (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
+                                new OperationRejectedException("Update failed. The object was not found")), null);
+                    }
 
-                        if (value != null)
-                        {
-                            return ApplyChangesToDb(property, value, originalValue,
-                                command.Entries[index].UpdatedProperties, db, context);
-                        }
+                    if (!property.Key.CanUpdate(context, dbValue, serviceProvider))
+                    {
+                        return new Tuple<ValidatedResponseBase, object>(
+                            (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
+                                new UnauthorizedException("The user is not authorized for this action.")), null);
+                    }
 
-                        return (ValidatedResponseBase) CreateRangeCommandHandler
-                            .SetPropertiesAndValidate<UpdateEventAttribute>(db, property, value, context,
-                                serviceProvider);
-                    }).ToList()
-                };
+                    return new Tuple<ValidatedResponseBase, object>(ApplyChangesToDb(property, dbValue,
+                        updateEntry.Value,
+                        updateEntry.UpdatedProperties, db, context), dbValue);
+                }).ToList();
 
                 try
                 {
@@ -100,30 +106,41 @@ namespace SapphireDb.Command.UpdateRange
                 }
             } while (updateRejected);
 
-            foreach (object value in originalUpdatedValues)
+            foreach (Tuple<ValidatedResponseBase, object> value in updateResults)
             {
-                property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                    value, context, serviceProvider);
+                if (value.Item2 != null)
+                {
+                    property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
+                        value.Item2, context, serviceProvider);
+                }
             }
 
-            return response;
+            return new UpdateRangeResponse
+            {
+                ReferenceId = command.ReferenceId,
+                Results = updateResults.Select(r => r.Item1).ToList()
+            };
         }
 
-        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object dbValue, object originalValue,
+        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object dbValue,
+            JObject originalValue,
             JObject updatedProperties, SapphireDbContext db, HttpInformation context)
         {
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
                 dbValue, context, serviceProvider);
 
-            List<string> mergeErrors = null;
+            List<Tuple<string, string>> mergeErrors = null;
+
+            DateTime? modifiedOn = originalValue.GetTimestamp();
 
             if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
-                originalValue is SapphireOfflineEntity originalOfflineEntity &&
-                !dbValueOfflineEntity.ModifiedOn.EqualWithTolerance(originalOfflineEntity.ModifiedOn, db.Database.ProviderName))
+                property.Key.JsonContainsData(db, originalValue) &&
+                modifiedOn.HasValue &&
+                !dbValueOfflineEntity.ModifiedOn.EqualWithTolerance(modifiedOn.Value, db.Database.ProviderName))
             {
                 if (property.Key.GetModelAttributesInfo().DisableAutoMergeAttribute == null)
                 {
-                    mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, originalOfflineEntity,
+                    mergeErrors = property.Key.MergeFields(dbValueOfflineEntity, originalValue,
                         updatedProperties, context, serviceProvider);
                 }
                 else
@@ -139,7 +156,7 @@ namespace SapphireDb.Command.UpdateRange
             }
             else
             {
-                property.Key.UpdateFields(dbValue, updatedProperties, context, serviceProvider);
+                property.Key.UpdateFields(dbValue, originalValue, updatedProperties, context, serviceProvider);
             }
 
             if (!ValidationHelper.ValidateModel(dbValue, serviceProvider,
@@ -163,7 +180,7 @@ namespace SapphireDb.Command.UpdateRange
                 Value = dbValue,
                 UpdatedProperties = updatedProperties,
                 ValidationResults = mergeErrors != null && mergeErrors.Any()
-                    ? mergeErrors.ToDictionary(v => v, v => new List<string>() {"merge conflict"})
+                    ? mergeErrors.ToDictionary(v => v.Item1, v => new List<string>() {$"merge conflict: {v.Item2}"})
                     : null
             };
         }
