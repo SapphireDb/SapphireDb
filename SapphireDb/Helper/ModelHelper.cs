@@ -51,11 +51,6 @@ namespace SapphireDb.Helper
                    jsonObjectProperties.Count > defaultPropertyList.Length;
         }
 
-        public static string[] GetPrimaryKeyNames(this Type type, SapphireDbContext db)
-        {
-            return type.GetPrimaryKeys(db).Select(p => p.Name.ToCamelCase()).ToArray();
-        }
-
         private static readonly ConcurrentDictionary<Type, IProperty[]> PrimaryKeyDictionary =
             new ConcurrentDictionary<Type, IProperty[]>();
 
