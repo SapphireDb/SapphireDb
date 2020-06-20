@@ -52,9 +52,6 @@ namespace WebUI
                     }
                 }, "demo")
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
-                .AddActionHandlerConfiguration<UserActionsConfiguration>()
-                .AddModelConfiguration<MessageConfiguration>()
-                .AddModelConfiguration<DocumentConfiguration>()
                 .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string) parameters[0]))
                 .AddTopicConfiguration("admin", i => i.User.IsInRole("admin"), i => i.User.IsInRole("admin"));
                 // .AddRedisSync();

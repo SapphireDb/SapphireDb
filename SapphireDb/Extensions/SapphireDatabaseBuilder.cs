@@ -36,18 +36,6 @@ namespace SapphireDb.Extensions
 
             return this;
         }
-        
-        public SapphireDatabaseBuilder AddActionHandlerConfiguration<T>() where T : class, ISapphireActionConfiguration
-        {
-            serviceCollection.AddTransient<ISapphireActionConfiguration, T>();
-            return this;
-        }
-        
-        public SapphireDatabaseBuilder AddModelConfiguration<T>() where T : class, ISapphireModelConfiguration
-        {
-            serviceCollection.AddTransient<ISapphireModelConfiguration, T>();
-            return this;
-        }
 
         public SapphireDatabaseBuilder AddTopicConfiguration(string topic, Func<HttpInformation, bool> canSubscribe,
             Func<HttpInformation, bool> canPublish)

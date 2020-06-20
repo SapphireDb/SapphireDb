@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
+using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -108,6 +108,22 @@ namespace SapphireDb.Extensions
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)
             {
                 services.AddTransient(handler.Value);
+            }
+            
+            IEnumerable<Type> modelConfigurationTypes = Assembly.GetCallingAssembly().GetTypes()
+                .Where(t => typeof(ISapphireModelConfiguration).IsAssignableFrom(t));
+
+            foreach (Type modelConfigurationType in modelConfigurationTypes)
+            {
+                services.AddTransient(typeof(ISapphireModelConfiguration), modelConfigurationType);
+            }
+            
+            IEnumerable<Type> actionHandlerConfigurationTypes = Assembly.GetCallingAssembly().GetTypes()
+                .Where(t => typeof(ISapphireActionConfiguration).IsAssignableFrom(t));
+
+            foreach (Type actionHandlerConfigurationType in actionHandlerConfigurationTypes)
+            {
+                services.AddTransient(typeof(ISapphireActionConfiguration), actionHandlerConfigurationType);
             }
 
             return new SapphireDatabaseBuilder(services);
