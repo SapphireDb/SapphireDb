@@ -17,9 +17,10 @@ namespace SapphireDb.Models.SapphireApiBuilder
         }
 
         public SapphireModelBuilder<T> AddQueryAuth(string policies = null,
-            Func<HttpInformation, T, bool> function = null)
+            Func<HttpInformation, bool> function = null)
         {
-            attributesInfo.QueryAuthAttributes.Add(CreateAuthAttribute<QueryAuthAttribute>(policies, function));
+            attributesInfo.QueryAuthAttributes.Add(CreateAuthAttribute<QueryAuthAttribute>(policies, 
+                (information, mode) => function(information)));
             return this;
         }
 
