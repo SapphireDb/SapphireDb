@@ -11,11 +11,13 @@ namespace SapphireDb.Sync
 {
     public class SyncManager
     {
+        private readonly ILogger<SyncManager> logger;
         private readonly Guid uId = Guid.NewGuid();
         private readonly ISapphireSyncModule sapphireSyncModule;
 
         public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger)
         {
+            this.logger = logger;
             sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
 
             if (sapphireSyncModule != null)
@@ -118,6 +120,7 @@ namespace SapphireDb.Sync
 
         private void Publish(SyncRequest syncRequest)
         {
+            logger.LogInformation("Publishing sync request to other servers");
             sapphireSyncModule?.Publish(syncRequest);
         }
     }
