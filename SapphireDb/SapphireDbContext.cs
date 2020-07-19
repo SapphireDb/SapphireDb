@@ -12,9 +12,9 @@ namespace SapphireDb
 {
     public class SapphireDbContext : DbContext
     {
-        private readonly SapphireDatabaseNotifier notifier;
+        private readonly ISapphireDatabaseNotifier notifier;
 
-        public SapphireDbContext(DbContextOptions options, SapphireDatabaseNotifier notifier) : base(options)
+        public SapphireDbContext(DbContextOptions options, ISapphireDatabaseNotifier notifier) : base(options)
         {
             this.notifier = notifier;
         }

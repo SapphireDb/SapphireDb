@@ -7,7 +7,7 @@ using SapphireDb.Sync;
 
 namespace SapphireDb
 {
-    public class SapphireDatabaseNotifier
+    public class SapphireDatabaseNotifier : ISapphireDatabaseNotifier
     {
         private readonly SapphireChangeNotifier notifier;
         private readonly SyncManager syncManager;
