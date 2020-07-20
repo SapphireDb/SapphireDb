@@ -7,24 +7,34 @@ using SapphireDb;
 using System.Collections.Generic;
 using WebUI.Data.Models;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace WebUI.Tests
 {
     internal class UserControllerTests
     {
         private Mock<ISapphireDatabaseNotifier> _sapphireDatabaseNotifierMock;
-        private RealtimeContext _realtimeContext;
+        private TestContext _testContext;
         private UserController _userController;
 
         [SetUp]
         public void Setup()
         {
             _sapphireDatabaseNotifierMock = new Mock<ISapphireDatabaseNotifier>();
-            var options = new DbContextOptionsBuilder<RealtimeContext>()
-                .UseInMemoryDatabase("RealtimeDb")
+            
+            var dbName = "RealtimeDb";
+            var root = new InMemoryDatabaseRoot();
+            
+            var realtimeOptions = new DbContextOptionsBuilder<RealtimeContext>()
+                .UseInMemoryDatabase(dbName, root)
                 .Options;
-            _realtimeContext = new RealtimeContext(options, _sapphireDatabaseNotifierMock.Object);
-            _userController = new UserController(_realtimeContext);
+            var realtimeContext = new RealtimeContext(realtimeOptions, _sapphireDatabaseNotifierMock.Object);
+            _userController = new UserController(realtimeContext);
+
+            var testOptions = new DbContextOptionsBuilder<TestContext>()
+                .UseInMemoryDatabase(dbName, root)
+                .Options;
+            _testContext = new TestContext(testOptions);
         }
 
         [Test]
@@ -38,8 +48,8 @@ namespace WebUI.Tests
                 new User { Id = 3, FirstName = "f3", LastName = "l3", Username = "u3" },
                 new User { Id = 4, FirstName = "f4", LastName = "l4", Username = "u4" }
             };
-            _realtimeContext.Users.AddRange(users);
-            _realtimeContext.SaveChanges();
+            _testContext.Users.AddRange(users);
+            _testContext.SaveChanges();
 
             // Act.
             List<User> usersFromController = _userController.Get();
@@ -79,14 +89,14 @@ namespace WebUI.Tests
             _userController.Post(newUser);
 
             // Assert.
-            User userFromDb = _realtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);            
+            User userFromDb = _testContext.Users.FirstOrDefault(user => user.Id == newUser.Id);            
             Assert.IsNotNull(userFromDb);
             Assert.AreEqual(newUser.Id, userFromDb.Id);
             Assert.AreEqual(newUser.FirstName, userFromDb.FirstName);
             Assert.AreEqual(newUser.LastName, userFromDb.LastName);
             Assert.AreEqual(newUser.Username, userFromDb.Username);
 
-            Test testFromDb = _realtimeContext.Tests.FirstOrDefault(test => test.Content == newUser.Username);
+            Test testFromDb = _testContext.Tests.FirstOrDefault(test => test.Content == newUser.Username);
             Assert.IsNotNull(testFromDb);
             Assert.AreEqual(newUser.Username, testFromDb.Content);
         }
@@ -96,16 +106,16 @@ namespace WebUI.Tests
         {
             // Arrange.
             var newUser = new User { Id = 1, FirstName = "f1", LastName = "l1", Username = "u1" };
-            _realtimeContext.Users.Add(newUser);
-            _realtimeContext.SaveChanges();
-            var existingUser = _realtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
+            _testContext.Users.Add(newUser);
+            _testContext.SaveChanges();
+            var existingUser = _testContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
             existingUser.FirstName = "changed first name";
 
             // Act.
             _userController.Put(existingUser);
 
             // Assert.
-            var existingUserFromDb = _realtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
+            var existingUserFromDb = _testContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
             Assert.IsNotNull(existingUserFromDb);
             Assert.AreEqual(newUser.Id, existingUserFromDb.Id);
             Assert.AreEqual(existingUser.FirstName, existingUserFromDb.FirstName);
@@ -118,21 +128,21 @@ namespace WebUI.Tests
         {
             // Arrange.
             var newUser = new User { Id = 1, FirstName = "f1", LastName = "l1", Username = "u1" };
-            _realtimeContext.Users.Add(newUser);
-            _realtimeContext.SaveChanges();
+            _testContext.Users.Add(newUser);
+            _testContext.SaveChanges();
 
             // Act.
             _userController.Delete(newUser);
 
             // Assert.
-            var existingUserFromDb = _realtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
+            var existingUserFromDb = _testContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
             Assert.IsNull(existingUserFromDb);
         }
 
         [TearDown]
         public void Cleanup()
         {
-            _realtimeContext.Database.EnsureDeleted();
+            _testContext.Database.EnsureDeleted();
         }
     }
 }
