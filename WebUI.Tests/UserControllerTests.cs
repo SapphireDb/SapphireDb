@@ -7,7 +7,6 @@ using SapphireDb;
 using System.Collections.Generic;
 using WebUI.Data.Models;
 using System.Linq;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace WebUI.Tests
 {
@@ -23,16 +22,15 @@ namespace WebUI.Tests
             _sapphireDatabaseNotifierMock = new Mock<ISapphireDatabaseNotifier>();
             
             var dbName = "RealtimeDb";
-            var root = new InMemoryDatabaseRoot();
             
             var realtimeOptions = new DbContextOptionsBuilder<RealtimeContext>()
-                .UseInMemoryDatabase(dbName, root)
+                .UseInMemoryDatabase(dbName)
                 .Options;
             var realtimeContext = new RealtimeContext(realtimeOptions, _sapphireDatabaseNotifierMock.Object);
             _userController = new UserController(realtimeContext);
 
             var testOptions = new DbContextOptionsBuilder<RealtimeContext>()
-                .UseInMemoryDatabase(dbName, root)
+                .UseInMemoryDatabase(dbName)
                 .Options;
             _testRealtimeContext = new RealtimeContext(testOptions, _sapphireDatabaseNotifierMock.Object);
         }
