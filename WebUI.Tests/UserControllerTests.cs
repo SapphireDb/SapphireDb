@@ -132,13 +132,7 @@ namespace WebUI.Tests
         [TearDown]
         public void Cleanup()
         {
-            DbSet<User> users = _realtimeContext.Users;
-            _realtimeContext.Users.RemoveRange(users);
-
-            DbSet<Test> tests = _realtimeContext.Tests;
-            _realtimeContext.Tests.RemoveRange(tests);
-
-            _realtimeContext.SaveChanges();
+            _realtimeContext.Database.EnsureDeleted();
         }
     }
 }
