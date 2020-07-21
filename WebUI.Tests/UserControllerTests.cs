@@ -7,6 +7,7 @@ using SapphireDb;
 using System.Collections.Generic;
 using WebUI.Data.Models;
 using System.Linq;
+using DeepEqual.Syntax;
 
 namespace WebUI.Tests
 {
@@ -53,28 +54,7 @@ namespace WebUI.Tests
             List<User> usersFromController = _userController.Get();
 
             // Assert.
-            Assert.IsNotNull(usersFromController);
-            Assert.AreEqual(4, usersFromController.Count);
-            
-            Assert.AreEqual(1, usersFromController[0].Id);
-            Assert.AreEqual("f1", usersFromController[0].FirstName);
-            Assert.AreEqual("l1", usersFromController[0].LastName);
-            Assert.AreEqual("u1", usersFromController[0].Username);
-
-            Assert.AreEqual(2, usersFromController[1].Id);
-            Assert.AreEqual("f2", usersFromController[1].FirstName);
-            Assert.AreEqual("l2", usersFromController[1].LastName);
-            Assert.AreEqual("u2", usersFromController[1].Username);
-
-            Assert.AreEqual(3, usersFromController[2].Id);
-            Assert.AreEqual("f3", usersFromController[2].FirstName);
-            Assert.AreEqual("l3", usersFromController[2].LastName);
-            Assert.AreEqual("u3", usersFromController[2].Username);
-
-            Assert.AreEqual(4, usersFromController[3].Id);
-            Assert.AreEqual("f4", usersFromController[3].FirstName);
-            Assert.AreEqual("l4", usersFromController[3].LastName);
-            Assert.AreEqual("u4", usersFromController[3].Username);
+            users.ShouldDeepEqual(usersFromController);
         }
 
         [Test]
@@ -87,12 +67,8 @@ namespace WebUI.Tests
             _userController.Post(newUser);
 
             // Assert.
-            User userFromDb = _testRealtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);            
-            Assert.IsNotNull(userFromDb);
-            Assert.AreEqual(newUser.Id, userFromDb.Id);
-            Assert.AreEqual(newUser.FirstName, userFromDb.FirstName);
-            Assert.AreEqual(newUser.LastName, userFromDb.LastName);
-            Assert.AreEqual(newUser.Username, userFromDb.Username);
+            User userFromDb = _testRealtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
+            newUser.ShouldDeepEqual(userFromDb);
 
             Test testFromDb = _testRealtimeContext.Tests.FirstOrDefault(test => test.Content == newUser.Username);
             Assert.IsNotNull(testFromDb);
@@ -114,11 +90,8 @@ namespace WebUI.Tests
 
             // Assert.
             var existingUserFromDb = _testRealtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
-            Assert.IsNotNull(existingUserFromDb);
-            Assert.AreEqual(newUser.Id, existingUserFromDb.Id);
-            Assert.AreEqual(existingUser.FirstName, existingUserFromDb.FirstName);
-            Assert.AreEqual(newUser.LastName, existingUserFromDb.LastName);
-            Assert.AreEqual(newUser.Username, existingUserFromDb.Username);
+            newUser.ShouldDeepEqual(existingUserFromDb);
+            existingUser.ShouldDeepEqual(existingUserFromDb);
         }
 
         [Test]
