@@ -54,7 +54,7 @@ namespace WebUI.Tests
             List<User> usersFromController = _userController.Get();
 
             // Assert.
-            users.ShouldDeepEqual(usersFromController);
+            usersFromController.ShouldDeepEqual(users);
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace WebUI.Tests
 
             // Assert.
             User userFromDb = _testRealtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
-            newUser.ShouldDeepEqual(userFromDb);
+            userFromDb.ShouldDeepEqual(newUser);
 
             Test testFromDb = _testRealtimeContext.Tests.FirstOrDefault(test => test.Content == newUser.Username);
             Assert.IsNotNull(testFromDb);
@@ -90,8 +90,8 @@ namespace WebUI.Tests
 
             // Assert.
             var existingUserFromDb = _testRealtimeContext.Users.FirstOrDefault(user => user.Id == newUser.Id);
-            newUser.ShouldDeepEqual(existingUserFromDb);
-            existingUser.ShouldDeepEqual(existingUserFromDb);
+            existingUserFromDb.ShouldDeepEqual(newUser);
+            existingUserFromDb.ShouldDeepEqual(existingUser);
         }
 
         [Test]
