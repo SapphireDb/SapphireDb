@@ -90,6 +90,7 @@ namespace SapphireDb.Extensions
             services.AddSingleton<MessageSubscriptionManager>();
 
             services.AddScoped<SapphireDatabaseNotifier>();
+            services.AddScoped<ISapphireDatabaseNotifier, SapphireDatabaseNotifier>();
 
             services.AddTransient<DbContextAccesor>();
 

@@ -55,8 +55,8 @@ You now have to change your DbContext to derive from `SapphireDbContext`. Also m
 // Change DbContext to SapphireDbContext
 public class MyDbContext : SapphireDbContext
 {
-  //Add SapphireDatabaseNotifier for DI
-  public MyDbContext(DbContextOptions<MyDbContext> options, SapphireDatabaseNotifier notifier) : base(options, notifier)
+  //Add ISapphireDatabaseNotifier for DI
+  public MyDbContext(DbContextOptions<MyDbContext> options, ISapphireDatabaseNotifier notifier) : base(options, notifier)
   {
 
   }

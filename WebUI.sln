@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebUI", "WebUI\WebUI.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SapphireDb", "SapphireDb\SapphireDb.csproj", "{6BA035A1-0BD9-4062-9E1C-93E55699403F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebUI.Tests", "WebUI.Tests\WebUI.Tests.csproj", "{B28F0C7C-1DA1-440D-B605-8CF5C025190F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BA035A1-0BD9-4062-9E1C-93E55699403F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

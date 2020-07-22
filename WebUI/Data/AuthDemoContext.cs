@@ -6,7 +6,7 @@ namespace WebUI.Data
 {
     public class AuthDemoContext : RealtimeContext
     {
-        public AuthDemoContext(DbContextOptions<RealtimeContext> options, SapphireDatabaseNotifier notifier) : base(options, notifier)
+        public AuthDemoContext(DbContextOptions<RealtimeContext> options, ISapphireDatabaseNotifier notifier) : base(options, notifier)
         {
         }
 
