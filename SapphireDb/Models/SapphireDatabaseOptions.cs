@@ -14,6 +14,7 @@ namespace SapphireDb.Models
             {
                 CanExecuteCommand = (command, context) => context.User.Identity.IsAuthenticated;
                 IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
+                DisableIncludePrefilter = true;
             }
             else
             {
@@ -30,6 +31,7 @@ namespace SapphireDb.Models
             WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
             PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
             RestInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
+            DisableIncludePrefilter = configuration[nameof(DisableIncludePrefilter)]?.ToLowerInvariant() == "true";
         }
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
@@ -46,6 +48,8 @@ namespace SapphireDb.Models
 
         public bool RestInterface { get; set; } = true;
 
+        public bool DisableIncludePrefilter { get; set; } = false;
+        
         public SyncConfiguration Sync { get; set; } = new SyncConfiguration();
 
         public class SyncConfiguration
