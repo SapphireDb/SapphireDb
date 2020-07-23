@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,12 +15,26 @@ namespace SapphireDb
 
         public SapphireDbContext(DbContextOptions options) : base(options)
         {
-            notifier = this.GetService<ISapphireDatabaseNotifier>();
+            try
+            {
+                notifier = this.GetService<ISapphireDatabaseNotifier>();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Ignored -> Notifier is optional and only needed when running with SapphireDb
+            }
         }
 
         public SapphireDbContext()
         {
-            notifier = this.GetService<ISapphireDatabaseNotifier>();
+            try
+            {
+                notifier = this.GetService<ISapphireDatabaseNotifier>();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Ignored -> Notifier is optional and only needed when running with SapphireDb
+            }
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)

@@ -13,27 +13,24 @@ namespace WebUI.Tests
 {
     internal class UserControllerTests
     {
-        private Mock<ISapphireDatabaseNotifier> _sapphireDatabaseNotifierMock;
         private RealtimeContext _testRealtimeContext;
         private UserController _userController;
 
         [SetUp]
         public void Setup()
         {
-            _sapphireDatabaseNotifierMock = new Mock<ISapphireDatabaseNotifier>();
-            
             var dbName = "RealtimeDb";
             
             var realtimeOptions = new DbContextOptionsBuilder<RealtimeContext>()
                 .UseInMemoryDatabase(dbName)
                 .Options;
-            var realtimeContext = new RealtimeContext(realtimeOptions, _sapphireDatabaseNotifierMock.Object);
+            var realtimeContext = new RealtimeContext(realtimeOptions);
             _userController = new UserController(realtimeContext);
 
             var testOptions = new DbContextOptionsBuilder<RealtimeContext>()
                 .UseInMemoryDatabase(dbName)
                 .Options;
-            _testRealtimeContext = new RealtimeContext(testOptions, _sapphireDatabaseNotifierMock.Object);
+            _testRealtimeContext = new RealtimeContext(testOptions);
         }
 
         [Test]
