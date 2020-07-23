@@ -7,8 +7,7 @@ namespace WebUI.Data
     //Derive Context from SapphireDbContext
     public class RealtimeContext : SapphireDbContext
     {
-        //Add SapphireDatabaseNotifier for DI
-        public RealtimeContext(DbContextOptions<RealtimeContext> options, ISapphireDatabaseNotifier notifier) : base(options, notifier)
+        public RealtimeContext(DbContextOptions<RealtimeContext> options) : base(options)
         {
 
         }

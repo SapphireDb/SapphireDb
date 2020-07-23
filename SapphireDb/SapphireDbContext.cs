@@ -1,12 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using SapphireDb.Command.Subscribe;
-using SapphireDb.Models;
-using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb
 {
@@ -14,16 +12,21 @@ namespace SapphireDb
     {
         private readonly ISapphireDatabaseNotifier notifier;
 
-        public SapphireDbContext(DbContextOptions options, ISapphireDatabaseNotifier notifier) : base(options)
+        public SapphireDbContext(DbContextOptions options) : base(options)
         {
-            this.notifier = notifier;
+            notifier = this.GetService<ISapphireDatabaseNotifier>();
+        }
+
+        public SapphireDbContext()
+        {
+            notifier = this.GetService<ISapphireDatabaseNotifier>();
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             List<ChangeResponse> changes = GetChanges();
             int result = base.SaveChanges(acceptAllChangesOnSuccess);
-            notifier.HandleChanges(changes, GetType());
+            notifier?.HandleChanges(changes, GetType());
             return result;
         }
 
@@ -31,7 +34,7 @@ namespace SapphireDb
         {
             List<ChangeResponse> changes = GetChanges();
             int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            notifier.HandleChanges(changes, GetType());
+            notifier?.HandleChanges(changes, GetType());
             return result;
         }
 

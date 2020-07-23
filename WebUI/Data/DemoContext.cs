@@ -11,7 +11,7 @@ namespace WebUI.Data
 {
     public class DemoContext : SapphireDbContext
     {
-        public DemoContext(DbContextOptions<DemoContext> options, ISapphireDatabaseNotifier notifier) : base(options, notifier)
+        public DemoContext(DbContextOptions<DemoContext> options) : base(options)
         {
         }
 
