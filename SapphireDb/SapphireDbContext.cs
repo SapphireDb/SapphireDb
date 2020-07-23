@@ -21,7 +21,7 @@ namespace SapphireDb
             }
             catch (InvalidOperationException ex)
             {
-                // Ignored -> Notifier is optional and only needed when running with SapphireDb
+                // Ignored. Notifier is optional and only needed when running with SapphireDb
             }
         }
 
@@ -33,7 +33,7 @@ namespace SapphireDb
             }
             catch (InvalidOperationException ex)
             {
-                // Ignored -> Notifier is optional and only needed when running with SapphireDb
+                // Ignored. Notifier is optional and only needed when running with SapphireDb
             }
         }
 
