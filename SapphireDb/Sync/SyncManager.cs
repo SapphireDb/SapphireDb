@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
+using SapphireDb.Internal;
 using SapphireDb.Sync.Models;
 
 namespace SapphireDb.Sync
@@ -12,12 +11,14 @@ namespace SapphireDb.Sync
     public class SyncManager
     {
         private readonly ILogger<SyncManager> logger;
+        private readonly DbContextTypeContainer contextTypeContainer;
         private readonly Guid uId = Guid.NewGuid();
         private readonly ISapphireSyncModule sapphireSyncModule;
 
-        public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger)
+        public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger, DbContextTypeContainer contextTypeContainer)
         {
             this.logger = logger;
+            this.contextTypeContainer = contextTypeContainer;
             sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
 
             if (sapphireSyncModule != null)
@@ -36,8 +37,7 @@ namespace SapphireDb.Sync
 
                     if (request is SendChangesRequest sendChangesRequest)
                     {
-                        Type dbType = Assembly.GetEntryAssembly()?.DefinedTypes
-                            .FirstOrDefault(t => t.FullName == sendChangesRequest.DbType);
+                        Type dbType = contextTypeContainer.GetContext(sendChangesRequest.DbName);
 
                         if (dbType != null)
                         {
@@ -46,7 +46,7 @@ namespace SapphireDb.Sync
                             logger.LogInformation("Handling changes from other server");
                             logger.LogDebug(
                                 "Handling {0} changes of '{1}' from server with OriginId '{2}'. Propagate: {3}",
-                                sendChangesRequest.Changes.Count, sendChangesRequest.DbType,
+                                sendChangesRequest.Changes.Count, dbType.Name,
                                 sendChangesRequest.OriginId, sendChangesRequest.Propagate);
                             
                             changeNotifier.HandleChanges(sendChangesRequest.Changes, dbType);
@@ -85,7 +85,7 @@ namespace SapphireDb.Sync
             SendChangesRequest sendChangesRequest = new SendChangesRequest()
             {
                 Changes = changes,
-                DbType = dbContextType.FullName,
+                DbName = contextTypeContainer.GetName(dbContextType),
                 OriginId = uId
             };
 
