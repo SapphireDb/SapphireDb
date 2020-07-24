@@ -37,7 +37,7 @@ namespace WebUI
         public void ConfigureServices(IServiceCollection services)
         {
             SapphireDatabaseOptions options = new SapphireDatabaseOptions(Configuration.GetSection("Sapphire"));
-            RedisSyncConfiguration redisSyncConfiguration = new RedisSyncConfiguration(Configuration.GetSection("RedisSync"));
+            // RedisSyncConfiguration redisSyncConfiguration = new RedisSyncConfiguration(Configuration.GetSection("RedisSync"));
             // HttpSyncConfiguration httpSyncConfiguration = new HttpSyncConfiguration(Configuration.GetSection("HttpSync"));
             
             bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
@@ -58,8 +58,8 @@ namespace WebUI
                 }, "demo")
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
                 .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string) parameters[0]))
-                .AddTopicConfiguration("admin", i => i.User.IsInRole("admin"), i => i.User.IsInRole("admin"))
-                .AddRedisSync(redisSyncConfiguration);
+                .AddTopicConfiguration("admin", i => i.User.IsInRole("admin"), i => i.User.IsInRole("admin"));
+                // .AddRedisSync(redisSyncConfiguration);
                 // .AddHttpSync(httpSyncConfiguration);
 
             // services.AddMvc();
