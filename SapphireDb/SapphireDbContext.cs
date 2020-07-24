@@ -19,7 +19,7 @@ namespace SapphireDb
             {
                 notifier = this.GetService<ISapphireDatabaseNotifier>();
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 // Ignored. Notifier is optional and only needed when running with SapphireDb
             }
@@ -31,12 +31,17 @@ namespace SapphireDb
             {
                 notifier = this.GetService<ISapphireDatabaseNotifier>();
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 // Ignored. Notifier is optional and only needed when running with SapphireDb
             }
         }
 
+        public SapphireDbContext(DbContextOptions options, ISapphireDatabaseNotifier notifier) : base(options)
+        {
+            this.notifier = notifier;
+        }
+        
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             List<ChangeResponse> changes = GetChanges();
