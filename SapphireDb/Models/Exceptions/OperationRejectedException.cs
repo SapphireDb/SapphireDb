@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class OperationRejectedException : Exception
+    public class OperationRejectedException : SapphireDbException
     {
         public OperationRejectedException(string message) : base(message)
         {

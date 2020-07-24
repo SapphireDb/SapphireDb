@@ -1,22 +1,21 @@
 ﻿using System;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Models
 {
-    public class SapphireDbError
+    public class SapphireDbErrorResponse
     {
-        public SapphireDbError(Exception exception)
+        public SapphireDbErrorResponse(SapphireDbException exception)
         {
             Type = exception.GetType().Name;
             Message = exception.Message;
+            Id = exception.Id;
         }
-        
+
         public string Type { get; }
 
         public string Message { get; }
 
-        public override string ToString()
-        {
-            return Message;
-        }
+        public Guid Id { get; set; }
     }
 }

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class ActionHandlerNotFoundException : Exception
+    public class ActionHandlerNotFoundException : SapphireDbException
     {
         public ActionHandlerNotFoundException() : base("No action handler was found for command")
         {

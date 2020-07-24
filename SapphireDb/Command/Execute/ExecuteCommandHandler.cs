@@ -12,6 +12,7 @@ using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
+using FormatException = SapphireDb.Models.Exceptions.FormatException;
 
 namespace SapphireDb.Command.Execute
 {

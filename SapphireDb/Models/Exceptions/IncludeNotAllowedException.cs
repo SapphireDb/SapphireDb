@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class IncludeNotAllowedException : Exception
+    public class IncludeNotAllowedException : SapphireDbException
     {
         public IncludeNotAllowedException() : base("Include prefilters are disabled")
         {

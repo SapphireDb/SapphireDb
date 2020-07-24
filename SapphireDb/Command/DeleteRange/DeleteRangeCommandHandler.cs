@@ -30,100 +30,93 @@ namespace SapphireDb.Command.DeleteRange
 
             if (property.Key != null)
             {
-                try
+                List<object> removedValues = new List<object>();
+
+                DeleteRangeResponse response;
+                bool updateRejected;
+
+                do
                 {
-                    List<object> removedValues = new List<object>();
+                    updateRejected = false;
 
-                    DeleteRangeResponse response;
-                    bool updateRejected;
-
-                    do
+                    response = new DeleteRangeResponse
                     {
-                        updateRejected = false;
-
-                        response = new DeleteRangeResponse
+                        ReferenceId = command.ReferenceId,
+                        Results = command.Values.Select(valuePrimaryKeys =>
                         {
-                            ReferenceId = command.ReferenceId,
-                            Results = command.Values.Select(valuePrimaryKeys =>
+                            object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
+                            object value = db.Find(property.Key, primaryKeys);
+
+                            if (value != null)
                             {
-                                object[] primaryKeys = property.Key.GetPrimaryKeyValues(db, valuePrimaryKeys);
-                                object value = db.Find(property.Key, primaryKeys);
-
-                                if (value != null)
+                                if (value is SapphireOfflineEntity valueOfflineEntity &&
+                                    valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
                                 {
-                                    if (value is SapphireOfflineEntity valueOfflineEntity &&
-                                        valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
-                                    {
-                                        DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+                                    DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
 
-                                        if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
-                                            db.Database.ProviderName))
-                                        {
-                                            return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                                new OperationRejectedException(
-                                                    "Deletion rejected. The object state has changed"));
-                                        }
-                                    }
-
-                                    if (!property.Key.CanRemove(context, value, serviceProvider))
+                                    if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
+                                        db.Database.ProviderName))
                                     {
                                         return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                            new UnauthorizedException("The user is not authorized for this action"));
+                                            new OperationRejectedException(
+                                                "Deletion rejected. The object state has changed"));
                                     }
-
-                                    property.Key.ExecuteHookMethods<RemoveEventAttribute>(
-                                        ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
-
-                                    db.Remove(value);
-
-                                    property.Key.ExecuteHookMethods<RemoveEventAttribute>(
-                                        ModelStoreEventAttributeBase.EventType.BeforeSave, value, context,
-                                        serviceProvider);
-
-                                    removedValues.Add(value);
-
-                                    return new DeleteResponse()
-                                    {
-                                        Value = value,
-                                        ReferenceId = command.ReferenceId
-                                    };
                                 }
 
-                                return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                    new ValueNotFoundException());
-                            }).ToList()
-                        };
+                                if (!property.Key.CanRemove(context, value, serviceProvider))
+                                {
+                                    return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
+                                        new UnauthorizedException("The user is not authorized for this action"));
+                                }
 
-                        try
-                        {
-                            db.SaveChanges();
-                        }
-                        catch (DbUpdateConcurrencyException)
-                        {
-                            foreach (EntityEntry entityEntry in db.ChangeTracker.Entries())
-                            {
-                                await entityEntry.ReloadAsync();
+                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                                    ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
+
+                                db.Remove(value);
+
+                                property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                                    ModelStoreEventAttributeBase.EventType.BeforeSave, value, context,
+                                    serviceProvider);
+
+                                removedValues.Add(value);
+
+                                return new DeleteResponse()
+                                {
+                                    Value = value,
+                                    ReferenceId = command.ReferenceId
+                                };
                             }
 
-                            updateRejected = true;
-                        }
-                    } while (updateRejected);
+                            return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
+                                new ValueNotFoundException());
+                        }).ToList()
+                    };
 
-                    foreach (object value in removedValues)
+                    try
                     {
-                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(
-                            ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
+                        db.SaveChanges();
                     }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        foreach (EntityEntry entityEntry in db.ChangeTracker.Entries())
+                        {
+                            await entityEntry.ReloadAsync();
+                        }
 
-                    return response;
-                }
-                catch (Exception ex)
+                        updateRejected = true;
+                    }
+                } while (updateRejected);
+
+                foreach (object value in removedValues)
                 {
-                    return command.CreateExceptionResponse<DeleteResponse>(ex);
+                    property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                        ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
                 }
+
+                return response;
             }
 
-            return command.CreateExceptionResponse<DeleteResponse>(new CollectionNotFoundException());
+            throw new CollectionNotFoundException();
         }
     }
 }

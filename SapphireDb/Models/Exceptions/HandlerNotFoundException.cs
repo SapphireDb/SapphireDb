@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class HandlerNotFoundException : Exception
+    public class HandlerNotFoundException : SapphireDbException
     {
         public HandlerNotFoundException() : base("No handler was found for command")
         {

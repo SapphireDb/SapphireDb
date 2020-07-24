@@ -30,7 +30,7 @@ namespace SapphireDb.Command.Subscribe
         {
             if (sapphireDatabaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
             {
-                return Task.FromResult(command.CreateExceptionResponse<ResponseBase>(new IncludeNotAllowedException()));
+                throw new IncludeNotAllowedException();
             }
             
             ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);

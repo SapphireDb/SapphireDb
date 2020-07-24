@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class UnauthorizedException : Exception
+    public class UnauthorizedException : SapphireDbException
     {
         public UnauthorizedException(string message) : base(message)
         {

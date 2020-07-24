@@ -28,18 +28,10 @@ namespace SapphireDb.Command.CreateRange
 
             if (property.Key != null)
             {
-                try
-                {
-                    return Task.FromResult(CreateObjects(command, property, context, db));
-                }
-                catch (Exception ex)
-                {
-                    return Task.FromResult(command.CreateExceptionResponse<CreateRangeResponse>(ex));
-                }
+                return Task.FromResult(CreateObjects(command, property, context, db));
             }
 
-            return Task.FromResult(
-                command.CreateExceptionResponse<CreateRangeResponse>(new CollectionNotFoundException()));
+            throw new CollectionNotFoundException();
         }
 
         private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,

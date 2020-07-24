@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class MissingRealtimeConnectionException : Exception
+    public class MissingRealtimeConnectionException : SapphireDbException
     {
         public MissingRealtimeConnectionException() : base("Cannot handle this command without realtime connection")
         {

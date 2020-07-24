@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace SapphireDb.Models.Exceptions
+﻿namespace SapphireDb.Models.Exceptions
 {
-    public class ActionNotFoundException : Exception
+    public class ActionNotFoundException : SapphireDbException
     {
         public ActionNotFoundException() : base("No action to execute was found")
         {

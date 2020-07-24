@@ -31,17 +31,10 @@ namespace SapphireDb.Command.UpdateRange
 
             if (property.Key != null)
             {
-                try
-                {
-                    return await InitializeUpdate(command, property, context, db);
-                }
-                catch (Exception ex)
-                {
-                    return command.CreateExceptionResponse<UpdateRangeResponse>(ex);
-                }
+                return await InitializeUpdate(command, property, context, db);
             }
 
-            return command.CreateExceptionResponse<UpdateRangeResponse>(new CollectionNotFoundException());
+            throw new CollectionNotFoundException();
         }
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,
@@ -148,7 +141,7 @@ namespace SapphireDb.Command.UpdateRange
                     {
                         Value = originalValue,
                         UpdatedProperties = updatedProperties,
-                        Error = new SapphireDbError(
+                        Error = new SapphireDbErrorResponse(
                             new OperationRejectedException("Update rejected. The object state has changed"))
                     };
                 }
