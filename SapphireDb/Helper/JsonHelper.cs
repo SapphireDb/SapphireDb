@@ -10,7 +10,7 @@ using SapphireDb.Internal.Prefilter;
 
 namespace SapphireDb.Helper
 {
-    static class JsonHelper
+    public static class JsonHelper
     {
         public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings()
         {

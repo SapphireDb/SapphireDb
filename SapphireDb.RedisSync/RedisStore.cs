@@ -1,14 +1,13 @@
 ﻿using System;
-using SapphireDb.Models;
 using StackExchange.Redis;
 
-namespace SapphireDb.Sync.Redis
+namespace SapphireDb.RedisSync
 {
-    public class RedisStore
+    class RedisStore
     {
-        public RedisStore(SapphireDatabaseOptions options)
+        public RedisStore(RedisSyncConfiguration configuration)
         {
-            lazyConnection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(options.Sync.ConnectionString));
+            lazyConnection = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(configuration.ConnectionString));
         }
 
         private readonly Lazy<ConnectionMultiplexer> lazyConnection;

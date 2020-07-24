@@ -2,19 +2,20 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using SapphireDb.Helper;
-using SapphireDb.Models;
+using SapphireDb.Sync;
+using SapphireDb.Sync.Http;
 using SapphireDb.Sync.Models;
 
-namespace SapphireDb.Sync.Http
+namespace SapphireDb.HttpSync
 {
-    public class SapphireHttpSyncModule : ISapphireSyncModule
+    class SapphireHttpSyncModule : ISapphireSyncModule
     {
-        private readonly SapphireDatabaseOptions options;
+        private readonly HttpSyncConfiguration configuration;
         private readonly IHttpClientFactory httpClientFactory;
 
-        public SapphireHttpSyncModule(SapphireDatabaseOptions options, IHttpClientFactory httpClientFactory)
+        public SapphireHttpSyncModule(HttpSyncConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
-            this.options = options;
+            this.configuration = configuration;
             this.httpClientFactory = httpClientFactory;
         }
         
@@ -25,14 +26,14 @@ namespace SapphireDb.Sync.Http
             string path = syncRequest is SendPublishRequest ? "publish" :
                 syncRequest is SendMessageRequest ? "message" : "changes";
             
-            options.Sync.Entries.Where(entry => !string.IsNullOrEmpty(entry.Url)).ToList().ForEach(nlbEntry =>
+            configuration.Entries.Where(entry => !string.IsNullOrEmpty(entry.Url)).ToList().ForEach(nlbEntry =>
             {
                 Task.Run(async () =>
                 {
                     HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
                         $"{(nlbEntry.Url.EndsWith('/') ? nlbEntry.Url : nlbEntry.Url + "/")}sapphiresync/{path}");
                     request.Headers.Add("Secret", nlbEntry.Secret);
-                    request.Headers.Add("OriginId", options.Sync.Id);
+                    request.Headers.Add("OriginId", configuration.Id);
                     request.Content = new StringContent(requestString);
 
                     HttpClient client = httpClientFactory.CreateClient();

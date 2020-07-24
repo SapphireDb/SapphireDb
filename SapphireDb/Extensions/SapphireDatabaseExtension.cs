@@ -14,6 +14,7 @@ using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
 using SapphireDb.Sync;
+using SapphireDb.Sync.Models;
 
 namespace SapphireDb.Extensions
 {
@@ -104,6 +105,7 @@ namespace SapphireDb.Extensions
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);
             
+            services.AddSingleton<SyncContext>();
             services.AddSingleton<SyncManager>();
 
             foreach (KeyValuePair<string, Type> handler in actionMapper.actionHandlerTypes)

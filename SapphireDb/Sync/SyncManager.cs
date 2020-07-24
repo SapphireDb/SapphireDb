@@ -12,20 +12,21 @@ namespace SapphireDb.Sync
     {
         private readonly ILogger<SyncManager> logger;
         private readonly DbContextTypeContainer contextTypeContainer;
-        private readonly Guid uId = Guid.NewGuid();
+        private readonly SyncContext syncContext;
         private readonly ISapphireSyncModule sapphireSyncModule;
 
-        public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger, DbContextTypeContainer contextTypeContainer)
+        public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger, DbContextTypeContainer contextTypeContainer, SyncContext syncContext)
         {
             this.logger = logger;
             this.contextTypeContainer = contextTypeContainer;
+            this.syncContext = syncContext;
             sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
 
             if (sapphireSyncModule != null)
             {
                 sapphireSyncModule.SyncRequestRequestReceived += request =>
                 {
-                    if (request.OriginId == uId)
+                    if (request.OriginId == syncContext.SessionId)
                     {
                         return;
                     }
@@ -86,7 +87,7 @@ namespace SapphireDb.Sync
             {
                 Changes = changes,
                 DbName = contextTypeContainer.GetName(dbContextType),
-                OriginId = uId
+                OriginId = syncContext.SessionId
             };
 
             Publish(sendChangesRequest);
@@ -99,7 +100,7 @@ namespace SapphireDb.Sync
                 Topic = topic,
                 Message = message,
                 Retain = retain,
-                OriginId = uId
+                OriginId = syncContext.SessionId
             };
 
             Publish(sendPublishRequest);
@@ -112,7 +113,7 @@ namespace SapphireDb.Sync
                 Message = message,
                 Filter = filter,
                 FilterParameters = filterParameters,
-                OriginId = uId
+                OriginId = syncContext.SessionId
             };
 
             Publish(sendMessageRequest);
@@ -120,8 +121,11 @@ namespace SapphireDb.Sync
 
         private void Publish(SyncRequest syncRequest)
         {
-            logger.LogInformation("Publishing sync request to other servers");
-            sapphireSyncModule?.Publish(syncRequest);
+            if (sapphireSyncModule != null)
+            {
+                logger.LogInformation("Publishing sync request to other servers");
+                sapphireSyncModule.Publish(syncRequest);
+            }
         }
     }
 }

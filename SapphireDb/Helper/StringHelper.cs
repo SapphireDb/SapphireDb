@@ -5,7 +5,7 @@ using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace SapphireDb.Helper
 {
-    static class StringHelper
+    public static class StringHelper
     {
         public static string ToCamelCase(this string input)
         {

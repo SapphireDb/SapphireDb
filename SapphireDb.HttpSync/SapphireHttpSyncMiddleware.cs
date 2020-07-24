@@ -5,26 +5,27 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SapphireDb.Helper;
-using SapphireDb.Models;
+using SapphireDb.Sync;
+using SapphireDb.Sync.Http;
 using SapphireDb.Sync.Models;
 
-namespace SapphireDb.Sync.Http
+namespace SapphireDb.HttpSync
 {
     class SapphireHttpSyncMiddleware
     {
         private readonly RequestDelegate next;
-        private readonly SapphireDatabaseOptions options;
+        private readonly HttpSyncConfiguration configuration;
         private readonly ILogger<SapphireHttpSyncMiddleware> logger;
         private readonly SapphireHttpSyncModule sapphireHttpSyncModule;
 
         public SapphireHttpSyncMiddleware(
             RequestDelegate next,
-            SapphireDatabaseOptions options,
+            HttpSyncConfiguration configuration,
             ILogger<SapphireHttpSyncMiddleware> logger,
             ISapphireSyncModule sapphireHttpSyncModule)
         {
             this.next = next;
-            this.options = options;
+            this.configuration = configuration;
             this.logger = logger;
             this.sapphireHttpSyncModule = (SapphireHttpSyncModule)sapphireHttpSyncModule;
         }
@@ -36,12 +37,13 @@ namespace SapphireDb.Sync.Http
                 await next(context);
                 return;
             }
-
+            
             logger.LogInformation("Started handling sync request");
 
             string originId = context.Request.Headers["OriginId"].ToString();
-            if (context.Request.Headers["Secret"].ToString().ComputeHash() != options.Sync.Secret ||
-                options.Sync.Entries.All(e => e.Id != originId))
+            
+            if (context.Request.Headers["Secret"].ToString().ComputeHash() != configuration.Secret ||
+                configuration.Entries.All(e => e.Id != originId))
             {
                 logger.LogWarning("Prevented unauthorized access to sync methods");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

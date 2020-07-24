@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SapphireDb", "SapphireDb\Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebUI.Tests", "WebUI.Tests\WebUI.Tests.csproj", "{B28F0C7C-1DA1-440D-B605-8CF5C025190F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SapphireDb.RedisSync", "SapphireDb.RedisSync\SapphireDb.RedisSync.csproj", "{B9040F80-B739-460F-9003-3C045F82F4D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SapphireDb.HttpSync", "SapphireDb.HttpSync\SapphireDb.HttpSync.csproj", "{DBD51FAE-BD4C-4665-A5B7-3EB7207B6E1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B28F0C7C-1DA1-440D-B605-8CF5C025190F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9040F80-B739-460F-9003-3C045F82F4D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9040F80-B739-460F-9003-3C045F82F4D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9040F80-B739-460F-9003-3C045F82F4D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9040F80-B739-460F-9003-3C045F82F4D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD51FAE-BD4C-4665-A5B7-3EB7207B6E1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD51FAE-BD4C-4665-A5B7-3EB7207B6E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD51FAE-BD4C-4665-A5B7-3EB7207B6E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD51FAE-BD4C-4665-A5B7-3EB7207B6E1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

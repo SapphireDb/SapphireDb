@@ -1,25 +1,34 @@
-﻿using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SapphireDb.Helper;
-using SapphireDb.Models;
+using SapphireDb.Sync;
 using SapphireDb.Sync.Models;
 using StackExchange.Redis;
 
-namespace SapphireDb.Sync.Redis
+namespace SapphireDb.RedisSync
 {
-    public class SapphireRedisSyncModule : ISapphireSyncModule
+    class SapphireRedisSyncModule : ISapphireSyncModule
     {
-        private readonly SapphireDatabaseOptions options;
+        private readonly RedisSyncConfiguration configuration;
+        private readonly SyncContext syncContext;
         private readonly IConnectionMultiplexer redisMultiplexer;
 
-        public SapphireRedisSyncModule(RedisStore redisStore, SapphireDatabaseOptions options)
+        public SapphireRedisSyncModule(RedisStore redisStore, RedisSyncConfiguration configuration, SyncContext syncContext)
         {
-            this.options = options;
+            this.configuration = configuration;
+            this.syncContext = syncContext;
             redisMultiplexer = redisStore.RedisCache.Multiplexer;
 
-            redisMultiplexer.GetSubscriber().Subscribe($"{options.Sync.Prefix}sapphiresync/*", (channel, message) =>
+            redisMultiplexer.GetSubscriber().Subscribe($"{configuration.Prefix}sapphiresync/*/*", (channel, message) =>
             {
-                string channelPath = channel.ToString().Split('/').LastOrDefault();
+                string[] channelParts = channel.ToString().Split('/');
+                string senderSessionId = channelParts[^2];
+
+                if (syncContext.SessionId.ToString() == senderSessionId)
+                {
+                    return;
+                }
+                
+                string channelPath = channelParts[^1];
                 
                 switch (channelPath)
                 {
@@ -46,7 +55,7 @@ namespace SapphireDb.Sync.Redis
             string path = syncRequest is SendPublishRequest ? "publish" :
                 syncRequest is SendMessageRequest ? "message" : "changes";
 
-            redisMultiplexer.GetSubscriber().Publish($"{options.Sync.Prefix}sapphiresync/{path}", requestString);
+            redisMultiplexer.GetSubscriber().Publish($"{configuration.Prefix}sapphiresync/{syncContext.SessionId}/{path}", requestString);
         }
         
         public event ISapphireSyncModule.SyncRequestReceivedHandler SyncRequestRequestReceived;

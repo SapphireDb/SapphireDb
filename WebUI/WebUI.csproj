@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SapphireDb.HttpSync\SapphireDb.HttpSync.csproj" />
+    <ProjectReference Include="..\SapphireDb.RedisSync\SapphireDb.RedisSync.csproj" />
     <ProjectReference Include="..\SapphireDb\SapphireDb.csproj" />
   </ItemGroup>
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SapphireDb.Sync.Models
+﻿namespace SapphireDb.Sync.Models
 {
-    class SendPublishRequest : SyncRequest
+    public class SendPublishRequest : SyncRequest
     {
         public string Topic { get; set; }
 

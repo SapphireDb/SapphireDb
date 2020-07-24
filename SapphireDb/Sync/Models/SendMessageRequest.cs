@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SapphireDb.Sync.Models
+﻿namespace SapphireDb.Sync.Models
 {
-    class SendMessageRequest : SyncRequest
+    public class SendMessageRequest : SyncRequest
     {
         public object Message { get; set; }
         

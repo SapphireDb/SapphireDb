@@ -30,6 +30,22 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "pg"
       }
+    },
+    "WebUI-Redis": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Redis"
+      }
+    },
+    "WebUI-NLB1": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "NLB1"
+      }
     }
   }
 }
