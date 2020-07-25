@@ -2,9 +2,11 @@
 {
     public class IncludeNotAllowedException : SapphireDbException
     {
-        public IncludeNotAllowedException() : base("Include prefilters are disabled")
+        public string CollectionName { get; }
+
+        public IncludeNotAllowedException(string collectionName) : base("Include prefilters are disabled")
         {
-            
+            CollectionName = collectionName;
         }
     }
 }

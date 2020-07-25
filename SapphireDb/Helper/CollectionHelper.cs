@@ -33,7 +33,7 @@ namespace SapphireDb.Helper
             
             if (sapphireDatabaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
             {
-                throw new IncludeNotAllowedException();
+                throw new IncludeNotAllowedException(command.CollectionName);
             }
             
             Type dbContextType = db.GetType();
@@ -41,7 +41,7 @@ namespace SapphireDb.Helper
 
             if (property.Key == null)
             {
-                throw new CollectionNotFoundException();
+                throw new CollectionNotFoundException(command.CollectionName);
             }
 
             if (!property.Key.CanQuery(information, serviceProvider))

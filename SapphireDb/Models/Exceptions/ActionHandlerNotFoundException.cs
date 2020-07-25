@@ -2,9 +2,11 @@
 {
     public class ActionHandlerNotFoundException : SapphireDbException
     {
-        public ActionHandlerNotFoundException() : base("No action handler was found for command")
+        public string ActionHandler { get; }
+
+        public ActionHandlerNotFoundException(string actionHandler) : base("No action handler was found for command")
         {
-            
+            ActionHandler = actionHandler;
         }
     }
 }

@@ -35,7 +35,7 @@ namespace SapphireDb.Command.UpdateRange
                 return await InitializeUpdate(command, property, context, db);
             }
 
-            throw new CollectionNotFoundException();
+            throw new CollectionNotFoundException(command.CollectionName);
         }
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,
@@ -67,7 +67,7 @@ namespace SapphireDb.Command.UpdateRange
                                     serviceProvider), completeValue);
                         }
 
-                        throw new OperationRejectedException("Update failed. The object was not found");
+                        throw new ValueNotFoundException(command.CollectionName, primaryKeys);
                     }
 
                     if (!property.Key.CanUpdate(context, dbValue, serviceProvider))
@@ -75,7 +75,7 @@ namespace SapphireDb.Command.UpdateRange
                         throw new UnauthorizedException("The user is not authorized for this action.");
                     }
 
-                    return new Tuple<ValidatedResponseBase, object>(ApplyChangesToDb(property, dbValue,
+                    return new Tuple<ValidatedResponseBase, object>(ApplyChangesToDb(command, property, dbValue,
                         updateEntry.Value,
                         updateEntry.UpdatedProperties, db, context), dbValue);
                 }).ToList();
@@ -111,7 +111,7 @@ namespace SapphireDb.Command.UpdateRange
             };
         }
 
-        private UpdateResponse ApplyChangesToDb(KeyValuePair<Type, string> property, object dbValue,
+        private UpdateResponse ApplyChangesToDb(UpdateRangeCommand command, KeyValuePair<Type, string> property, object dbValue,
             JObject originalValue,
             JObject updatedProperties, SapphireDbContext db, HttpInformation context)
         {
@@ -134,7 +134,7 @@ namespace SapphireDb.Command.UpdateRange
                 }
                 else
                 {
-                    throw new OperationRejectedException("Update rejected. The object state has changed");
+                    throw new UpdateRejectedException(command.CollectionName, originalValue, updatedProperties);
                 }
             }
             else

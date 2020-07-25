@@ -2,9 +2,11 @@
 {
     public class ActionNotFoundException : SapphireDbException
     {
-        public ActionNotFoundException() : base("No action to execute was found")
+        public string Action { get; }
+
+        public ActionNotFoundException(string action) : base("No action to execute was found")
         {
-            
+            Action = action;
         }
     }
 }

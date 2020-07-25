@@ -2,9 +2,11 @@
 {
     public class MissingRealtimeConnectionException : SapphireDbException
     {
-        public MissingRealtimeConnectionException() : base("Cannot handle this command without realtime connection")
+        public string CommandType { get; }
+
+        public MissingRealtimeConnectionException(string commandType) : base("Cannot handle this command without realtime connection")
         {
-            
+            CommandType = commandType;
         }
     }
 }

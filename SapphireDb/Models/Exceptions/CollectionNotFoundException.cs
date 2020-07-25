@@ -2,9 +2,11 @@
 {
     public class CollectionNotFoundException : SapphireDbException
     {
-        public CollectionNotFoundException() : base("No collection was found for given collection name")
+        public string Collection { get; }
+
+        public CollectionNotFoundException(string collection) : base("No collection was found for given collection name")
         {
-            
+            Collection = collection;
         }
     }
 }

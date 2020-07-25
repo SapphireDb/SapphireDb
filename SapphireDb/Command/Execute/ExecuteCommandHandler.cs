@@ -12,7 +12,6 @@ using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
-using FormatException = SapphireDb.Models.Exceptions.FormatException;
 
 namespace SapphireDb.Command.Execute
 {
@@ -55,7 +54,7 @@ namespace SapphireDb.Command.Execute
 
             if (actionParts == null || actionParts.Length != 2)
             {
-                throw new FormatException("Wrong format of action name.");
+                throw new WrongActionFormatException(command?.Action);
             }
 
             string actionHandlerName = actionParts[0];
@@ -63,39 +62,39 @@ namespace SapphireDb.Command.Execute
 
             Type actionHandlerType = actionMapper.GetHandler(actionHandlerName);
 
-            if (actionHandlerType != null)
+            if (actionHandlerType == null)
             {
-                MethodInfo actionMethod = actionMapper.GetAction(actionName, actionHandlerType);
+                throw new ActionHandlerNotFoundException(actionHandlerName);
+            }
+            
+            MethodInfo actionMethod = actionMapper.GetAction(actionName, actionHandlerType);
 
-                if (actionMethod != null)
-                {
-                    ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);
+            if (actionMethod == null)
+            {
+                throw new ActionNotFoundException(actionName);
+            }
+            
+            ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);
 
-                    if (actionHandler != null)
-                    {
-                        actionHandler.connection = Connection;
-                        actionHandler.executeCommand = command;
+            if (actionHandler == null)
+            {
+                throw new ActionHandlerNotFoundException(actionHandlerName);
+            }
+            
+            actionHandler.connection = Connection;
+            actionHandler.executeCommand = command;
 
-                        if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
-                        {
-                            throw new UnauthorizedException("User is not allowed to execute actions of this handler");
-                        }
-
-                        if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
-                        {
-                            throw new UnauthorizedException("User is not allowed to execute action");
-                        }
-
-                        return await ExecuteAction(actionHandler, command, actionMethod, executionContext);
-                    }
-
-                    throw new HandlerNotFoundException();
-                }
-
-                throw new ActionNotFoundException();
+            if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
+            {
+                throw new UnauthorizedException("User is not allowed to execute actions of this handler");
             }
 
-            throw new ActionHandlerNotFoundException();
+            if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
+            {
+                throw new UnauthorizedException("User is not allowed to execute action");
+            }
+
+            return await ExecuteAction(actionHandler, command, actionMethod, executionContext);
         }
 
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,

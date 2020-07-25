@@ -37,14 +37,14 @@ namespace SapphireDb.Internal
             {
                 if (handlerType == null)
                 {
-                    throw new HandlerNotFoundException();
+                    throw new CommandHandlerNotFoundException(commandTypeName);
                 }
                 
                 object handler = serviceProvider.GetService(handlerType);
 
                 if (handler == null)
                 {
-                    throw new HandlerNotFoundException();
+                    throw new CommandHandlerNotFoundException(commandTypeName);
                 }
 
                 logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}, ExecutionId: {executionId}",
@@ -63,7 +63,7 @@ namespace SapphireDb.Internal
                     }
                     else
                     {
-                        throw new MissingRealtimeConnectionException();
+                        throw new MissingRealtimeConnectionException(command.GetType().Name);
                     }
                 }
 
