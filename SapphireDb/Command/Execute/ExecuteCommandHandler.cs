@@ -54,8 +54,7 @@ namespace SapphireDb.Command.Execute
 
             if (actionParts == null || actionParts.Length != 2)
             {
-                return command.CreateExceptionResponse<ExecuteResponse>(
-                    new FormatException("Wrong format of action name."));
+                throw new FormatException("Wrong format of action name.");
             }
 
             string actionHandlerName = actionParts[0];
@@ -78,26 +77,24 @@ namespace SapphireDb.Command.Execute
 
                         if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
                         {
-                            return command.CreateExceptionResponse<ExecuteResponse>(
-                                new UnauthorizedException("User is not allowed to execute actions of this handler"));
+                            throw new UnauthorizedException("User is not allowed to execute actions of this handler");
                         }
 
                         if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
                         {
-                            return command.CreateExceptionResponse<ExecuteResponse>(
-                                new UnauthorizedException("User is not allowed to execute action"));
+                            throw new UnauthorizedException("User is not allowed to execute action");
                         }
 
                         return await ExecuteAction(actionHandler, command, actionMethod);
                     }
 
-                    return command.CreateExceptionResponse<ExecuteResponse>(new HandlerNotFoundException());
+                    throw new HandlerNotFoundException();
                 }
 
-                return command.CreateExceptionResponse<ExecuteResponse>(new ActionNotFoundException());
+                throw new ActionNotFoundException();
             }
 
-            return command.CreateExceptionResponse<ExecuteResponse>(new ActionHandlerNotFoundException());
+            throw new ActionHandlerNotFoundException();
         }
 
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,

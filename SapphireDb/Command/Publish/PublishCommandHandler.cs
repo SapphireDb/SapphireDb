@@ -21,9 +21,7 @@ namespace SapphireDb.Command.Publish
         {
             if (!MessageTopicHelper.IsAllowedForPublish(command.Topic, context))
             {
-                return Task.FromResult(
-                    command.CreateExceptionResponse<ResponseBase>(
-                        new UnauthorizedException("User is not allowed to publish data to this topic")));
+                throw new UnauthorizedException("User is not allowed to publish data to this topic");
             }
 
             messageSender.Publish(command.Topic, command.Data, command.Retain);

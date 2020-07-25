@@ -137,13 +137,7 @@ namespace SapphireDb.Command.UpdateRange
                 }
                 else
                 {
-                    return new UpdateResponse()
-                    {
-                        Value = originalValue,
-                        UpdatedProperties = updatedProperties,
-                        Error = new SapphireDbErrorResponse(
-                            new OperationRejectedException("Update rejected. The object state has changed"))
-                    };
+                    throw new OperationRejectedException("Update rejected. The object state has changed");
                 }
             }
             else

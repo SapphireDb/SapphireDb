@@ -25,8 +25,7 @@ namespace SapphireDb.Command.SubscribeMessage
         {
             if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
             {
-                return Task.FromResult(command.CreateExceptionResponse<ResponseBase>(
-                    new UnauthorizedException("Not allowed to subscribe this topic(s)")));
+                throw new UnauthorizedException("Not allowed to subscribe this topic(s)");
             }
 
             subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);

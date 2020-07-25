@@ -47,8 +47,7 @@ namespace SapphireDb.Command.CreateRange
                 {
                     if (!property.Key.CanCreate(context, value, serviceProvider))
                     {
-                        return (CreateResponse) command.CreateExceptionResponse<CreateResponse>(
-                            new UnauthorizedException("The user is not authorized for this action"));
+                        throw new UnauthorizedException("The user is not authorized for this action");
                     }
 
                     return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context,

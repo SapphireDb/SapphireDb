@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using SapphireDb.Models.Exceptions;
 
-namespace SapphireDb.Models
+namespace SapphireDb.Command
 {
     public class SapphireDbErrorResponse
     {

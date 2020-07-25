@@ -57,16 +57,13 @@ namespace SapphireDb.Command.DeleteRange
                                     if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
                                         db.Database.ProviderName))
                                     {
-                                        return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                            new OperationRejectedException(
-                                                "Deletion rejected. The object state has changed"));
+                                        throw new OperationRejectedException("Deletion rejected. The object state has changed");
                                     }
                                 }
 
                                 if (!property.Key.CanRemove(context, value, serviceProvider))
                                 {
-                                    return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                        new UnauthorizedException("The user is not authorized for this action"));
+                                    throw new UnauthorizedException("The user is not authorized for this action");
                                 }
 
                                 property.Key.ExecuteHookMethods<RemoveEventAttribute>(
@@ -87,8 +84,7 @@ namespace SapphireDb.Command.DeleteRange
                                 };
                             }
 
-                            return (DeleteResponse) command.CreateExceptionResponse<DeleteResponse>(
-                                new ValueNotFoundException());
+                            throw new ValueNotFoundException();
                         }).ToList()
                     };
 
