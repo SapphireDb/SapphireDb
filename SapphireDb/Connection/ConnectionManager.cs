@@ -39,9 +39,8 @@ namespace SapphireDb.Connection
                 connectionsLock.EnterWriteLock();
                 connections.TryAdd(connection.Id, connection);
                 
-                logger.LogInformation("Added new {0}", connection);
-                logger.LogDebug("Added new {0} with ConnectionId '{1}'", connection, connection.Id);
-                logger.LogDebug("Connection count: {0}", connections.Count);
+                logger.LogInformation("Added new {connectionType} with ConnectionId {connectionId}", connection, connection.Id);
+                logger.LogDebug("Connection count: {connectionCount}", connections.Count);
             }
             finally
             {
@@ -60,9 +59,8 @@ namespace SapphireDb.Connection
                 messageSubscriptionManager.RemoveConnectionSubscriptions(connectionId);
                 connection.Dispose();
                 
-                logger.LogInformation("Removed {0}", connection);
-                logger.LogDebug("Removed {0} with ConnectionId '{1}'", connection, connection.Id);
-                logger.LogDebug("Connection count: {0}", connections.Count);
+                logger.LogInformation("Removed {connectionType} with ConnectionId {connectionId}", connection, connection.Id);
+                logger.LogDebug("Connection count: {connectionCount}", connections.Count);
             }
             finally
             {

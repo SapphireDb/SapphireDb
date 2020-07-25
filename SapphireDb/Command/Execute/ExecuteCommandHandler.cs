@@ -100,8 +100,8 @@ namespace SapphireDb.Command.Execute
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod)
         {
-            logger.LogDebug("Execution of {0}.{1} started", actionMethod.DeclaringType?.FullName,
-                actionMethod.Name);
+            logger.LogDebug("Execution of {actionHandlerName}.{actionName} started. ConnectionId: {connectionId}", actionMethod.DeclaringType?.FullName,
+                actionMethod.Name, Connection.Id);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
 
@@ -117,7 +117,7 @@ namespace SapphireDb.Command.Execute
                 }
             }
 
-            logger.LogInformation("Executed {0}.{1}", actionMethod.DeclaringType?.FullName, actionMethod.Name);
+            logger.LogInformation("Executed {actionHandlerName}.{actionName}. ConnectionId: {connectionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id);
 
             return new ExecuteResponse()
             {
