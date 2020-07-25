@@ -5,8 +5,8 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <Authors>morrisjdev</Authors>
-        <Title>SapphireDb.HttpSync - Http sync module for SapphireDb</Title>
-        <Description>A self-hosted, easy to use realtime database</Description>
+        <Title>SapphireDb.HttpSync</Title>
+        <Description>Http sync module for SapphireDb</Description>
         <PackageProjectUrl>https://sapphire-db.com/</PackageProjectUrl>
         <PackageIconUrl>https://sapphire-db.com/assets/icon/SapphireDB%20Logo.png</PackageIconUrl>
         <RepositoryUrl>https://github.com/morrisjdev/SapphireDb</RepositoryUrl>
@@ -22,7 +22,7 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>icon.png</PackageIcon>
         <PackageVersion>2.2.1</PackageVersion>
-        <PackageReadmeFile>README-NUGET.md</PackageReadmeFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -45,7 +45,7 @@
             <Pack>True</Pack>
             <PackagePath></PackagePath>
         </None>
-        <None Include="..\README-NUGET.md">
+        <None Include="README.md">
             <Pack>True</Pack>
             <PackagePath></PackagePath>
         </None>
