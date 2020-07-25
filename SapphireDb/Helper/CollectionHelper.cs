@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Command;
 using SapphireDb.Command.Query;
 using SapphireDb.Internal.Prefilter;
@@ -28,6 +29,13 @@ namespace SapphireDb.Helper
         public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
             HttpInformation information, IServiceProvider serviceProvider)
         {
+            SapphireDatabaseOptions sapphireDatabaseOptions = serviceProvider.GetService<SapphireDatabaseOptions>();
+            
+            if (sapphireDatabaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
+            {
+                throw new IncludeNotAllowedException();
+            }
+            
             Type dbContextType = db.GetType();
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
 
