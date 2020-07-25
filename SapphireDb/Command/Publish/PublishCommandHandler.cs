@@ -17,7 +17,8 @@ namespace SapphireDb.Command.Publish
             this.messageSender = messageSender;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, PublishCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, PublishCommand command,
+            ExecutionContext executionContext)
         {
             if (!MessageTopicHelper.IsAllowedForPublish(command.Topic, context))
             {

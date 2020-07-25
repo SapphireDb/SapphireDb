@@ -7,6 +7,6 @@ namespace SapphireDb.Command
     internal interface ICommandHandler<T>
         where T : CommandBase
     {
-        Task<ResponseBase> Handle(HttpInformation context, T command);
+        Task<ResponseBase> Handle(HttpInformation context, T command, ExecutionContext executionContext);
     }
 }

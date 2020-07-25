@@ -21,7 +21,8 @@ namespace SapphireDb.Command.Subscribe
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command,
+            ExecutionContext executionContext)
         {
             ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
 

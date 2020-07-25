@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Connection;
@@ -24,7 +23,8 @@ namespace SapphireDb.Command.ExecuteCommands
             this.logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommandsCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommandsCommand command,
+            ExecutionContext executionContext)
         {
             List<ExecuteCommandsResultResponse> results = new List<ExecuteCommandsResultResponse>();
             

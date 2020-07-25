@@ -32,11 +32,12 @@ namespace SapphireDb.Command.Execute
             this.logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommand command,
+            ExecutionContext executionContext)
         {
             try
             {
-                return await GetActionDetails(command, context);
+                return await GetActionDetails(command, context, executionContext);
             }
             catch (RuntimeBinderException)
             {
@@ -48,7 +49,7 @@ namespace SapphireDb.Command.Execute
             }
         }
 
-        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpInformation context)
+        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpInformation context, ExecutionContext executionContext)
         {
             string[] actionParts = command?.Action.Split('.');
 
@@ -85,7 +86,7 @@ namespace SapphireDb.Command.Execute
                             throw new UnauthorizedException("User is not allowed to execute action");
                         }
 
-                        return await ExecuteAction(actionHandler, command, actionMethod);
+                        return await ExecuteAction(actionHandler, command, actionMethod, executionContext);
                     }
 
                     throw new HandlerNotFoundException();
@@ -98,10 +99,10 @@ namespace SapphireDb.Command.Execute
         }
 
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
-            MethodInfo actionMethod)
+            MethodInfo actionMethod, ExecutionContext executionContext)
         {
-            logger.LogDebug("Execution of {actionHandlerName}.{actionName} started. ConnectionId: {connectionId}", actionMethod.DeclaringType?.FullName,
-                actionMethod.Name, Connection.Id);
+            logger.LogDebug("Execution of {actionHandlerName}.{actionName} started. ConnectionId: {connectionId}, ExecutionId: {executionId}", actionMethod.DeclaringType?.FullName,
+                actionMethod.Name, Connection.Id, executionContext.Id);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
 
@@ -117,7 +118,7 @@ namespace SapphireDb.Command.Execute
                 }
             }
 
-            logger.LogInformation("Executed {actionHandlerName}.{actionName}. ConnectionId: {connectionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id);
+            logger.LogInformation("Executed {actionHandlerName}.{actionName}. ConnectionId: {connectionId}, ExecutionId: {executionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id, executionContext.Id);
 
             return new ExecuteResponse()
             {

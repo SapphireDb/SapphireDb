@@ -21,7 +21,8 @@ namespace SapphireDb.Command.SubscribeMessage
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command,
+            ExecutionContext executionContext)
         {
             if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
             {

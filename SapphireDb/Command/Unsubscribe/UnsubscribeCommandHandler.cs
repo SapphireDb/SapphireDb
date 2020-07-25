@@ -16,7 +16,8 @@ namespace SapphireDb.Command.Unsubscribe
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, UnsubscribeCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, UnsubscribeCommand command,
+            ExecutionContext executionContext)
         {
             subscriptionManager.RemoveSubscription(command.ReferenceId);
             return Task.FromResult<ResponseBase>(null);

@@ -28,6 +28,8 @@ namespace SapphireDb.Internal
         public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider,
             HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
         {
+            ExecutionContext executionContext = new ExecutionContext();
+            
             string commandTypeName = command.GetType().Name;
             Type handlerType = commandHandlerTypes.GetValueOrDefault(commandTypeName);
             
@@ -45,8 +47,8 @@ namespace SapphireDb.Internal
                     throw new HandlerNotFoundException();
                 }
 
-                logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}",
-                    command.GetType().Name, handler.GetType().Name, connection?.Id);
+                logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}, ExecutionId: {executionId}",
+                    command.GetType().Name, handler.GetType().Name, connection?.Id, executionContext.Id);
 
                 if (!options.CanExecuteCommand(command, information))
                 {
@@ -61,17 +63,15 @@ namespace SapphireDb.Internal
                     }
                     else
                     {
-                        logger.LogWarning("Cannot handle {command} without realtime connection",
-                            command.GetType().Name);
                         throw new MissingRealtimeConnectionException();
                     }
                 }
 
                 ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
-                    .Invoke(handler, new object[] {information, command});
+                    .Invoke(handler, new object[] {information, command, executionContext});
 
-                logger.LogInformation("Handled {command}. ConnectionId: {connectionId}", command.GetType().Name,
-                    connection?.Id);
+                logger.LogInformation("Handled {command}. ConnectionId: {connectionId}, ExecutionId: {executionId}", command.GetType().Name,
+                    connection?.Id, executionContext.Id);
 
                 return response;
             }
@@ -91,16 +91,16 @@ namespace SapphireDb.Internal
                 if (sapphireDbException.Severity == ExceptionSeverity.Warning)
                 {
                     logger.LogWarning(sapphireDbException,
-                        "The command handler return an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}",
+                        "The command handler returned an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}, ExecutionId: {executionId}",
                         command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
-                        connection?.Id);
+                        connection?.Id, executionContext.Id);
                 }
                 else
                 {
                     logger.LogError(sapphireDbException,
-                        "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}",
+                        "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}, ExecutionId: {executionId}",
                         command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
-                        connection?.Id);
+                        connection?.Id, executionContext.Id);
                 }
 
                 return new ResponseBase()

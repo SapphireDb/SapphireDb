@@ -21,7 +21,8 @@ namespace SapphireDb.Command.CreateRange
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, CreateRangeCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, CreateRangeCommand command,
+            ExecutionContext executionContext)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);

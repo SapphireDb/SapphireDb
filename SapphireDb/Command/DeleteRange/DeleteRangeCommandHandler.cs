@@ -23,7 +23,8 @@ namespace SapphireDb.Command.DeleteRange
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, DeleteRangeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, DeleteRangeCommand command,
+            ExecutionContext executionContext)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);

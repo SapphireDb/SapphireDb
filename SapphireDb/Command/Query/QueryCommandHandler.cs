@@ -16,7 +16,8 @@ namespace SapphireDb.Command.Query
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, QueryCommand command)
+        public Task<ResponseBase> Handle(HttpInformation context, QueryCommand command,
+            ExecutionContext executionContext)
         {
             return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider));
         }

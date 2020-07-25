@@ -24,7 +24,8 @@ namespace SapphireDb.Command.UpdateRange
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command)
+        public async Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command,
+            ExecutionContext executionContext)
         {
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
