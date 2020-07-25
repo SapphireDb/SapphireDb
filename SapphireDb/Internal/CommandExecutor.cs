@@ -32,14 +32,77 @@ namespace SapphireDb.Internal
 
             if (commandHandlerTypes.TryGetValue(commandTypeName, out Type handlerType))
             {
-                ResponseBase authResponse = CreateAuthenticationResponseOrNull(handlerType, information, command);
+                object handler = serviceProvider.GetService(handlerType);
 
-                if (authResponse != null)
+                if (handler != null)
                 {
-                    return authResponse;
+                    logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}",
+                        command.GetType().Name, handler.GetType().Name, connection?.Id);
+                    try
+                    {
+                        if (!options.CanExecuteCommand(command, information))
+                        {
+                            throw new UnauthorizedException("You are not allowed to execute this command");
+                        }
+                        
+                        if (handler is INeedsConnection handlerWithConnection)
+                        {
+                            if (handler is ExecuteCommandHandler || connection != null)
+                            {
+                                handlerWithConnection.Connection = connection;
+                            }
+                            else
+                            {
+                                logger.LogWarning("Cannot handle {command} without realtime connection",
+                                    command.GetType().Name);
+                                return command.CreateExceptionResponse<ResponseBase>(
+                                    new MissingRealtimeConnectionException());
+                            }
+                        }
+
+                        ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
+                            .Invoke(handler, new object[] {information, command});
+
+                        logger.LogInformation("Handled {command}. ConnectionId: {connectionId}", command.GetType().Name,
+                            connection?.Id);
+
+                        return response;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex is TargetInvocationException targetInvocationException &&
+                            targetInvocationException.InnerException != null)
+                        {
+                            ex = ex.InnerException;
+                        }
+
+                        if (!(ex is SapphireDbException sapphireDbException))
+                        {
+                            sapphireDbException = new UnhandledException(ex);
+                        }
+
+                        if (sapphireDbException.Severity == ExceptionSeverity.Warning)
+                        {
+                            logger.LogWarning(sapphireDbException,
+                                "The command handler return an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}",
+                                command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
+                                connection?.Id);
+                        }
+                        else
+                        {
+                            logger.LogError(sapphireDbException,
+                                "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}",
+                                command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
+                                connection?.Id);
+                        }
+
+                        return command.CreateExceptionResponse<ResponseBase>(sapphireDbException);
+                    }
                 }
 
-                return await ExecuteAction(handlerType, serviceProvider, command, logger, information, connection);
+                logger.LogWarning("No handler was found to handle {command}. ConnectionId: {connectionId}",
+                    command.GetType().Name, connection?.Id);
+                return command.CreateExceptionResponse<ResponseBase>(new HandlerNotFoundException());
             }
 
             return null;
@@ -51,82 +114,6 @@ namespace SapphireDb.Internal
                 .Where(t => t.Name.EndsWith("Handler") && t.IsSubclassOf(type))
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Handler", StringComparison.Ordinal)),
                     t => t);
-        }
-
-        private async Task<ResponseBase> ExecuteAction<T>(Type handlerType, IServiceProvider serviceProvider,
-            CommandBase command, ILogger<T> logger,
-            HttpInformation information, ConnectionBase connection)
-        {
-            object handler = serviceProvider.GetService(handlerType);
-
-            if (handler != null)
-            {
-                logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}", command.GetType().Name, handler.GetType().Name, connection?.Id);
-                try
-                {
-                    if (handler is INeedsConnection handlerWithConnection)
-                    {
-                        if (handler is ExecuteCommandHandler || connection != null)
-                        {
-                            handlerWithConnection.Connection = connection;
-                        }
-                        else
-                        {
-                            logger.LogWarning("Cannot handle {command} without realtime connection",
-                                command.GetType().Name);
-                            return command.CreateExceptionResponse<ResponseBase>(
-                                new MissingRealtimeConnectionException());
-                        }
-                    }
-
-                    ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
-                        .Invoke(handler, new object[] {information, command});
-
-                    logger.LogInformation("Handled {command}. ConnectionId: {connectionId}", command.GetType().Name, connection?.Id);
-
-                    return response;
-                }
-                catch (Exception ex)
-                {
-                    if (ex is TargetInvocationException targetInvocationException && targetInvocationException.InnerException != null)
-                    {
-                        ex = ex.InnerException;
-                    }
-
-                    if (!(ex is SapphireDbException sapphireDbException))
-                    {
-                        sapphireDbException = new UnhandledException(ex);
-                    }
-                    
-                    if (sapphireDbException.Severity == ExceptionSeverity.Warning)
-                    {
-                        logger.LogWarning(sapphireDbException, "The command handler return an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id, connection?.Id);
-                    }
-                    else
-                    {
-                        logger.LogError(sapphireDbException, "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id, connection?.Id);
-                    }
-
-                    return command.CreateExceptionResponse<ResponseBase>(sapphireDbException);
-                }
-            }
-            else
-            {
-                logger.LogWarning("No handler was found to handle {command}. ConnectionId: {connectionId}", command.GetType().Name, connection?.Id);
-                return command.CreateExceptionResponse<ResponseBase>(new HandlerNotFoundException());
-            }
-        }
-
-        private ResponseBase CreateAuthenticationResponseOrNull(Type handlerType, HttpInformation information,
-            CommandBase command)
-        {
-            if (!options.CanExecuteCommand(command, information))
-            {
-                return command.CreateExceptionResponse<ResponseBase>(
-                    new UnauthorizedException("You are not allowed to execute this command"));
-            }
-
-            return null;
         }
     }
 }
