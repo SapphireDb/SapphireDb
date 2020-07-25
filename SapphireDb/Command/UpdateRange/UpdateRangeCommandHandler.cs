@@ -66,16 +66,12 @@ namespace SapphireDb.Command.UpdateRange
                                     serviceProvider), completeValue);
                         }
 
-                        return new Tuple<ValidatedResponseBase, object>(
-                            (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
-                                new OperationRejectedException("Update failed. The object was not found")), null);
+                        throw new OperationRejectedException("Update failed. The object was not found");
                     }
 
                     if (!property.Key.CanUpdate(context, dbValue, serviceProvider))
                     {
-                        return new Tuple<ValidatedResponseBase, object>(
-                            (UpdateResponse) command.CreateExceptionResponse<UpdateResponse>(
-                                new UnauthorizedException("The user is not authorized for this action.")), null);
+                        throw new UnauthorizedException("The user is not authorized for this action.");
                     }
 
                     return new Tuple<ValidatedResponseBase, object>(ApplyChangesToDb(property, dbValue,

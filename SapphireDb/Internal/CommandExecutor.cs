@@ -103,7 +103,11 @@ namespace SapphireDb.Internal
                         connection?.Id);
                 }
 
-                return command.CreateExceptionResponse<ResponseBase>(sapphireDbException);
+                return new ResponseBase()
+                {
+                    ReferenceId = command.ReferenceId,
+                    Error = new SapphireDbErrorResponse(sapphireDbException)
+                };
             }
         }
 
