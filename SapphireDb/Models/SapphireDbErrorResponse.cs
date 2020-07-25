@@ -15,7 +15,8 @@ namespace SapphireDb.Models
             Id = exception.Id;
 
             Data = exception.GetType()
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .GetProperties()
+                .Where(property => property.DeclaringType.IsSubclassOf(typeof(SapphireDbException)))
                 .ToDictionary(property => property.Name, property => property.GetValue(exception));
         }
 

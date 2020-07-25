@@ -61,7 +61,7 @@ namespace SapphireDb.Internal
 
             if (handler != null)
             {
-                logger.LogInformation("Handling {command} with {handler}", command.GetType().Name, handler.GetType().Name);
+                logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}", command.GetType().Name, handler.GetType().Name, connection?.Id);
                 try
                 {
                     if (handler is INeedsConnection handlerWithConnection)
@@ -82,7 +82,7 @@ namespace SapphireDb.Internal
                     ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
                         .Invoke(handler, new object[] {information, command});
 
-                    logger.LogInformation("Handled {command}", command.GetType().Name);
+                    logger.LogInformation("Handled {command}. ConnectionId: {connectionId}", command.GetType().Name, connection?.Id);
 
                     return response;
                 }
@@ -100,11 +100,11 @@ namespace SapphireDb.Internal
                     
                     if (sapphireDbException.Severity == ExceptionSeverity.Warning)
                     {
-                        logger.LogWarning(sapphireDbException, "The command handler return an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id);
+                        logger.LogWarning(sapphireDbException, "The command handler return an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id, connection?.Id);
                     }
                     else
                     {
-                        logger.LogError(sapphireDbException, "Error handling {command}. Error: {error}, ErrorId: {errorId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id);
+                        logger.LogError(sapphireDbException, "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}", command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id, connection?.Id);
                     }
 
                     return command.CreateExceptionResponse<ResponseBase>(sapphireDbException);
@@ -112,7 +112,7 @@ namespace SapphireDb.Internal
             }
             else
             {
-                logger.LogWarning("No handler was found to handle {command}", command.GetType().Name);
+                logger.LogWarning("No handler was found to handle {command}. ConnectionId: {connectionId}", command.GetType().Name, connection?.Id);
                 return command.CreateExceptionResponse<ResponseBase>(new HandlerNotFoundException());
             }
         }
