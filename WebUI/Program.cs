@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore;
+﻿using System;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Exceptions;
+using Serilog.Exceptions.Core;
+using Serilog.Sinks.Loki;
 
 namespace WebUI
 {
@@ -9,7 +13,30 @@ namespace WebUI
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            var credentials = new NoAuthCredentials("http://localhost:3100");
+            
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .Enrich.WithExceptionDetails()
+                .WriteTo.Console()
+                .WriteTo.Debug()
+                .WriteTo.LokiHttp(credentials)
+                .CreateLogger();
+
+            try
+            {
+                Log.Information("Starting web host");
+                CreateWebHostBuilder(args).Build().Run();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Host terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args)
@@ -20,13 +47,8 @@ namespace WebUI
 
             return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)
-                .ConfigureLogging(builder =>
-                {
-                    builder
-                        .AddFilter("SapphireDb", LogLevel.Debug);
-                })
+                .UseSerilog()
                 .UseStartup<Startup>();
         }
-
     }
 }
