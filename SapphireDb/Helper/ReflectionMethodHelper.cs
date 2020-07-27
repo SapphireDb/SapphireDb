@@ -41,7 +41,7 @@ namespace SapphireDb.Helper
             MethodInfo methodInfo = modelType.GetMethod(methodName,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             
-            if (methodInfo == null || methodInfo.ReturnType != returnType)
+            if (methodInfo == null || !returnType.IsAssignableFrom(methodInfo.ReturnType))
             {
                 throw new Exception("No suiting method was found");
             }
