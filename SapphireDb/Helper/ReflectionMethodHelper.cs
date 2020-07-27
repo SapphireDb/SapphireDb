@@ -31,6 +31,24 @@ namespace SapphireDb.Helper
             return QueryableWhere.MakeGenericMethod(parameterType);
         }
         
+        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType)
+        {
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+            
+            MethodInfo methodInfo = modelType.GetMethod(methodName,
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            
+            if (methodInfo == null || methodInfo.ReturnType != returnType)
+            {
+                throw new Exception("No suiting method was found");
+            }
+
+            return methodInfo;
+        }
+        
         public static readonly MethodInfo StringToLower = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { });
         public static readonly MethodInfo StringContains = typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) });
         public static readonly MethodInfo StringStartsWith = typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) });

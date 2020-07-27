@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
+using SapphireDb.Helper;
 using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
@@ -35,27 +34,9 @@ namespace SapphireDb.Attributes
 
         public void Compile(Type modelType)
         {
-            BeforeFunction = GetMethodInfo(modelType, Before);
-            BeforeSaveFunction = GetMethodInfo(modelType, BeforeSave);
-            AfterFunction = GetMethodInfo(modelType, After);
-        }
-
-        private MethodInfo GetMethodInfo(Type modelType, string methodName)
-        {
-            if (string.IsNullOrEmpty(methodName))
-            {
-                return null;
-            }
-            
-            MethodInfo methodInfo = modelType.GetMethod(methodName,
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            
-            if (methodInfo == null || methodInfo.ReturnType != typeof(void))
-            {
-                throw new Exception("No suiting method was found");
-            }
-
-            return methodInfo;
+            BeforeFunction = ReflectionMethodHelper.GetMethodInfo(modelType, Before, typeof(void));
+            BeforeSaveFunction = ReflectionMethodHelper.GetMethodInfo(modelType, BeforeSave, typeof(void));
+            AfterFunction = ReflectionMethodHelper.GetMethodInfo(modelType, After, typeof(void));
         }
 
         public enum EventType
