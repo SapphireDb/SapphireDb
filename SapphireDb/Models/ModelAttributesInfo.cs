@@ -24,7 +24,7 @@ namespace SapphireDb.Models
         
         public List<RemoveEventAttribute> RemoveEventAttributes { get; set; }
 
-        public UpdatableAttribute UpdatableAttribute { get; set; }
+        public UpdateableAttribute UpdateableAttribute { get; set; }
         
         public DisableAutoMergeAttribute DisableAutoMergeAttribute { get; set; }
         
@@ -40,7 +40,7 @@ namespace SapphireDb.Models
             UpdateEventAttributes = GetHookAttributeOfClassAndTopClasses<UpdateEventAttribute>(modelType);
             RemoveEventAttributes = GetHookAttributeOfClassAndTopClasses<RemoveEventAttribute>(modelType);
 
-            UpdatableAttribute = modelType.GetCustomAttribute<UpdatableAttribute>(false);
+            UpdateableAttribute = modelType.GetCustomAttribute<UpdateableAttribute>(false);
             DisableAutoMergeAttribute = modelType.GetCustomAttribute<DisableAutoMergeAttribute>(false);
         }
 

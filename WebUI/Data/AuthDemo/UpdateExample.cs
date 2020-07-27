@@ -2,7 +2,7 @@
 
 namespace WebUI.Data.AuthDemo
 {
-    [Updatable]
+    [Updateable]
     [UpdateAuth("requireUser")]
     public class UpdateExample : Base
     {

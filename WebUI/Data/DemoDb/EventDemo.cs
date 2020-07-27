@@ -16,7 +16,7 @@ namespace WebUI.Data.DemoDb
 
         public DateTime UpdatedOn { get; set; }
 
-        [Updatable]
+        [Updateable]
         public string Content { get; set; }
 
         private void OnCreate()

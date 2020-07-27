@@ -19,7 +19,7 @@ namespace WebUI.Data.DemoDb
 
         public IncludeDemoUser User { get; set; }
 
-        [Updatable]
+        [Updateable]
         public string Content { get; set; }
     }
 }

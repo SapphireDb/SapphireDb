@@ -4,7 +4,7 @@ using SapphireDb.Models;
 
 namespace WebUI.Data.DemoDb
 {
-    [Updatable]
+    [Updateable]
     public class DemoEntry : SapphireOfflineEntity
     {
         public string Content { get; set; }

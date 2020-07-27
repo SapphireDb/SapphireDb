@@ -113,9 +113,9 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return attribute;
         }
 
-        public SapphireModelBuilder<T> MakeUpdatable()
+        public SapphireModelBuilder<T> MakeUpdateable()
         {
-            attributesInfo.UpdatableAttribute = new UpdatableAttribute();
+            attributesInfo.UpdateableAttribute = new UpdateableAttribute();
             return this;
         }
         

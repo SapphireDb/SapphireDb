@@ -21,7 +21,7 @@ namespace WebUI.Data.Models
         [MinLength(3)]
         [QueryAuth(functionName: "Test2")]
         [UpdateAuth(functionName: "Test")]
-        [Updatable]
+        [Updateable]
         public string FirstName { get; set; }
 
         public bool Test(HttpInformation context)
@@ -37,7 +37,7 @@ namespace WebUI.Data.Models
 
         [Required]
         [MinLength(3)]
-        [Updatable]
+        [Updateable]
         public string LastName { get; set; }
 
         public void afterCreate(HttpInformation context, RealtimeContext db)

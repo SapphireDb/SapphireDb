@@ -16,9 +16,9 @@ namespace SapphireDb.Models.SapphireApiBuilder
                 .FirstOrDefault(property => property.PropertyInfo == propertyInfo);
         }
 
-        public SapphirePropertyBuilder<TModel, TProperty> MakeUpdatable()
+        public SapphirePropertyBuilder<TModel, TProperty> MakeUpdateable()
         {
-            attributesInfo.UpdatableAttribute = new UpdatableAttribute();
+            attributesInfo.UpdateableAttribute = new UpdateableAttribute();
             return this;
         }
 

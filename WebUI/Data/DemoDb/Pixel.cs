@@ -12,7 +12,7 @@ namespace WebUI.Data.DemoDb
         [Key]
         public Guid Id { get; set; }
 
-        [Updatable]
+        [Updateable]
         public string Color { get; set; }
 
         public int X { get; set; }

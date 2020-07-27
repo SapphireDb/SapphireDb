@@ -15,7 +15,7 @@ namespace WebUI.Data.DemoDb
         public string Name { get; set; }
 
         // [MergeConflictResolutionMode(MergeConflictResolutionMode.ConflictMarkers)]
-        [Updatable]
+        [Updateable]
         public string Content { get; set; }
     }
 

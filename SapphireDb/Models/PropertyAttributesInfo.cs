@@ -13,7 +13,7 @@ namespace SapphireDb.Models
 
         public List<UpdateAuthAttribute> UpdateAuthAttributes { get; set; }
 
-        public UpdatableAttribute UpdatableAttribute { get; set; }
+        public UpdateableAttribute UpdateableAttribute { get; set; }
 
         public NonCreatableAttribute NonCreatableAttribute { get; set; }
         
@@ -24,7 +24,7 @@ namespace SapphireDb.Models
             PropertyInfo = propertyInfo;
             QueryAuthAttributes = GetCustomAttributes<QueryAuthAttribute>();
             UpdateAuthAttributes = GetCustomAttributes<UpdateAuthAttribute>();
-            UpdatableAttribute = PropertyInfo.GetCustomAttribute<UpdatableAttribute>(false);
+            UpdateableAttribute = PropertyInfo.GetCustomAttribute<UpdateableAttribute>(false);
             NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>(false);
             MergeConflictResolutionModeAttribute = PropertyInfo.GetCustomAttribute<MergeConflictResolutionModeAttribute>();
         }
