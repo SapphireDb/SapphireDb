@@ -6,7 +6,7 @@ using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
 {
-    public class SapphirePropertyBuilder<TModel, TProperty>
+    public class SapphirePropertyBuilder<TModel, TProperty> where TModel : class
     {
         private readonly PropertyAttributesInfo attributesInfo;
 

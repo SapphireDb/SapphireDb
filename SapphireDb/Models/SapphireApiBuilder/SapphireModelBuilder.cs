@@ -6,7 +6,7 @@ using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
 {
-    public class SapphireModelBuilder<T>
+    public class SapphireModelBuilder<T> where T : class
     {
         private readonly ModelAttributesInfo attributesInfo;
 
