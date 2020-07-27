@@ -26,11 +26,7 @@ namespace SapphireDb.Command.Subscribe
         {
             ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
 
-            if (response.Error == null)
-            {
-                subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters,
-                    Connection, command.ReferenceId);
-            }
+            subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters, Connection, command.ReferenceId);
 
             return Task.FromResult(response);
         }
