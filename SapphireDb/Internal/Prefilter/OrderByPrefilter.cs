@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -43,6 +44,22 @@ namespace SapphireDb.Internal.Prefilter
                 PropertySelectExpression = Expression.Lambda<Func<object, object>>(bodyConverted, parameter);
             }
         }
+        
+        protected bool serverInitialized = false;
+        protected readonly Guid serverInitializedId = Guid.NewGuid();
+        
+        public void InitializeServer<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression) where TModel : class
+        {
+            serverInitialized = true;
+            initialized = true;
+            
+            ParameterExpression parameter = Expression.Parameter(typeof(object));
+            UnaryExpression modelExpression = Expression.Convert(parameter, typeof(TModel));
+            SubstitutionExpressionVisitor expressionVisitor =
+                new SubstitutionExpressionVisitor(expression.Parameters.Single(), modelExpression);
+            Expression selector = Expression.Convert(expressionVisitor.Visit(expression.Body), typeof(object));
+            PropertySelectExpression = Expression.Lambda<Func<object, object>>(selector, parameter);
+        }
 
         public void Dispose()
         {
@@ -51,6 +68,11 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
+            if (serverInitialized)
+            {
+                return $"OrderByPrefilter,{serverInitializedId}";
+            }
+            
             return $"OrderByPrefilter,{Property},{Descending}";
         }
     }

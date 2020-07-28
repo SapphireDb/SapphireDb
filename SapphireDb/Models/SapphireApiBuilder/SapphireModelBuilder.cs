@@ -124,6 +124,13 @@ namespace SapphireDb.Models.SapphireApiBuilder
             attributesInfo.DisableAutoMergeAttribute = new DisableAutoMergeAttribute();
             return this;
         }
+
+        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, SapphireQueryBuilder<T>> builder)
+        {
+            SapphireQueryBuilderBase<T> queryBuilderBase = builder(new SapphireQueryBuilder<T>());
+
+            return this;
+        }
         
         public SapphirePropertyBuilder<T, TProperty> Property<TProperty>(Expression<Func<T, TProperty>> selector)
         {
