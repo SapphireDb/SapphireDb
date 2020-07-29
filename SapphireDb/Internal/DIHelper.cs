@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Models;
 
 namespace SapphireDb.Internal
@@ -18,6 +16,32 @@ namespace SapphireDb.Internal
                 if (p.ParameterType == typeof(HttpInformation))
                 {
                     return httpInformation;
+                }
+
+                return serviceProvider.GetService(p.ParameterType);
+            }).ToArray();
+        }
+        
+        public static object[] CreateParametersWithJTokensAndQueryBuilder(this MethodInfo mi, HttpInformation httpInformation, JToken[] jTokens, object queryBuilder, IServiceProvider serviceProvider)
+        {
+            Type queryBuilderType = queryBuilder.GetType();
+            
+            ParameterInfo[] parameters = mi.GetParameters();
+            return parameters.Select(p =>
+            {
+                if (p.ParameterType == typeof(HttpInformation))
+                {
+                    return httpInformation;
+                }
+
+                if (p.ParameterType == typeof(JToken[]))
+                {
+                    return jTokens;
+                }
+
+                if (p.ParameterType == queryBuilderType)
+                {
+                    return queryBuilder;
                 }
 
                 return serviceProvider.GetService(p.ParameterType);

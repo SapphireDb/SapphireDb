@@ -54,7 +54,7 @@ namespace SapphireDb.Command.SubscribeQuery
             if (query.FunctionInfo != null)
             {
                 queryBuilder = query.FunctionInfo.Invoke(null,
-                    new object[] {queryBuilder, Connection.Information, command.Parameters});
+                    query.FunctionInfo.CreateParametersWithJTokensAndQueryBuilder(Connection.Information, command.Parameters, (object)queryBuilder, serviceProvider));
             }
 
             List<IPrefilterBase> prefilters = typeof(SapphireQueryBuilderBase<>)
