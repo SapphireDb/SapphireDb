@@ -56,4 +56,8 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Command\QueryQuery" />
+  </ItemGroup>
 </Project>
