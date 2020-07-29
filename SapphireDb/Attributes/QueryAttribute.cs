@@ -26,7 +26,8 @@ namespace SapphireDb.Attributes
         
         public void Compile(Type modelType)
         {
-            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(modelType, FunctionName, typeof(SapphireQueryBuilder<>).MakeGenericType(modelType));
+            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(modelType, FunctionName, typeof(SapphireQueryBuilder<>).MakeGenericType(modelType),
+                BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
     }
 }

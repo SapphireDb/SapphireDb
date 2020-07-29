@@ -31,15 +31,15 @@ namespace SapphireDb.Helper
             return QueryableWhere.MakeGenericMethod(parameterType);
         }
         
-        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType)
+        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType,
+            BindingFlags bindingFlags = BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         {
             if (string.IsNullOrEmpty(methodName))
             {
                 return null;
             }
             
-            MethodInfo methodInfo = modelType.GetMethod(methodName,
-                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MethodInfo methodInfo = modelType.GetMethod(methodName, bindingFlags);
             
             if (methodInfo == null || !returnType.IsAssignableFrom(methodInfo.ReturnType))
             {

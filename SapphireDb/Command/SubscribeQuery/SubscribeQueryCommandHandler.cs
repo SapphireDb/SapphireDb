@@ -7,8 +7,10 @@ using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
+using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
+using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Command.SubscribeQuery
 {
@@ -17,7 +19,7 @@ namespace SapphireDb.Command.SubscribeQuery
         public ConnectionBase Connection { get; set; }
         private readonly IServiceProvider serviceProvider;
         private readonly SubscriptionManager subscriptionManager;
-        
+
         public SubscribeQueryCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider,
             SubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
@@ -37,27 +39,42 @@ namespace SapphireDb.Command.SubscribeQuery
             {
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
-            
+
             QueryAttribute query = property.Key.GetModelAttributesInfo()
                 .QueryAttributes
-                .FirstOrDefault(q => q.QueryName.Equals(command.QueryName, StringComparison.InvariantCultureIgnoreCase));
+                .FirstOrDefault(q =>
+                    q.QueryName.Equals(command.QueryName, StringComparison.InvariantCultureIgnoreCase));
 
             if (query == null)
             {
                 throw new QueryNotFoundException(command.ContextName, command.CollectionName, command.QueryName);
             }
+
+            dynamic queryBuilder =
+                Activator.CreateInstance(typeof(SapphireQueryBuilder<>).MakeGenericType(property.Key));
+
+            if (query.FunctionLambda != null)
+            {
+                queryBuilder = query.FunctionLambda(queryBuilder, Connection.Information, command.Parameters);
+            }
+
+            if (query.FunctionInfo != null)
+            {
+                queryBuilder = query.FunctionInfo.Invoke(null,
+                    new object[] {queryBuilder, Connection.Information, command.Parameters});
+            }
+
+            List<IPrefilterBase> prefilters = typeof(SapphireQueryBuilderBase<>)
+                .MakeGenericType(property.Key)
+                .GetField("prefilters")
+                .GetValue(queryBuilder);
             
-            // ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
+            
+            ResponseBase response = CollectionHelper.GetCollection(db, command, prefilters, context, serviceProvider);
 
-            // if (response.Error == null)
-            // {
-                // subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters,
-                    // Connection, command.ReferenceId);
-            // }
+            subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, prefilters, Connection, command.ReferenceId);
 
-            // return Task.FromResult(response);
-
-            return null;
+            return Task.FromResult(response);
         }
     }
 }

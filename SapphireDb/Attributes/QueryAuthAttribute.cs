@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using SapphireDb.Helper;
 
 namespace SapphireDb.Attributes
 {
@@ -7,6 +9,12 @@ namespace SapphireDb.Attributes
     {
         public QueryAuthAttribute(string policies = null, string functionName = null) : base(policies, functionName)
         {
+        }
+        
+        public new void Compile(Type targetType)
+        {
+            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(targetType, FunctionName, typeof(bool),
+                BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
     }
 }

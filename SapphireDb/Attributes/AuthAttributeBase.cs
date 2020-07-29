@@ -9,7 +9,7 @@ namespace SapphireDb.Attributes
     {
         public string[] Policies { get; } = new string[0];
 
-        private string FunctionName { get; }
+        protected string FunctionName { get; }
 
         public MethodInfo FunctionInfo { get; set; }
         
