@@ -31,7 +31,7 @@ namespace SapphireDb.Command.DeleteRange
 
             if (property.Key == null)
             {
-                throw new CollectionNotFoundException(command.CollectionName);
+                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
             
             List<object> removedValues = new List<object>();
@@ -53,7 +53,7 @@ namespace SapphireDb.Command.DeleteRange
 
                         if (value == null)
                         {
-                            throw new ValueNotFoundException(command.CollectionName, primaryKeys);
+                            throw new ValueNotFoundException(command.ContextName, command.CollectionName, primaryKeys);
                         }
                         
                         if (value is SapphireOfflineEntity valueOfflineEntity &&
@@ -64,7 +64,7 @@ namespace SapphireDb.Command.DeleteRange
                             if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
                                 db.Database.ProviderName))
                             {
-                                throw new DeleteRejectedException(command.CollectionName, primaryKeys);
+                                throw new DeleteRejectedException(command.ContextName, command.CollectionName, primaryKeys);
                             }
                         }
 

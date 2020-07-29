@@ -35,7 +35,7 @@ namespace SapphireDb.Command.UpdateRange
                 return await InitializeUpdate(command, property, context, db);
             }
 
-            throw new CollectionNotFoundException(command.CollectionName);
+            throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
         }
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,
@@ -67,7 +67,7 @@ namespace SapphireDb.Command.UpdateRange
                                     serviceProvider), completeValue);
                         }
 
-                        throw new ValueNotFoundException(command.CollectionName, primaryKeys);
+                        throw new ValueNotFoundException(command.ContextName, command.CollectionName, primaryKeys);
                     }
 
                     if (!property.Key.CanUpdate(context, dbValue, serviceProvider))
@@ -134,7 +134,7 @@ namespace SapphireDb.Command.UpdateRange
                 }
                 else
                 {
-                    throw new UpdateRejectedException(command.CollectionName, originalValue, updatedProperties);
+                    throw new UpdateRejectedException(command.ContextName, command.CollectionName, originalValue, updatedProperties);
                 }
             }
             else

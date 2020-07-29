@@ -33,7 +33,7 @@ namespace SapphireDb.Helper
 
             if (property.Key == null)
             {
-                throw new CollectionNotFoundException(command.CollectionName);
+                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
             if (!property.Key.CanQuery(information, serviceProvider))

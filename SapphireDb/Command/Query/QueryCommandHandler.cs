@@ -26,7 +26,7 @@ namespace SapphireDb.Command.Query
         {
             if (databaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
             {
-                throw new IncludeNotAllowedException(command.CollectionName);
+                throw new IncludeNotAllowedException(command.ContextName, command.CollectionName);
             }
             
             return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider));

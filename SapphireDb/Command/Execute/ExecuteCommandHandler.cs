@@ -71,7 +71,7 @@ namespace SapphireDb.Command.Execute
 
             if (actionMethod == null)
             {
-                throw new ActionNotFoundException(actionName);
+                throw new ActionNotFoundException(actionHandlerName, actionName);
             }
             
             ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);

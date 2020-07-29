@@ -32,7 +32,7 @@ namespace SapphireDb.Command.CreateRange
                 return Task.FromResult(CreateObjects(command, property, context, db));
             }
 
-            throw new CollectionNotFoundException(command.CollectionName);
+            throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
         }
 
         private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,

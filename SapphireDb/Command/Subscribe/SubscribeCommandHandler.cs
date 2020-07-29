@@ -31,7 +31,7 @@ namespace SapphireDb.Command.Subscribe
         {
             if (databaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
             {
-                throw new IncludeNotAllowedException(command.CollectionName);
+                throw new IncludeNotAllowedException(command.ContextName, command.CollectionName);
             }
             
             ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider);
