@@ -8,22 +8,24 @@ namespace SapphireDb.Models
 {
     public class ModelAttributesInfo
     {
-        public List<QueryAuthAttribute> QueryAuthAttributes { get; set; }
+        public List<QueryAuthAttribute> QueryAuthAttributes { get; }
         
-        public List<QueryEntryAuthAttribute> QueryEntryAuthAttributes { get; set; }
+        public List<QueryEntryAuthAttribute> QueryEntryAuthAttributes { get; }
 
-        public List<UpdateAuthAttribute> UpdateAuthAttributes { get; set; }
+        public List<UpdateAuthAttribute> UpdateAuthAttributes { get; }
         
-        public List<RemoveAuthAttribute> RemoveAuthAttributes { get; set; }
+        public List<RemoveAuthAttribute> RemoveAuthAttributes { get; }
         
-        public List<CreateAuthAttribute> CreateAuthAttributes { get; set; }
+        public List<CreateAuthAttribute> CreateAuthAttributes { get; }
 
-        public List<CreateEventAttribute> CreateEventAttributes { get; set; }
+        public List<CreateEventAttribute> CreateEventAttributes { get; }
         
-        public List<UpdateEventAttribute> UpdateEventAttributes { get; set; }
+        public List<UpdateEventAttribute> UpdateEventAttributes { get; }
         
-        public List<RemoveEventAttribute> RemoveEventAttributes { get; set; }
+        public List<RemoveEventAttribute> RemoveEventAttributes { get; }
 
+        public List<QueryAttribute> QueryAttributes { get; }
+        
         public UpdateableAttribute UpdateableAttribute { get; set; }
         
         public DisableAutoMergeAttribute DisableAutoMergeAttribute { get; set; }
@@ -40,10 +42,20 @@ namespace SapphireDb.Models
             UpdateEventAttributes = GetHookAttributeOfClassAndTopClasses<UpdateEventAttribute>(modelType);
             RemoveEventAttributes = GetHookAttributeOfClassAndTopClasses<RemoveEventAttribute>(modelType);
 
+            QueryAttributes = GetQueryAttributes(modelType);
             UpdateableAttribute = modelType.GetCustomAttribute<UpdateableAttribute>(false);
             DisableAutoMergeAttribute = modelType.GetCustomAttribute<DisableAutoMergeAttribute>(false);
         }
 
+        private List<QueryAttribute> GetQueryAttributes(Type modelType)
+        {
+            List<QueryAttribute> queryAttributes = modelType.GetCustomAttributes<QueryAttribute>(false).ToList();
+            
+            queryAttributes.ForEach(queryAttribute => queryAttribute.Compile(modelType));
+
+            return queryAttributes;
+        }
+        
         private List<T> GetAuthAttributesOfClassOrDirectTopClass<T>(Type modelType) where T : AuthAttributeBase
         {
             Type currentModelType = modelType;

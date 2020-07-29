@@ -15,7 +15,7 @@ namespace WebUI.Data.DemoDb
                 Console.WriteLine(message.Content.ToString());
             });
 
-            modelBuilder.CreateQuery("query1", builder =>
+            modelBuilder.CreateQuery("query1", (builder, information, parameters) =>
                 builder
                     .OrderBy(m => m.Content)
                     .Where(m => m.Content == null)

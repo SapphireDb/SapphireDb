@@ -15,7 +15,7 @@ namespace SapphireDb.Attributes
 
         public MethodInfo FunctionInfo { get; set; }
         
-        public Func<HttpInformation, object[], object> FunctionLambda { get; set; }
+        public Func<dynamic, HttpInformation, object[], dynamic> FunctionLambda { get; set; }
         
         public QueryAttribute(string queryName, string functionName)
         {

@@ -125,10 +125,12 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return this;
         }
 
-        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, SapphireQueryBuilder<T>> builder)
+        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, HttpInformation, object[], SapphireQueryBuilder<T>> builder)
         {
-            SapphireQueryBuilderBase<T> queryBuilderBase = builder(new SapphireQueryBuilder<T>());
-
+            attributesInfo.QueryAttributes.Add(new QueryAttribute(queryName, null)
+            {
+                FunctionLambda = (queryBuilder, information, parameters) => builder(queryBuilder, information, parameters)
+            });
             return this;
         }
         
