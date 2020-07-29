@@ -37,13 +37,9 @@ namespace SapphireDb.Internal.Prefilter
             WhereExpression = Expression.Lambda<Func<object, bool>>(whereConditionBody, parameter);
             WhereExpressionCompiled = WhereExpression.Compile();
         }
-
-        private bool serverInitialized = false;
-        private readonly Guid serverInitializedId = Guid.NewGuid();
         
         public void InitializeServer<TModel>(Expression<Func<TModel, bool>> expression) where TModel : class
         {
-            serverInitialized = true;
             initialized = true;
             
             ParameterExpression parameter = Expression.Parameter(typeof(object));
@@ -63,12 +59,7 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            if (serverInitialized)
-            {
-                return $"WherePrefilter,{serverInitializedId}";
-            }
-            
-            return $"WherePrefilter,{Conditions}";
+            return $"WherePrefilter,{WhereExpression}";
         }
     }
 }

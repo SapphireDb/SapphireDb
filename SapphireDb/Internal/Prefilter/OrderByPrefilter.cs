@@ -45,12 +45,8 @@ namespace SapphireDb.Internal.Prefilter
             }
         }
         
-        protected bool serverInitialized = false;
-        protected readonly Guid serverInitializedId = Guid.NewGuid();
-        
         public void InitializeServer<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression) where TModel : class
         {
-            serverInitialized = true;
             initialized = true;
             
             ParameterExpression parameter = Expression.Parameter(typeof(object));
@@ -68,12 +64,7 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            if (serverInitialized)
-            {
-                return $"OrderByPrefilter,{serverInitializedId}";
-            }
-            
-            return $"OrderByPrefilter,{Property},{Descending}";
+            return $"OrderByPrefilter,{PropertySelectExpression},{Descending}";
         }
     }
 }

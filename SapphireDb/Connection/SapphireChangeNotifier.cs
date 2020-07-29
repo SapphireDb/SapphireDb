@@ -185,7 +185,6 @@ namespace SapphireDb.Connection
 
                 if (afterQueryPrefilter != null)
                 {
-                    afterQueryPrefilter.Initialize(property.Key);
                     object result = afterQueryPrefilter.Execute(collectionValues);
 
                     Parallel.ForEach(equalCollectionSubscriptions, subscription =>

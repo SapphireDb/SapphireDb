@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SapphireDb.Helper;
@@ -29,7 +30,11 @@ namespace SapphireDb.Command.Query
                 throw new IncludeNotAllowedException(command.ContextName, command.CollectionName);
             }
             
-            return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider));
+            SapphireDbContext db = GetContext(command.ContextName);
+            KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
+            
+            command.Prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+            return Task.FromResult(CollectionHelper.GetCollection(db, command, property, command.Prefilters, context, serviceProvider));
         }
     }
 }

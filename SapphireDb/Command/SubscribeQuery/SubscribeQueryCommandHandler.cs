@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SapphireDb.Attributes;
-using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -32,13 +31,7 @@ namespace SapphireDb.Command.SubscribeQuery
             ExecutionContext executionContext)
         {
             SapphireDbContext db = GetContext(command.ContextName);
-            Type dbContextType = db.GetType();
-            KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
-
-            if (property.Key == null)
-            {
-                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
-            }
+            KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
 
             QueryAttribute query = property.Key.GetModelAttributesInfo()
                 .QueryAttributes
@@ -69,9 +62,9 @@ namespace SapphireDb.Command.SubscribeQuery
                 .GetField("prefilters")
                 .GetValue(queryBuilder);
             
+            prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+            ResponseBase response = CollectionHelper.GetCollection(db, command, property, prefilters, context, serviceProvider);
             
-            ResponseBase response = CollectionHelper.GetCollection(db, command, prefilters, context, serviceProvider);
-
             subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, prefilters, Connection, command.ReferenceId);
 
             return Task.FromResult(response);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SapphireDb.Connection;
@@ -33,8 +34,12 @@ namespace SapphireDb.Command.Subscribe
             {
                 throw new IncludeNotAllowedException(command.ContextName, command.CollectionName);
             }
+
+            SapphireDbContext db = GetContext(command.ContextName);
+            KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
-            ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider);
+            command.Prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+            ResponseBase response = CollectionHelper.GetCollection(db, command, property, command.Prefilters, context, serviceProvider);
 
             subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters, Connection, command.ReferenceId);
 

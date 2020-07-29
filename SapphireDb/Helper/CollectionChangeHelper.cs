@@ -21,8 +21,6 @@ namespace SapphireDb.Helper
 
             foreach (WherePrefilter wherePrefilter in wherePrefilters)
             {
-                wherePrefilter.Initialize(property.Key);
-
                 oldValuesUnloadResponses.AddRange(
                     allChanges
                         .Where(change => change.State == ChangeResponse.ChangeState.Modified &&

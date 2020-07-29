@@ -18,24 +18,28 @@ namespace SapphireDb.Helper
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
-                prefilter.Initialize(property.Key);
                 collectionSet = prefilter.Execute(collectionSet);
             }
 
             return collectionSet;
         }
 
-        public static ResponseBase GetCollection(SapphireDbContext db, IQueryCommand command, List<IPrefilterBase> prefilters,
-            HttpInformation information, IServiceProvider serviceProvider)
+        public static KeyValuePair<Type, string> GetCollectionType(SapphireDbContext db, IQueryCommand command)
         {
             Type dbContextType = db.GetType();
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
-
+            
             if (property.Key == null)
             {
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
+            return property;
+        }
+        
+        public static ResponseBase GetCollection(SapphireDbContext db, IQueryCommand command, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters,
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
             if (!property.Key.CanQuery(information, serviceProvider))
             {
                 throw new UnauthorizedException("Not allowed to query values from collection");
@@ -53,7 +57,6 @@ namespace SapphireDb.Helper
 
             if (afterQueryPrefilter != null)
             {
-                afterQueryPrefilter.Initialize(property.Key);
                 queryResponse.Result = afterQueryPrefilter.Execute(collectionValues);
             }
             else
