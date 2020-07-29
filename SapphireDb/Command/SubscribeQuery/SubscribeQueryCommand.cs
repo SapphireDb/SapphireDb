@@ -1,8 +1,10 @@
-﻿using SapphireDb.Models.Exceptions;
+﻿using Newtonsoft.Json.Linq;
+using SapphireDb.Command.Query;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Command.SubscribeQuery
 {
-    public class SubscribeQueryCommand : CommandBase
+    public class SubscribeQueryCommand : CommandBase, IQueryCommand
     {
         private string collectionName;
         private string contextName = "default";
@@ -40,5 +42,7 @@ namespace SapphireDb.Command.SubscribeQuery
         public string CollectionName => collectionName;
         
         public string ContextName => contextName;
+
+        public JToken[] Parameters { get; set; }
     }
 }

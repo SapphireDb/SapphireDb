@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Helper;
 
@@ -125,7 +126,16 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return this;
         }
 
-        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, HttpInformation, object[], SapphireQueryBuilder<T>> builder)
+        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, HttpInformation, SapphireQueryBuilder<T>> builder)
+        {
+            attributesInfo.QueryAttributes.Add(new QueryAttribute(queryName, null)
+            {
+                FunctionLambda = (queryBuilder, information, _) => builder(queryBuilder, information)
+            });
+            return this;
+        }
+        
+        public SapphireModelBuilder<T> CreateQuery(string queryName, Func<SapphireQueryBuilder<T>, HttpInformation, JToken[], SapphireQueryBuilder<T>> builder)
         {
             attributesInfo.QueryAttributes.Add(new QueryAttribute(queryName, null)
             {

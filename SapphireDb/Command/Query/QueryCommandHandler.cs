@@ -29,7 +29,7 @@ namespace SapphireDb.Command.Query
                 throw new IncludeNotAllowedException(command.CollectionName);
             }
             
-            return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider));
+            return Task.FromResult(CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider));
         }
     }
 }

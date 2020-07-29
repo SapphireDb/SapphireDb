@@ -34,7 +34,7 @@ namespace SapphireDb.Command.Subscribe
                 throw new IncludeNotAllowedException(command.CollectionName);
             }
             
-            ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, context, serviceProvider);
+            ResponseBase response = CollectionHelper.GetCollection(GetContext(command.ContextName), command, command.Prefilters, context, serviceProvider);
 
             subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters, Connection, command.ReferenceId);
 

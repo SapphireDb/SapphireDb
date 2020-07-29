@@ -25,7 +25,7 @@ namespace SapphireDb.Helper
             return collectionSet;
         }
 
-        public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
+        public static ResponseBase GetCollection(SapphireDbContext db, IQueryCommand command, List<IPrefilterBase> prefilters,
             HttpInformation information, IServiceProvider serviceProvider)
         {
             Type dbContextType = db.GetType();
@@ -41,7 +41,7 @@ namespace SapphireDb.Helper
                 throw new UnauthorizedException("Not allowed to query values from collection");
             }
 
-            IQueryable<object> collectionValues = db.GetCollectionValues(property, command.Prefilters);
+            IQueryable<object> collectionValues = db.GetCollectionValues(property, prefilters);
 
             QueryResponse queryResponse = new QueryResponse()
             {
@@ -49,7 +49,7 @@ namespace SapphireDb.Helper
             };
 
             IAfterQueryPrefilter afterQueryPrefilter =
-                command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+                prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
 
             if (afterQueryPrefilter != null)
             {
