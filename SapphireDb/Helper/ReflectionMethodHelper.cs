@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
 {
@@ -43,7 +44,7 @@ namespace SapphireDb.Helper
             
             if (methodInfo == null || !returnType.IsAssignableFrom(methodInfo.ReturnType))
             {
-                throw new Exception("No suiting method was found");
+                throw new MethodNotFoundException(modelType.Name, methodName);
             }
 
             return methodInfo;

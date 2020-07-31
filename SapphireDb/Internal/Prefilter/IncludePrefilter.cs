@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using SapphireDb.Helper;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -43,7 +44,7 @@ namespace SapphireDb.Internal.Prefilter
 
                 if (propertyInfo == null)
                 {
-                    throw new Exception("Navigation property not found");
+                    throw new NavigationPropertyNotFoundException(modelType.Name, propertyType.Name, includePart, Include);
                 }
 
                 navigationPropertyNames.Add(propertyInfo.Name);
