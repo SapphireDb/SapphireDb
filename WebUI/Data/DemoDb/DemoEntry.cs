@@ -14,10 +14,13 @@ namespace WebUI.Data.DemoDb
 
         public int IntegerValue { get; set; } = RandomNumberGenerator.GetInt32(1, 100);
 
-        private static SapphireQueryBuilder<DemoEntry> OnyTestQuery(SapphireQueryBuilder<DemoEntry> queryBuilder, HttpInformation httpInformation, JToken[] parameters)
+        private static SapphireQueryBuilderBase<DemoEntry> OnyTestQuery(SapphireQueryBuilder<DemoEntry> queryBuilder, HttpInformation httpInformation, JToken[] parameters)
         {
             return queryBuilder
-                .Where(d => d.Content == "Test");
+                .Where(e => e.Content.Length > 5)
+                .OrderBy(e => e.Content)
+                .ThenOrderBy(e => e.IntegerValue)
+                .Select(m => new { m.Content });
         }
     }
 }
