@@ -46,7 +46,7 @@ namespace SapphireDb.Sync
                                 (SapphireChangeNotifier) serviceProvider.GetService(typeof(SapphireChangeNotifier));
                             logger.LogInformation("Handling changes from other server");
                             logger.LogDebug(
-                                "Handling {changeCount} changes of '{dbType}' from server with OriginId '{originId}'. Propagate: {propagate}",
+                                "Handling {ChangeCount} changes of {DbType} from server with OriginId {OriginId}. Propagate: {Propagate}",
                                 sendChangesRequest.Changes.Count, dbType.Name,
                                 sendChangesRequest.OriginId, sendChangesRequest.Propagate);
                             
@@ -59,7 +59,7 @@ namespace SapphireDb.Sync
                             (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
                         logger.LogInformation("Handling message from other server");
                         logger.LogDebug(
-                            "Handling message for filter '{filter}' from server with OriginId '{originId}'. Propagate: {propagate}",
+                            "Handling message for filter {Filter} from server with OriginId {OriginId}. Propagate: {Propagate}",
                             sendMessageRequest.Filter, sendMessageRequest.OriginId, sendMessageRequest.Propagate);
                         
                         sender.Send(sendMessageRequest.Message, sendMessageRequest.Filter,
@@ -71,7 +71,7 @@ namespace SapphireDb.Sync
                             (SapphireMessageSender) serviceProvider.GetService(typeof(SapphireMessageSender));
                         logger.LogInformation("Handling publish from other server");
                         logger.LogDebug(
-                            "Handling publish to topic '{topic}' from server with OriginId '{originId}'. Retain: {retain}, Propagate: {propagate}",
+                            "Handling publish to topic {Topic} from server with OriginId {OriginId}. Retain: {Retain}, Propagate: {Propagate}",
                             sendPublishRequest.Topic, sendPublishRequest.OriginId, sendPublishRequest.Retain, sendPublishRequest.Propagate);
                         
                         sender.Publish(sendPublishRequest.Topic, sendPublishRequest.Message, sendPublishRequest.Retain,
