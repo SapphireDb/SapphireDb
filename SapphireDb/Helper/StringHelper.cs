@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace SapphireDb.Helper
@@ -25,6 +26,18 @@ namespace SapphireDb.Helper
             Matcher m = new Matcher();
             m.AddInclude(globPattern);
             return m.Match(input).HasMatches;
+        }
+
+        public static string TryGetReferenceId(this string rawCommand)
+        {
+            Match match = Regex.Match(rawCommand, "[\"']+referenceId[\"']+:[\"'](.*?)[\"']");
+            
+            if (match.Groups.Count == 2 && match.Groups[1].Success)
+            {
+                return match.Groups[1].Value;
+            }
+            
+            return null;
         }
     }
 }

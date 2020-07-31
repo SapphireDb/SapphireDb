@@ -6,7 +6,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using SapphireDb.Command;
+using SapphireDb.Command.Error;
 using SapphireDb.Internal.Prefilter;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
 {
@@ -50,9 +52,24 @@ namespace SapphireDb.Helper
             {
                 return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                string referenceId = value.TryGetReferenceId();
+                
+                if (ex.InnerException is SapphireDbException sapphireDbException)
+                {
+                    return new ErrorCommand()
+                    {
+                        Exception = sapphireDbException,
+                        ReferenceId = referenceId
+                    };
+                }
+                
+                return new ErrorCommand()
+                {
+                    Exception = ex,
+                    ReferenceId = referenceId
+                };;
             }
         }
     }
