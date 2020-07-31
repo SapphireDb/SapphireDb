@@ -77,8 +77,7 @@ namespace SapphireDb.Internal
             }
             catch (Exception ex)
             {
-                if (ex is TargetInvocationException targetInvocationException &&
-                    targetInvocationException.InnerException != null)
+                while (ex is TargetInvocationException targetInvocationException && targetInvocationException.InnerException != null)
                 {
                     ex = ex.InnerException;
                 }
