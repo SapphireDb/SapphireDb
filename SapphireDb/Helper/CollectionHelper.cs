@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SapphireDb.Attributes;
 using SapphireDb.Command;
 using SapphireDb.Command.Query;
+using SapphireDb.Command.QueryQuery;
+using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
+using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Helper
 {
@@ -76,6 +80,43 @@ namespace SapphireDb.Helper
             }
 
             return queryResponse;
+        }
+
+        public static List<IPrefilterBase> GetQueryPrefilters(KeyValuePair<Type, string> property, QueryQueryCommand queryCommand,
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
+            QueryAttribute query = property.Key.GetModelAttributesInfo()
+                .QueryAttributes
+                .FirstOrDefault(q =>
+                    q.QueryName.Equals(queryCommand.QueryName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (query == null)
+            {
+                throw new QueryNotFoundException(queryCommand.ContextName, queryCommand.CollectionName, queryCommand.QueryName);
+            }
+
+            dynamic queryBuilder =
+                Activator.CreateInstance(typeof(SapphireQueryBuilder<>).MakeGenericType(property.Key));
+
+            if (query.FunctionLambda != null)
+            {
+                queryBuilder = query.FunctionLambda(queryBuilder, information, queryCommand.Parameters);
+            }
+
+            if (query.FunctionInfo != null)
+            {
+                queryBuilder = query.FunctionInfo.Invoke(null,
+                    query.FunctionInfo.CreateParametersWithJTokensAndQueryBuilder(information, queryCommand.Parameters, (object)queryBuilder, serviceProvider));
+            }
+
+            List<IPrefilterBase> prefilters = typeof(SapphireQueryBuilderBase<>)
+                .MakeGenericType(property.Key)
+                .GetField("prefilters")?
+                .GetValue(queryBuilder);
+            
+            prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+
+            return prefilters;
         }
     }
 }

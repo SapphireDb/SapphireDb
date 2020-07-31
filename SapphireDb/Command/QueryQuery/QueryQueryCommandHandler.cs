@@ -7,15 +7,15 @@ using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 
-namespace SapphireDb.Command.SubscribeQuery
+namespace SapphireDb.Command.QueryQuery
 {
-    class SubscribeQueryCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeQueryCommand>, INeedsConnection
+    class QueryQueryCommandHandler : CommandHandlerBase, ICommandHandler<QueryQueryCommand>, INeedsConnection
     {
         public ConnectionBase Connection { get; set; }
         private readonly IServiceProvider serviceProvider;
         private readonly SubscriptionManager subscriptionManager;
 
-        public SubscribeQueryCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider,
+        public QueryQueryCommandHandler(DbContextAccesor dbContextAccessor, IServiceProvider serviceProvider,
             SubscriptionManager subscriptionManager)
             : base(dbContextAccessor)
         {
@@ -23,7 +23,7 @@ namespace SapphireDb.Command.SubscribeQuery
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeQueryCommand queryCommand,
+        public Task<ResponseBase> Handle(HttpInformation context, QueryQueryCommand queryCommand,
             ExecutionContext executionContext)
         {
             SapphireDbContext db = GetContext(queryCommand.ContextName);
