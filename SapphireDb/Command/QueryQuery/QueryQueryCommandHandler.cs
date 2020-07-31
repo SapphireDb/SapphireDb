@@ -33,9 +33,6 @@ namespace SapphireDb.Command.QueryQuery
                 CollectionHelper.GetQueryPrefilters(property, queryCommand, Connection.Information, serviceProvider);
             
             ResponseBase response = CollectionHelper.GetCollection(db, queryCommand, property, prefilters, context, serviceProvider);
-            
-            subscriptionManager.AddSubscription(queryCommand.ContextName, queryCommand.CollectionName, prefilters, Connection, queryCommand.ReferenceId);
-
             return Task.FromResult(response);
         }
     }

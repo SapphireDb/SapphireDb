@@ -65,12 +65,11 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return new SapphireOrderedQueryBuilder<T>(prefilters);
         }
         
-        public SapphireReducedQueryBuilder<T> Select(params string[] properties)
+        public SapphireReducedQueryBuilder<T> Select<TProperty>(Expression<Func<T, TProperty>> selector)
         {
-            prefilters.Add(new SelectPrefilter()
-            {
-                Properties = properties.ToList()
-            });
+            SelectPrefilter selectPrefilter = new SelectPrefilter();
+            selectPrefilter.InitializeServer(selector);
+            prefilters.Add(selectPrefilter);
             
             return new SapphireReducedQueryBuilder<T>(prefilters);
         }
