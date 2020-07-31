@@ -30,6 +30,14 @@ namespace SapphireDb.Models
         
         public DisableAutoMergeAttribute DisableAutoMergeAttribute { get; set; }
         
+        public DisableCreateAttribute DisableCreateAttribute { get; set; }
+        
+        public DisableUpdateAttribute DisableUpdateAttribute { get; set; }
+        
+        public DisableDeleteAttribute DisableDeleteAttribute { get; set; }
+        
+        public DisableQueryAttribute DisableQueryAttribute { get; set; }
+        
         public ModelAttributesInfo(Type modelType)
         {
             QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
@@ -45,6 +53,11 @@ namespace SapphireDb.Models
             QueryAttributes = GetQueryAttributes(modelType);
             UpdateableAttribute = modelType.GetCustomAttribute<UpdateableAttribute>(false);
             DisableAutoMergeAttribute = modelType.GetCustomAttribute<DisableAutoMergeAttribute>(false);
+            
+            DisableCreateAttribute = modelType.GetCustomAttribute<DisableCreateAttribute>(true);
+            DisableUpdateAttribute = modelType.GetCustomAttribute<DisableUpdateAttribute>(true);
+            DisableDeleteAttribute = modelType.GetCustomAttribute<DisableDeleteAttribute>(true);
+            DisableQueryAttribute = modelType.GetCustomAttribute<DisableQueryAttribute>(true);
         }
 
         private List<QueryAttribute> GetQueryAttributes(Type modelType)

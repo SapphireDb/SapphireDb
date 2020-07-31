@@ -34,6 +34,11 @@ namespace SapphireDb.Command.DeleteRange
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
             
+            if (property.Key.GetModelAttributesInfo().DisableDeleteAttribute != null)
+            {
+                throw new OperationDisabledException("Delete", command.ContextName, command.CollectionName);
+            }
+            
             List<object> removedValues = new List<object>();
 
             DeleteRangeResponse response;

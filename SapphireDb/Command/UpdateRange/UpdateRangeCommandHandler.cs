@@ -30,12 +30,17 @@ namespace SapphireDb.Command.UpdateRange
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
-            if (property.Key != null)
+            if (property.Key == null)
             {
-                return await InitializeUpdate(command, property, context, db);
+                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
-            throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
+            if (property.Key.GetModelAttributesInfo().DisableUpdateAttribute != null)
+            {
+                throw new OperationDisabledException("Update", command.ContextName, command.CollectionName);
+            }
+            
+            return await InitializeUpdate(command, property, context, db);
         }
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,

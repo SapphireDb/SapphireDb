@@ -8,6 +8,10 @@ namespace WebUI.Data.DemoDb
 {
     [Updateable]
     [Query("only_test", nameof(OnyTestQuery))]
+    // [DisableCreate]
+    // [DisableUpdate]
+    // [DisableDelete]
+    // [DisableQuery]
     public class DemoEntry : SapphireOfflineEntity
     {
         public string Content { get; set; }

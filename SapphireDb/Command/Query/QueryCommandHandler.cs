@@ -33,6 +33,11 @@ namespace SapphireDb.Command.Query
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
+            if (property.Key.GetModelAttributesInfo().DisableQueryAttribute != null)
+            {
+                throw new OperationDisabledException("Query", command.ContextName, command.CollectionName);
+            }
+            
             command.Prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
             return Task.FromResult(CollectionHelper.GetCollection(db, command, property, command.Prefilters, context, serviceProvider));
         }
