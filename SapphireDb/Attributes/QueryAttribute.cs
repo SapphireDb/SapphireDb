@@ -7,7 +7,7 @@ using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class QueryAttribute : Attribute
     {
         public string QueryName { get; set; }
