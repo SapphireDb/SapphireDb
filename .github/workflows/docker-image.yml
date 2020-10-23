@@ -26,6 +26,10 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
       -
+        name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      -
         name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -33,4 +37,4 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_REGISTRY_URL }}/sapphiredb.docs.server:${GITHUB_REF#refs/tags/}
+            ${{ secrets.DOCKER_REGISTRY_URL }}/sapphiredb.docs.server:${{ steps.get_version.outputs.VERSION }}
