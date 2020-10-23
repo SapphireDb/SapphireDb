@@ -2,7 +2,8 @@ name: Build and push docker image
 
 on:
   push:
-    branches: master
+    tags:
+      - '*.*.*'
 
 jobs:
   main:
@@ -32,4 +33,4 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_REGISTRY_URL }}/sapphiredb.docs.server:latest
+            ${{ secrets.DOCKER_REGISTRY_URL }}/sapphiredb.docs.server:${GITHUB_REF#refs/tags/}
