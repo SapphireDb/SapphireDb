@@ -7,10 +7,7 @@
 
         public string CollectionName
         {
-            get
-            {
-                return collectionName;
-            }
+            get => collectionName;
             set
             {
                 string[] collectionNameParts = value.Split('.');
@@ -19,7 +16,7 @@
                 {
                     collectionName = collectionNameParts[0];
                 }
-                else if (collectionNameParts.Length == 2)
+                else if (collectionNameParts.Length >= 2)
                 {
                     contextName = collectionNameParts[0];
                     collectionName = collectionNameParts[1];
@@ -32,9 +29,6 @@
             }
         }
 
-        public string ContextName
-        {
-            get { return contextName; }
-        }
+        public string ContextName => contextName;
     }
 }

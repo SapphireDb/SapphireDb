@@ -22,11 +22,10 @@ namespace SapphireDb.Helper
                        config.Key == key && config.Secret == secret.ComputeHash());
         }
 
-        public static bool CanQuery(this Type t, HttpInformation httpInformation, IServiceProvider serviceProvider,
-            object entityObject = null)
+        public static bool CanQuery(this Type t, HttpInformation httpInformation, IServiceProvider serviceProvider)
         {
             return t.CallHandleAuthAttribute(SapphireAuthResource.OperationTypeEnum.Query, httpInformation,
-                entityObject, serviceProvider);
+                null, serviceProvider);
         }
         
         public static bool CanQueryEntry(this Type t, HttpInformation httpInformation, IServiceProvider serviceProvider,

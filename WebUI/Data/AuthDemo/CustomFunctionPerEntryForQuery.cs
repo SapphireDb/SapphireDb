@@ -17,7 +17,7 @@ namespace WebUI.Data.AuthDemo
             return Content == "Test 2";
         }
         
-        [Updatable]
+        [Updateable]
         public string Content { get; set; }
     }
 }

@@ -37,7 +37,21 @@ namespace SapphireDb.Internal.Prefilter
             WhereExpression = Expression.Lambda<Func<object, bool>>(whereConditionBody, parameter);
             WhereExpressionCompiled = WhereExpression.Compile();
         }
-
+        
+        public void InitializeServer<TModel>(Expression<Func<TModel, bool>> expression) where TModel : class
+        {
+            initialized = true;
+            
+            ParameterExpression parameter = Expression.Parameter(typeof(object));
+            UnaryExpression modelExpression = Expression.Convert(parameter, typeof(TModel));
+            SubstitutionExpressionVisitor expressionVisitor =
+                new SubstitutionExpressionVisitor(expression.Parameters.Single(), modelExpression);
+            Expression whereCondition = expressionVisitor.Visit(expression.Body);
+            
+            WhereExpression = Expression.Lambda<Func<object, bool>>(whereCondition, parameter);
+            WhereExpressionCompiled = WhereExpression.Compile();
+        }
+        
         public void Dispose()
         {
             
@@ -45,7 +59,7 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            return $"WherePrefilter,{Conditions}";
+            return $"WherePrefilter,{WhereExpression}";
         }
     }
 }

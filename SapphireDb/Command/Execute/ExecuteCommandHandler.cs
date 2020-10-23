@@ -71,7 +71,7 @@ namespace SapphireDb.Command.Execute
 
             if (actionMethod == null)
             {
-                throw new ActionNotFoundException(actionName);
+                throw new ActionNotFoundException(actionHandlerName, actionName);
             }
             
             ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);
@@ -100,7 +100,7 @@ namespace SapphireDb.Command.Execute
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod, ExecutionContext executionContext)
         {
-            logger.LogDebug("Execution of {actionHandlerName}.{actionName} started. ConnectionId: {connectionId}, ExecutionId: {executionId}", actionMethod.DeclaringType?.FullName,
+            logger.LogDebug("Execution of {ActionHandlerName}.{ActionName} started. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName,
                 actionMethod.Name, Connection.Id, executionContext.Id);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
@@ -117,7 +117,7 @@ namespace SapphireDb.Command.Execute
                 }
             }
 
-            logger.LogInformation("Executed {actionHandlerName}.{actionName}. ConnectionId: {connectionId}, ExecutionId: {executionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id, executionContext.Id);
+            logger.LogInformation("Executed {ActionHandlerName}.{ActionName}. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id, executionContext.Id);
 
             return new ExecuteResponse()
             {

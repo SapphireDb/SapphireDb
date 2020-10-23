@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
+using SapphireDb.Attributes;
 using SapphireDb.Command;
 using SapphireDb.Command.Query;
+using SapphireDb.Command.QueryQuery;
+using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
+using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Helper
 {
@@ -19,37 +22,34 @@ namespace SapphireDb.Helper
 
             foreach (IPrefilter prefilter in prefilters.OfType<IPrefilter>())
             {
-                prefilter.Initialize(property.Key);
                 collectionSet = prefilter.Execute(collectionSet);
             }
 
             return collectionSet;
         }
 
-        public static ResponseBase GetCollection(SapphireDbContext db, QueryCommand command,
-            HttpInformation information, IServiceProvider serviceProvider)
+        public static KeyValuePair<Type, string> GetCollectionType(SapphireDbContext db, IQueryCommand command)
         {
-            SapphireDatabaseOptions sapphireDatabaseOptions = serviceProvider.GetService<SapphireDatabaseOptions>();
-            
-            if (sapphireDatabaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
-            {
-                throw new IncludeNotAllowedException(command.CollectionName);
-            }
-            
             Type dbContextType = db.GetType();
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
-
+            
             if (property.Key == null)
             {
-                throw new CollectionNotFoundException(command.CollectionName);
+                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
+            return property;
+        }
+        
+        public static ResponseBase GetCollection(SapphireDbContext db, IQueryCommand command, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters,
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
             if (!property.Key.CanQuery(information, serviceProvider))
             {
                 throw new UnauthorizedException("Not allowed to query values from collection");
             }
 
-            IQueryable<object> collectionValues = db.GetCollectionValues(property, command.Prefilters);
+            IQueryable<object> collectionValues = db.GetCollectionValues(property, prefilters);
 
             QueryResponse queryResponse = new QueryResponse()
             {
@@ -57,11 +57,10 @@ namespace SapphireDb.Helper
             };
 
             IAfterQueryPrefilter afterQueryPrefilter =
-                command.Prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
+                prefilters.OfType<IAfterQueryPrefilter>().FirstOrDefault();
 
             if (afterQueryPrefilter != null)
             {
-                afterQueryPrefilter.Initialize(property.Key);
                 queryResponse.Result = afterQueryPrefilter.Execute(collectionValues);
             }
             else
@@ -81,6 +80,43 @@ namespace SapphireDb.Helper
             }
 
             return queryResponse;
+        }
+
+        public static List<IPrefilterBase> GetQueryPrefilters(KeyValuePair<Type, string> property, QueryQueryCommand queryCommand,
+            HttpInformation information, IServiceProvider serviceProvider)
+        {
+            QueryAttribute query = property.Key.GetModelAttributesInfo()
+                .QueryAttributes
+                .FirstOrDefault(q =>
+                    q.QueryName.Equals(queryCommand.QueryName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (query == null)
+            {
+                throw new QueryNotFoundException(queryCommand.ContextName, queryCommand.CollectionName, queryCommand.QueryName);
+            }
+
+            dynamic queryBuilder =
+                Activator.CreateInstance(typeof(SapphireQueryBuilder<>).MakeGenericType(property.Key));
+
+            if (query.FunctionLambda != null)
+            {
+                queryBuilder = query.FunctionLambda(queryBuilder, information, queryCommand.Parameters);
+            }
+
+            if (query.FunctionInfo != null)
+            {
+                queryBuilder = query.FunctionInfo.Invoke(null,
+                    query.FunctionInfo.CreateParametersWithJTokensAndQueryBuilder(information, queryCommand.Parameters, (object)queryBuilder, serviceProvider));
+            }
+
+            List<IPrefilterBase> prefilters = typeof(SapphireQueryBuilderBase<>)
+                .MakeGenericType(property.Key)
+                .GetField("prefilters")?
+                .GetValue(queryBuilder);
+            
+            prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+
+            return prefilters;
         }
     }
 }

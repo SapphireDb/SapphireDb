@@ -13,10 +13,10 @@ namespace WebUI.Data.DemoDb
         [Key]
         public Guid Id { get; set; }
 
-        [Updatable]
+        [Updateable]
         public List<IncludeDemoUserEntry> Entries { get; set; }
 
-        [Updatable]
+        [Updateable]
         public string Name { get; set; }
     }
 }

@@ -6,7 +6,7 @@ namespace WebUI.Data.AuthDemo
     public class QueryFields : Base
     {
         [QueryAuth]
-        [Updatable]
+        [Updateable]
         public string Content { get; set; }
         
         [QueryAuth("requireAdmin")]

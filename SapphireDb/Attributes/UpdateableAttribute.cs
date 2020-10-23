@@ -3,7 +3,7 @@
 namespace SapphireDb.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
-    public class UpdatableAttribute : Attribute
+    public class UpdateableAttribute : Attribute
     {
     }
 }

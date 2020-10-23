@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
 {
@@ -163,7 +164,7 @@ namespace SapphireDb.Helper
                 return CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression);
             }
 
-            throw new Exception("Wrong order of conditions");
+            throw new WrongConditionOrderException(conditionParts);
         }
     }
 }

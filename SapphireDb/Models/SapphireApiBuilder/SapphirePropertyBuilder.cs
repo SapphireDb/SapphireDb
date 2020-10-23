@@ -6,7 +6,7 @@ using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
 {
-    public class SapphirePropertyBuilder<TModel, TProperty>
+    public class SapphirePropertyBuilder<TModel, TProperty> where TModel : class
     {
         private readonly PropertyAttributesInfo attributesInfo;
 
@@ -16,9 +16,9 @@ namespace SapphireDb.Models.SapphireApiBuilder
                 .FirstOrDefault(property => property.PropertyInfo == propertyInfo);
         }
 
-        public SapphirePropertyBuilder<TModel, TProperty> MakeUpdatable()
+        public SapphirePropertyBuilder<TModel, TProperty> MakeUpdateable()
         {
-            attributesInfo.UpdatableAttribute = new UpdatableAttribute();
+            attributesInfo.UpdateableAttribute = new UpdateableAttribute();
             return this;
         }
 

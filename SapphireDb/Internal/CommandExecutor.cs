@@ -47,7 +47,7 @@ namespace SapphireDb.Internal
                     throw new CommandHandlerNotFoundException(commandTypeName);
                 }
 
-                logger.LogInformation("Handling {command} with {handler}. ConnectionId: {connectionId}, ExecutionId: {executionId}",
+                logger.LogInformation("Handling {Command} with {Handler}. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}",
                     command.GetType().Name, handler.GetType().Name, connection?.Id, executionContext.Id);
 
                 if (!options.CanExecuteCommand(command, information))
@@ -70,15 +70,14 @@ namespace SapphireDb.Internal
                 ResponseBase response = await (dynamic) handlerType.GetHandlerHandleMethod()
                     .Invoke(handler, new object[] {information, command, executionContext});
 
-                logger.LogInformation("Handled {command}. ConnectionId: {connectionId}, ExecutionId: {executionId}", command.GetType().Name,
+                logger.LogInformation("Handled {Command}. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", command.GetType().Name,
                     connection?.Id, executionContext.Id);
 
                 return response;
             }
             catch (Exception ex)
             {
-                if (ex is TargetInvocationException targetInvocationException &&
-                    targetInvocationException.InnerException != null)
+                while (ex is TargetInvocationException targetInvocationException && targetInvocationException.InnerException != null)
                 {
                     ex = ex.InnerException;
                 }
@@ -91,14 +90,14 @@ namespace SapphireDb.Internal
                 if (sapphireDbException.Severity == ExceptionSeverity.Warning)
                 {
                     logger.LogWarning(sapphireDbException,
-                        "The command handler returned an error with low severity during handling of {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}, ExecutionId: {executionId}",
+                        "The command handler returned an error with low severity during handling of {Command}. Error: {Error}, ErrorId: {ErrorId}, ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}",
                         command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
                         connection?.Id, executionContext.Id);
                 }
                 else
                 {
                     logger.LogError(sapphireDbException,
-                        "Error handling {command}. Error: {error}, ErrorId: {errorId}, ConnectionId: {connectionId}, ExecutionId: {executionId}",
+                        "Error handling {Command}. Error: {Error}, ErrorId: {ErrorId}, ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}",
                         command.GetType().Name, sapphireDbException.GetType().Name, sapphireDbException.Id,
                         connection?.Id, executionContext.Id);
                 }

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore.Internal;
-using Newtonsoft.Json.Linq;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
@@ -13,11 +11,11 @@ namespace SapphireDb.Internal.Prefilter
     {
         public List<string> Properties { get; set; }
 
-        private Expression<Func<object, object>> selectExpression;
+        public Expression<Func<object, object>> SelectExpression { get; set; }
 
         public object Execute(IQueryable<object> array)
         {
-            return array.Select(selectExpression);
+            return array.Select(SelectExpression);
         }
 
         private bool initialized;
@@ -67,7 +65,20 @@ namespace SapphireDb.Internal.Prefilter
                 body = Expression.NewArrayInit(typeof(object), propertyExpressions);
             }
 
-            selectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
+            SelectExpression = Expression.Lambda<Func<object, object>>(body, parameter);
+        }
+        
+        public void InitializeServer<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression) where TModel : class
+        {
+            initialized = true;
+            
+            ParameterExpression parameter = Expression.Parameter(typeof(object));
+            UnaryExpression modelExpression = Expression.Convert(parameter, typeof(TModel));
+            SubstitutionExpressionVisitor expressionVisitor =
+                new SubstitutionExpressionVisitor(expression.Parameters.Single(), modelExpression);
+            Expression selectExpression = Expression.Convert(expressionVisitor.Visit(expression.Body), typeof(object));
+            
+            SelectExpression = Expression.Lambda<Func<object, object>>(selectExpression, parameter);
         }
 
         public void Dispose()
@@ -77,7 +88,7 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            return $"SelectPrefilter,{JsonHelper.Serialize(Properties)}";
+            return $"SelectPrefilter,{SelectExpression}";
         }
     }
 }

@@ -3,8 +3,8 @@ using SapphireDb.Internal.Prefilter;
 
 namespace SapphireDb.Command.Query
 {
-    public class QueryCommand : CollectionCommandBase
+    public class QueryCommand : CollectionCommandBase, IQueryCommand
     {
-        public List<IPrefilterBase> Prefilters { get; set; } = new List<IPrefilterBase>();
+        public List<IPrefilterBase> Prefilters { get; } = new List<IPrefilterBase>();
     }
 }

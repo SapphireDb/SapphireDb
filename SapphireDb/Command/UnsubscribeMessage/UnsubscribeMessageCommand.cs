@@ -2,6 +2,6 @@
 {
     public class UnsubscribeMessageCommand : CommandBase
     {
-        public string Topic { get; set; }
+        
     }
 }

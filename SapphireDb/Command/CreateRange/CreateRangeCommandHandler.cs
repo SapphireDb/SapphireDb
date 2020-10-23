@@ -27,12 +27,17 @@ namespace SapphireDb.Command.CreateRange
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
-            if (property.Key != null)
+            if (property.Key == null)
             {
-                return Task.FromResult(CreateObjects(command, property, context, db));
+                throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
+            }
+            
+            if (property.Key.GetModelAttributesInfo().DisableCreateAttribute != null)
+            {
+                throw new OperationDisabledException("Create", command.ContextName, command.CollectionName);
             }
 
-            throw new CollectionNotFoundException(command.CollectionName);
+            return Task.FromResult(CreateObjects(command, property, context, db));
         }
 
         private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,

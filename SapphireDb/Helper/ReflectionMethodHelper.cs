@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
 {
@@ -29,6 +30,24 @@ namespace SapphireDb.Helper
         public static MethodInfo GetGenericWhere(Type parameterType)
         {
             return QueryableWhere.MakeGenericMethod(parameterType);
+        }
+        
+        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType,
+            BindingFlags bindingFlags = BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        {
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+            
+            MethodInfo methodInfo = modelType.GetMethod(methodName, bindingFlags);
+            
+            if (methodInfo == null || !returnType.IsAssignableFrom(methodInfo.ReturnType))
+            {
+                throw new MethodNotFoundException(modelType.Name, methodName);
+            }
+
+            return methodInfo;
         }
         
         public static readonly MethodInfo StringToLower = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { });

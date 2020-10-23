@@ -15,6 +15,12 @@ namespace WebUI.Data.DemoDb
                 Console.WriteLine(message.Content.ToString());
             });
 
+            modelBuilder.CreateQuery("query1", (builder, information, parameters) =>
+                builder
+                    .OrderBy(m => m.Content)
+                    .Where(m => m.Content == null)
+                );
+
             // modelBuilder.Property(m => m.CreatedOn).AddQueryAuth("requireAdmin");
             // modelBuilder.Property(m => m.Content).MakeNonCreatable();
         }

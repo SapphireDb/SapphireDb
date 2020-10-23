@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Reflection;
+using SapphireDb.Helper;
 using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
@@ -9,7 +9,7 @@ namespace SapphireDb.Attributes
     {
         public string[] Policies { get; } = new string[0];
 
-        private string FunctionName { get; }
+        protected string FunctionName { get; }
 
         public MethodInfo FunctionInfo { get; set; }
         
@@ -27,18 +27,7 @@ namespace SapphireDb.Attributes
 
         public void Compile(Type targetType)
         {
-            if (string.IsNullOrEmpty(FunctionName))
-            {
-                return;
-            }
-            
-            FunctionInfo = targetType.GetMethod(FunctionName,
-                BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-
-            if (FunctionInfo == null || FunctionInfo.ReturnType != typeof(bool))
-            {
-                throw new Exception("No suiting method was found");
-            }
+            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(targetType, FunctionName, typeof(bool));
         }
     }
 }

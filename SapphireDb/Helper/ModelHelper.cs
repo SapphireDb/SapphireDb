@@ -118,8 +118,8 @@ namespace SapphireDb.Helper
             return entityType.GetPropertyAttributesInfos()
                 .Where(info =>
                 {
-                    if (info.UpdatableAttribute != null ||
-                        info.PropertyInfo.DeclaringType.GetModelAttributesInfo().UpdatableAttribute != null)
+                    if (info.UpdateableAttribute != null ||
+                        info.PropertyInfo.DeclaringType.GetModelAttributesInfo().UpdateableAttribute != null)
                     {
                         return info.CanUpdate(information, entityObject, serviceProvider);
                     }

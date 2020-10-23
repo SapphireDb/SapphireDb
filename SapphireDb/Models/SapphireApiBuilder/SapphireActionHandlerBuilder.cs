@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Reflection;
+using SapphireDb.Actions;
 using SapphireDb.Attributes;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
 {
     public class SapphireActionHandlerBuilder<T>
+        where T : ActionHandlerBase
     {
         private readonly ActionHandlerAttributesInfo attributesInfo;
         

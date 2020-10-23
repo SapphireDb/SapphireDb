@@ -13,7 +13,7 @@ namespace SapphireDb.Internal.Prefilter
         
         public new string Hash()
         {
-            return $"ThenOrderByPrefilter,{Property},{Descending}";
+            return $"ThenOrderByPrefilter,{PropertySelectExpression},{Descending}";
         }
     }
 }
