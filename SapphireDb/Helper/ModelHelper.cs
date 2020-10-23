@@ -148,7 +148,7 @@ namespace SapphireDb.Helper
                     {
                         object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
 
-                        if (!originalPropertyValue.Equals(updatedPropertyValue))
+                        if (originalPropertyValue == null || !originalPropertyValue.Equals(updatedPropertyValue))
                         {
                             pi.PropertyInfo.SetValue(entityObject, updatedPropertyValue);
                         }
