@@ -55,8 +55,15 @@ namespace SapphireDb.Sync
                             sendChangesRequest.Changes.ForEach(change =>
                             {
                                 KeyValuePair<Type, string> property = dbType.GetDbSetType(change.CollectionName);
+                                
                                 JObject rawValue = change.Value as JObject;
                                 change.Value = rawValue?.ToObject(property.Key);
+
+                                if (change.State == ChangeResponse.ChangeState.Modified && change.OriginalValue != null)
+                                {
+                                    JObject rawOriginalValue = change.Value as JObject;
+                                    change.OriginalValue = rawOriginalValue?.ToObject(property.Key);
+                                }
                             });
                             
                             changeNotifier.HandleChanges(sendChangesRequest.Changes, dbType);

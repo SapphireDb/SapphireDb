@@ -51,7 +51,6 @@ namespace SapphireDb.Command.Subscribe
 
         public object Value { get; set; }
         
-        [JsonIgnore]
         public object OriginalValue { get; set; }
 
         public string CollectionName { get; set; }
