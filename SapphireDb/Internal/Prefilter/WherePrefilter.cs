@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-using SapphireDb.Helper;
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using Newtonsoft.Json.Linq;
+using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -59,7 +59,8 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            return $"WherePrefilter,{WhereExpression}";
+            string expressionString = WhereExpression.ToString(WhereExpressionCompiled);
+            return $"WherePrefilter,{expressionString}";
         }
     }
 }

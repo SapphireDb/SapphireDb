@@ -166,5 +166,31 @@ namespace SapphireDb.Helper
 
             throw new WrongConditionOrderException(conditionParts);
         }
+
+        public static string ToString(this Expression expression, object expressionCompiled)
+        {
+            string expressionString = expression.ToString();
+
+            object target = expressionCompiled.GetType().GetProperty("Target")?.GetValue(expressionCompiled);
+            
+            if (target?.GetType().GetField("Constants")?.GetValue(target) is object[] constants)
+            {
+                foreach (object constantContainer in constants)
+                {
+                    Type objectType = constantContainer.GetType();
+                    string objectName = objectType.FullName;
+
+                    foreach (FieldInfo field in objectType.GetFields().OrderByDescending(f => f.Name))
+                    {
+                        object value = field.GetValue(constantContainer);
+                        string valueString = Expression.Constant(value).ToString();
+                        string placeholder = $"value({objectName}).{field.Name}";
+                        expressionString = expressionString.Replace(placeholder, valueString);
+                    }
+                }
+            }
+
+            return expressionString;
+        }
     }
 }

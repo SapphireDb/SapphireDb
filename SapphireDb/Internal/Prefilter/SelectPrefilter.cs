@@ -88,7 +88,8 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            return $"SelectPrefilter,{SelectExpression}";
+            string expressionString = SelectExpression.ToString(SelectExpression.Compile());
+            return $"SelectPrefilter,{expressionString}";
         }
     }
 }

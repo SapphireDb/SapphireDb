@@ -64,7 +64,8 @@ namespace SapphireDb.Internal.Prefilter
         
         public string Hash()
         {
-            return $"OrderByPrefilter,{PropertySelectExpression},{Descending}";
+            string expressionString = PropertySelectExpression.ToString(PropertySelectExpression.Compile());
+            return $"OrderByPrefilter,{expressionString},{Descending}";
         }
     }
 }

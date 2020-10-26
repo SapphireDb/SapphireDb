@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using SapphireDb.Helper;
 
 namespace SapphireDb.Internal.Prefilter
 {
@@ -13,7 +14,8 @@ namespace SapphireDb.Internal.Prefilter
         
         public new string Hash()
         {
-            return $"ThenOrderByPrefilter,{PropertySelectExpression},{Descending}";
+            string expressionString = PropertySelectExpression.ToString(PropertySelectExpression.Compile());
+            return $"ThenOrderByPrefilter,{expressionString},{Descending}";
         }
     }
 }
