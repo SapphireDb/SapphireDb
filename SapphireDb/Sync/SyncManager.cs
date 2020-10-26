@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Command.Subscribe;
 using SapphireDb.Connection;
+using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Sync.Models;
 
@@ -49,6 +51,13 @@ namespace SapphireDb.Sync
                                 "Handling {ChangeCount} changes of {DbType} from server with OriginId {OriginId}. Propagate: {Propagate}",
                                 sendChangesRequest.Changes.Count, dbType.Name,
                                 sendChangesRequest.OriginId, sendChangesRequest.Propagate);
+
+                            sendChangesRequest.Changes.ForEach(change =>
+                            {
+                                KeyValuePair<Type, string> property = dbType.GetDbSetType(change.CollectionName);
+                                JObject rawValue = change.Value as JObject;
+                                change.Value = rawValue?.ToObject(property.Key);
+                            });
                             
                             changeNotifier.HandleChanges(sendChangesRequest.Changes, dbType);
                         }
