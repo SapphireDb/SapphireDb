@@ -61,7 +61,7 @@ namespace SapphireDb.Sync
 
                                 if (change.State == ChangeResponse.ChangeState.Modified && change.OriginalValue != null)
                                 {
-                                    JObject rawOriginalValue = change.Value as JObject;
+                                    JObject rawOriginalValue = change.OriginalValue as JObject;
                                     change.OriginalValue = rawOriginalValue?.ToObject(property.Key);
                                 }
                             });
