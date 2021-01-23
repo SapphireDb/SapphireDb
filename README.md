@@ -1,4 +1,5 @@
 # SapphireDb - Server for Asp.Net Core [![Build Status](https://travis-ci.org/morrisjdev/RealtimeDatabase.svg?branch=master)](https://travis-ci.org/morrisjdev/RealtimeDatabase)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSapphireDb%2FSapphireDb.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FSapphireDb%2FSapphireDb?ref=badge_shield)
 
 <p align="center">
   <a href="https://sapphire-db.com/">
@@ -133,3 +134,6 @@ Check out the documentation for more details: [Documentation](https://sapphire-d
 SapphireDb - [MIT License](https://github.com/SapphireDb/SapphireDb/blob/master/LICENSE)
 
 sapphiredb-js - [MIT License](https://github.com/SapphireDb/sapphiredb-js/blob/master/LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSapphireDb%2FSapphireDb.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSapphireDb%2FSapphireDb?ref=badge_large)
