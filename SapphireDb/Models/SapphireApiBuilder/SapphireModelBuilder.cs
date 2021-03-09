@@ -66,49 +66,95 @@ namespace SapphireDb.Models.SapphireApiBuilder
         }
 
         public SapphireModelBuilder<T> AddCreateEvent(Action<T, HttpInformation> before = null,
-            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null)
+            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null,
+            Action<T, HttpInformation> insteadOf = null)
         {
-            attributesInfo.CreateEventAttributes.Add(
-                CreateEventAttribute<CreateEventAttribute>(before, beforeSave, after));
+            attributesInfo.CreateEventAttributes.Add(CreateEventAttribute<CreateEventAttribute>(before, beforeSave, after, insteadOf));
             return this;
         }
 
         public SapphireModelBuilder<T> AddUpdateEvent(Action<T, HttpInformation> before = null,
-            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null)
+            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null,
+            Action<T, HttpInformation> insteadOf = null)
         {
             attributesInfo.UpdateEventAttributes.Add(
-                CreateEventAttribute<UpdateEventAttribute>(before, beforeSave, after));
+                CreateEventAttribute<UpdateEventAttribute>(before, beforeSave, after, insteadOf));
+            return this;
+        }
+        
+        public SapphireModelBuilder<T> AddUpdateEvent(Action<T, object, HttpInformation> before = null,
+            Action<T, object, HttpInformation> beforeSave = null, Action<T, object, HttpInformation> after = null,
+            Action<T, object, HttpInformation> insteadOf = null)
+        {
+            attributesInfo.UpdateEventAttributes.Add(
+                CreateEventAttribute<UpdateEventAttribute>(before, beforeSave, after, insteadOf));
             return this;
         }
 
         public SapphireModelBuilder<T> AddDeleteEvent(Action<T, HttpInformation> before = null,
-            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null)
+            Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null,
+            Action<T, HttpInformation> insteadOf = null)
         {
             attributesInfo.DeleteEventAttributes.Add(
-                CreateEventAttribute<DeleteEventAttribute>(before, beforeSave, after));
+                CreateEventAttribute<DeleteEventAttribute>(before, beforeSave, after, insteadOf));
             return this;
         }
 
         private TAttributeType CreateEventAttribute<TAttributeType>(
-            Action<T, HttpInformation> before, Action<T, HttpInformation> beforeSave,
-            Action<T, HttpInformation> after)
+            Action<T, object, HttpInformation> before, Action<T, object, HttpInformation> beforeSave,
+            Action<T, object, HttpInformation> after, Action<T, object, HttpInformation> insteadOf)
             where TAttributeType : ModelStoreEventAttributeBase
         {
-            TAttributeType attribute = (TAttributeType)Activator.CreateInstance(typeof(TAttributeType), null, null, null);
+            TAttributeType attribute = (TAttributeType)Activator.CreateInstance(typeof(TAttributeType), null, null, null, null);
 
             if (before != null)
             {
-                attribute.BeforeLambda = (model, information) => before((T) model, information);
+                attribute.BeforeLambda = (oldValue, newValue, httpInformation) => before((T)oldValue, newValue, httpInformation);
             }
-
+            
             if (beforeSave != null)
             {
-                attribute.BeforeSaveLambda = (model, information) => beforeSave((T) model, information);
+                attribute.BeforeSaveLambda = (oldValue, newValue, httpInformation) => beforeSave((T)oldValue, newValue, httpInformation);
             }
-
+            
             if (after != null)
             {
-                attribute.AfterLambda = (model, information) => after((T) model, information);
+                attribute.AfterLambda = (oldValue, newValue, httpInformation) => after((T)oldValue, newValue, httpInformation);
+            }
+            
+            if (insteadOf != null)
+            {
+                attribute.InsteadOfLambda = (oldValue, newValue, httpInformation) => insteadOf((T)oldValue, newValue, httpInformation);
+            }
+
+            return attribute;
+        }
+        
+        private TAttributeType CreateEventAttribute<TAttributeType>(
+            Action<T, HttpInformation> before, Action<T, HttpInformation> beforeSave,
+            Action<T, HttpInformation> after, Action<T, HttpInformation> insteadOf)
+            where TAttributeType : ModelStoreEventAttributeBase
+        {
+            TAttributeType attribute = (TAttributeType)Activator.CreateInstance(typeof(TAttributeType), null, null, null, null);
+
+            if (before != null)
+            {
+                attribute.BeforeLambda = (oldValue, _, httpInformation) => before((T)oldValue, httpInformation);
+            }
+            
+            if (beforeSave != null)
+            {
+                attribute.BeforeSaveLambda = (oldValue, _, httpInformation) => beforeSave((T)oldValue, httpInformation);
+            }
+            
+            if (after != null)
+            {
+                attribute.AfterLambda = (oldValue, _, httpInformation) => after((T)oldValue, httpInformation);
+            }
+            
+            if (insteadOf != null)
+            {
+                attribute.InsteadOfLambda = (oldValue, _, httpInformation) => insteadOf((T)oldValue, httpInformation);
             }
 
             return attribute;

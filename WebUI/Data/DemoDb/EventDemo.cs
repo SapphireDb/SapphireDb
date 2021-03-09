@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 
 namespace WebUI.Data.DemoDb
@@ -33,7 +34,7 @@ namespace WebUI.Data.DemoDb
             demoContext.SaveChanges();
         }
 
-        private void OnUpdate()
+        private void OnUpdate(JObject updatedObject)
         {
             UpdatedOn = DateTimeOffset.Now;
         }

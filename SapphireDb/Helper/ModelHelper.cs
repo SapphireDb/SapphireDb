@@ -243,8 +243,19 @@ namespace SapphireDb.Helper
             return values?.AsNoTracking();
         }
 
-        public static void ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
+        /// <summary>
+        /// Executes all event hook methods of a given instance of modelType
+        /// </summary>
+        /// <param name="modelType">The type of the model</param>
+        /// <param name="eventType">The type of event hook to execute</param>
+        /// <param name="oldValue">The instance of the old model</param>
+        /// <param name="newValue">New model data</param>
+        /// <param name="httpInformation">Object with information about current connection</param>
+        /// <param name="serviceProvider">Service provider instance for dependency injection</param>
+        /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
+        /// <returns>the number of event executed event hook methods</returns>
+        public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
+            object oldValue, object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
             where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
@@ -266,48 +277,72 @@ namespace SapphireDb.Helper
 
             if (eventAttributes == null)
             {
-                return;
+                return 0;
             }
 
+            int eventHooksExecuted = 0;
+            
             foreach (T attribute in eventAttributes)
             {
                 if (eventType == ModelStoreEventAttributeBase.EventType.Before)
                 {
                     if (attribute.BeforeLambda != null)
                     {
-                        attribute.BeforeLambda(newValue, httpInformation);
+                        attribute.BeforeLambda(oldValue, newValue, httpInformation);
+                        eventHooksExecuted++;
                     }
                     else if (attribute.BeforeFunction != null)
                     {
-                        attribute.BeforeFunction.Invoke(newValue,
-                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.BeforeFunction.Invoke(oldValue,
+                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                        eventHooksExecuted++;
                     }
                 }
                 else if (eventType == ModelStoreEventAttributeBase.EventType.BeforeSave)
                 {
                     if (attribute.BeforeSaveLambda != null)
                     {
-                        attribute.BeforeSaveLambda(newValue, httpInformation);
+                        attribute.BeforeSaveLambda(oldValue, newValue, httpInformation);
+                        eventHooksExecuted++;
                     }
                     else if (attribute.BeforeSaveFunction != null)
                     {
-                        attribute.BeforeSaveFunction.Invoke(newValue,
-                            attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.BeforeSaveFunction.Invoke(oldValue,
+                            attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                        eventHooksExecuted++;
                     }
                 }
                 else if (eventType == ModelStoreEventAttributeBase.EventType.After)
                 {
                     if (attribute.AfterLambda != null)
                     {
-                        attribute.AfterLambda(newValue, httpInformation);
+                        attribute.AfterLambda(oldValue, newValue, httpInformation);
+                        eventHooksExecuted++;
                     }
                     else if (attribute.AfterFunction != null)
                     {
-                        attribute.AfterFunction.Invoke(newValue,
-                            attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider));
+                        attribute.AfterFunction.Invoke(oldValue,
+                            attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                        eventHooksExecuted++;
+                    }
+                }
+                else if (eventType == ModelStoreEventAttributeBase.EventType.InsteadOf)
+                {
+                    if (attribute.InsteadOfLambda != null)
+                    {
+                        attribute.InsteadOfLambda(oldValue, newValue, httpInformation);
+                        eventHooksExecuted++;
+                    }
+                    else if (attribute.InsteadOfFunction != null)
+                    {
+                        attribute.InsteadOfFunction.Invoke(oldValue,
+                            attribute.InsteadOfFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                        eventHooksExecuted++;
                     }
                 }
             }
+
+            return eventHooksExecuted;
         }
     }
 }

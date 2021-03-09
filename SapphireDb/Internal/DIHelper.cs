@@ -8,7 +8,7 @@ namespace SapphireDb.Internal
 {
     static class DiHelper
     {
-        public static object[] CreateParameters(this MethodInfo mi, HttpInformation httpInformation, IServiceProvider serviceProvider)
+        public static object[] CreateParameters(this MethodInfo mi, HttpInformation httpInformation, IServiceProvider serviceProvider, params object[] additionalParameters)
         {
             ParameterInfo[] parameters = mi.GetParameters();
             return parameters.Select(p =>
@@ -16,6 +16,12 @@ namespace SapphireDb.Internal
                 if (p.ParameterType == typeof(HttpInformation))
                 {
                     return httpInformation;
+                }
+
+                object additionalParameter = additionalParameters.FirstOrDefault(parameter => parameter?.GetType() == p.ParameterType);
+                if (additionalParameter != null)
+                {
+                    return additionalParameter;
                 }
 
                 return serviceProvider.GetService(p.ParameterType);
