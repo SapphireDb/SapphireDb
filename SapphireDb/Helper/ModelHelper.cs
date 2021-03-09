@@ -185,13 +185,13 @@ namespace SapphireDb.Helper
                     {
                         object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
 
-                        if (originalPropertyValue.Equals(updatedPropertyValue))
+                        if (originalPropertyValue != null && originalPropertyValue.Equals(updatedPropertyValue))
                         {
                             // Value not updated
                             continue;
                         }
                         
-                        if (dbPropertyValue.Equals(originalPropertyValue))
+                        if (dbPropertyValue != null && dbPropertyValue.Equals(originalPropertyValue))
                         {
                             // Value in db equals previous value -> use new value
                             pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
