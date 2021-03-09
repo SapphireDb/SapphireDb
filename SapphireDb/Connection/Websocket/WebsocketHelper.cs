@@ -1,9 +1,10 @@
-﻿using SapphireDb.Internal;
-using System;
+﻿using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Connection.Websocket
@@ -46,7 +47,12 @@ namespace SapphireDb.Connection.Websocket
             return "";
         }
 
-        public static async Task Send(this WebSocket socket, string message)
+        public static async Task Send(this WebSocket socket, object message)
+        {
+            await socket.Send(JsonHelper.Serialize(message));
+        }
+        
+        private static async Task Send(this WebSocket socket, string message)
         {
             try
             {
@@ -64,9 +70,20 @@ namespace SapphireDb.Connection.Websocket
             }
         }
 
-        public static async Task Send(this WebSocket socket, object message)
+        public static string GetCustomHeader(HttpRequest request, string header)
         {
-            await socket.Send(JsonHelper.Serialize(message));
+            if (request.Headers.TryGetValue("sec-websocket-protocol", out StringValues customHeader) && customHeader.Count == 1)
+            {
+                string[] customHeaderParts = customHeader[0].Split(", ");
+
+                int keyIndex = Array.FindIndex(customHeaderParts, value => value.Equals(header, StringComparison.InvariantCultureIgnoreCase));
+                if (keyIndex != -1)
+                {
+                    return customHeaderParts[keyIndex + 1];
+                }
+            }
+
+            return null;
         }
     }
 }

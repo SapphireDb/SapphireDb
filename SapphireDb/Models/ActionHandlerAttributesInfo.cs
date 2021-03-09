@@ -21,7 +21,7 @@ namespace SapphireDb.Models
             
             attributes.ForEach(attribute =>
             {
-                attribute.Compile(actionHandlerType);
+                attribute.Compile(actionHandlerType, AuthAttributeBase.CompileContext.Class);
             });
             
             return attributes;

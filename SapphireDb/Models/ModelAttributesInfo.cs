@@ -82,7 +82,7 @@ namespace SapphireDb.Models
 
             attributes.ForEach(attribute =>
             {
-                attribute.Compile(modelType);
+                attribute.Compile(modelType, AuthAttributeBase.CompileContext.Class);
             });
             
             return attributes;

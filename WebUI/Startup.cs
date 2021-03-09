@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SapphireDb.Extensions;
+using SapphireDb.Helper;
 using SapphireDb.HttpSync;
 using SapphireDb.Models;
 using SapphireDb.RedisSync;
@@ -39,7 +40,7 @@ namespace WebUI
             SapphireDatabaseOptions options = new SapphireDatabaseOptions(Configuration.GetSection("Sapphire"));
             // RedisSyncConfiguration redisSyncConfiguration = new RedisSyncConfiguration(Configuration.GetSection("RedisSync"));
             // HttpSyncConfiguration httpSyncConfiguration = new HttpSyncConfiguration(Configuration.GetSection("HttpSync"));
-            
+
             bool usePostgres = Configuration.GetValue<bool>("UsePostgres");
 
             //Register services
@@ -59,11 +60,11 @@ namespace WebUI
                 .AddContext<AuthDemoContext>(cfg => cfg.UseInMemoryDatabase("authDemo"), "authDemo")
                 .AddMessageFilter("role", (i, parameters) => i.User.IsInRole((string) parameters[0]))
                 .AddTopicConfiguration("admin", i => i.User.IsInRole("admin"), i => i.User.IsInRole("admin"));
-                // .AddRedisSync(redisSyncConfiguration);
-                // .AddHttpSync(httpSyncConfiguration);
+            // .AddRedisSync(redisSyncConfiguration);
+            // .AddHttpSync(httpSyncConfiguration);
 
             // services.AddMvc();
-            
+
             /* Auth Demo */
             services.AddDbContext<IdentityDbContext<AppUser>>(cfg => cfg.UseFileContextDatabase(databaseName: "auth"));
 
@@ -98,7 +99,7 @@ namespace WebUI
                     },
                     OnMessageReceived = ctx =>
                     {
-                        string authorizationToken = ctx.Request.Query["authorization"];
+                        string authorizationToken = SapphireAuthenticationHelper.GetWebsocketAuthorizationHeader(ctx.Request);
                         if (!string.IsNullOrEmpty(authorizationToken))
                         {
                             ctx.Token = authorizationToken;
@@ -122,7 +123,7 @@ namespace WebUI
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Seeder seeder)
         {
             seeder.Execute();
-            
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -134,7 +135,7 @@ namespace WebUI
             }
 
             app.UseCors(cfg => cfg.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-            
+
             /* Auth Demo */
             app.UseAuthentication();
             // app.UseAuthorization();
@@ -142,14 +143,14 @@ namespace WebUI
             //Add Middleware
             app.UseSapphireDb();
             // app.UseSapphireHttpSync();
-            
+
             app.Run(async context =>
             {
                 context.Response.Headers.Add("Content-Type", "text/html; charset=UTF-8");
                 await context.Response.WriteAsync(
                     "SapphireDb Documentation Server. Visit <a href=\"https://sapphire-db.com\">https://sapphire-db.com</a> for more details.");
             });
-                
+
             //app.UseMvcWithDefaultRoute();
         }
     }

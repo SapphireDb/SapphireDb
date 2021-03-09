@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using SapphireDb.Models;
-using System;
+﻿using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SapphireDb.Command;
 using SapphireDb.Command.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
+using SapphireDb.Models;
 
 namespace SapphireDb.Connection.Websocket
 {
@@ -31,10 +31,11 @@ namespace SapphireDb.Connection.Websocket
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync("sapphire");
+                string keyHeader = WebsocketHelper.GetCustomHeader(context.Request, "key");
+                string secretHeader = WebsocketHelper.GetCustomHeader(context.Request, "secret");;
 
-                if (!AuthHelper.CheckApiAuth(context.Request.Query["key"], context.Request.Query["secret"],
-                    options))
+                if (!AuthHelper.CheckApiAuth(keyHeader, secretHeader, options))
                 {
                     await webSocket.Send(new WrongApiResponse());
                     await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Wrong API key or secret",

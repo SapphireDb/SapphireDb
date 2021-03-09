@@ -24,7 +24,7 @@ namespace SapphireDb.Models
             
             attributes.ForEach(attribute =>
             {
-                attribute.Compile(MethodInfo.DeclaringType);
+                attribute.Compile(MethodInfo.DeclaringType, AuthAttributeBase.CompileContext.Method);
             });
             
             return attributes;

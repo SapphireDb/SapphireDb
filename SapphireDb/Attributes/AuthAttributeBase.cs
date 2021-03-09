@@ -25,9 +25,14 @@ namespace SapphireDb.Attributes
             FunctionName = functionName;
         }
 
-        public void Compile(Type targetType)
+        public virtual void Compile(Type targetType, CompileContext compileContext)
         {
             FunctionInfo = ReflectionMethodHelper.GetMethodInfo(targetType, FunctionName, typeof(bool));
+        }
+
+        public enum CompileContext
+        {
+            Class, Method, Property
         }
     }
 }
