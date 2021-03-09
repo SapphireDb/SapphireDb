@@ -106,7 +106,7 @@ namespace SapphireDb.Helper
             if (query.FunctionInfo != null)
             {
                 queryBuilder = query.FunctionInfo.Invoke(null,
-                    query.FunctionInfo.CreateParametersWithJTokensAndQueryBuilder(information, queryCommand.Parameters, (object)queryBuilder, serviceProvider));
+                    query.FunctionInfo.CreateParameters(information, serviceProvider, queryCommand.Parameters, (object)queryBuilder));
             }
 
             List<IPrefilterBase> prefilters = typeof(SapphireQueryBuilderBase<>)
