@@ -45,10 +45,10 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return this;
         }
 
-        public SapphireModelBuilder<T> AddRemoveAuth(string policies = null,
+        public SapphireModelBuilder<T> AddDeleteAuth(string policies = null,
             Func<HttpInformation, T, bool> function = null)
         {
-            attributesInfo.RemoveAuthAttributes.Add(CreateAuthAttribute<RemoveAuthAttribute>(policies, function));
+            attributesInfo.DeleteAuthAttributes.Add(CreateAuthAttribute<DeleteAuthAttribute>(policies, function));
             return this;
         }
 
@@ -81,11 +81,11 @@ namespace SapphireDb.Models.SapphireApiBuilder
             return this;
         }
 
-        public SapphireModelBuilder<T> AddRemoveEvent(Action<T, HttpInformation> before = null,
+        public SapphireModelBuilder<T> AddDeleteEvent(Action<T, HttpInformation> before = null,
             Action<T, HttpInformation> beforeSave = null, Action<T, HttpInformation> after = null)
         {
-            attributesInfo.RemoveEventAttributes.Add(
-                CreateEventAttribute<RemoveEventAttribute>(before, beforeSave, after));
+            attributesInfo.DeleteEventAttributes.Add(
+                CreateEventAttribute<DeleteEventAttribute>(before, beforeSave, after));
             return this;
         }
 

@@ -6,7 +6,7 @@ namespace WebUI.Data.DemoDb
 {
     [CreateEvent(Before = nameof(OnCreate), After = nameof(OnCreated))]
     [UpdateEvent(Before = nameof(OnUpdate), After = nameof(OnUpdated))]
-    [RemoveEvent(After = nameof(OnRemoved))]
+    [DeleteEvent(After = nameof(OnRemoved))]
     public class EventDemo
     {
         [Key]

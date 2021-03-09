@@ -14,7 +14,7 @@ namespace SapphireDb.Models
 
         public List<UpdateAuthAttribute> UpdateAuthAttributes { get; }
         
-        public List<RemoveAuthAttribute> RemoveAuthAttributes { get; }
+        public List<DeleteAuthAttribute> DeleteAuthAttributes { get; }
         
         public List<CreateAuthAttribute> CreateAuthAttributes { get; }
 
@@ -22,7 +22,7 @@ namespace SapphireDb.Models
         
         public List<UpdateEventAttribute> UpdateEventAttributes { get; }
         
-        public List<RemoveEventAttribute> RemoveEventAttributes { get; }
+        public List<DeleteEventAttribute> DeleteEventAttributes { get; }
 
         public List<QueryAttribute> QueryAttributes { get; }
         
@@ -43,12 +43,12 @@ namespace SapphireDb.Models
             QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
             QueryEntryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryEntryAuthAttribute>(modelType);
             UpdateAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<UpdateAuthAttribute>(modelType);
-            RemoveAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<RemoveAuthAttribute>(modelType);
+            DeleteAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<DeleteAuthAttribute>(modelType);
             CreateAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<CreateAuthAttribute>(modelType);
             
             CreateEventAttributes = GetHookAttributeOfClassAndTopClasses<CreateEventAttribute>(modelType);
             UpdateEventAttributes = GetHookAttributeOfClassAndTopClasses<UpdateEventAttribute>(modelType);
-            RemoveEventAttributes = GetHookAttributeOfClassAndTopClasses<RemoveEventAttribute>(modelType);
+            DeleteEventAttributes = GetHookAttributeOfClassAndTopClasses<DeleteEventAttribute>(modelType);
 
             QueryAttributes = GetQueryAttributes(modelType);
             UpdateableAttribute = modelType.GetCustomAttribute<UpdateableAttribute>(false);

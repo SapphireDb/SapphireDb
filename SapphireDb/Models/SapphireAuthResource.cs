@@ -8,7 +8,7 @@
         
         public enum OperationTypeEnum
         {
-            Create, Query, Update, Remove, Execute
+            Create, Query, Update, Delete, Execute
         }
     }
 }

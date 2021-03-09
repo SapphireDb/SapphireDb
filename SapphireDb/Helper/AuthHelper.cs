@@ -49,10 +49,10 @@ namespace SapphireDb.Helper
                 entityObject, serviceProvider);
         }
 
-        public static bool CanRemove(this Type t, HttpInformation httpInformation, object entityObject,
+        public static bool CanDelete(this Type t, HttpInformation httpInformation, object entityObject,
             IServiceProvider serviceProvider)
         {
-            return t.CallHandleAuthAttribute(SapphireAuthResource.OperationTypeEnum.Remove, httpInformation,
+            return t.CallHandleAuthAttribute(SapphireAuthResource.OperationTypeEnum.Delete, httpInformation,
                 entityObject, serviceProvider);
         }
 
@@ -172,8 +172,8 @@ namespace SapphireDb.Helper
                 case SapphireAuthResource.OperationTypeEnum.Create:
                     return HandleAuthAttributes(modelAttributesInfo.CreateAuthAttributes,
                         httpInformation, operationTypeEnum, entityObject, serviceProvider);
-                case SapphireAuthResource.OperationTypeEnum.Remove:
-                    return HandleAuthAttributes(modelAttributesInfo.RemoveAuthAttributes,
+                case SapphireAuthResource.OperationTypeEnum.Delete:
+                    return HandleAuthAttributes(modelAttributesInfo.DeleteAuthAttributes,
                         httpInformation, operationTypeEnum, entityObject, serviceProvider);
                 case SapphireAuthResource.OperationTypeEnum.Update:
                     return HandleAuthAttributes(modelAttributesInfo.UpdateAuthAttributes,

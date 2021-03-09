@@ -259,9 +259,9 @@ namespace SapphireDb.Helper
             {
                 eventAttributes = modelAttributesInfo.UpdateEventAttributes.Cast<T>().ToList();
             }
-            else if (typeof(T) == typeof(RemoveEventAttribute))
+            else if (typeof(T) == typeof(DeleteEventAttribute))
             {
-                eventAttributes = modelAttributesInfo.RemoveEventAttributes.Cast<T>().ToList();
+                eventAttributes = modelAttributesInfo.DeleteEventAttributes.Cast<T>().ToList();
             }
 
             if (eventAttributes == null)

@@ -8,7 +8,7 @@ using SapphireDb.Models;
 namespace WebUI.Data.Models
 {
     //[Updatable]
-    [RemoveEvent(after: "AfterDelete")]
+    [DeleteEvent(after: "AfterDelete")]
     [CreateEvent(after: "AfterCreate")]
     [UpdateEvent(after: "AfterUpdate")]
     public class User : Base

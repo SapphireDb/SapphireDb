@@ -73,17 +73,17 @@ namespace SapphireDb.Command.DeleteRange
                             }
                         }
 
-                        if (!property.Key.CanRemove(context, value, serviceProvider))
+                        if (!property.Key.CanDelete(context, value, serviceProvider))
                         {
                             throw new UnauthorizedException("The user is not authorized for this action");
                         }
 
-                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                        property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                             ModelStoreEventAttributeBase.EventType.Before, value, context, serviceProvider);
 
                         db.Remove(value);
 
-                        property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                        property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                             ModelStoreEventAttributeBase.EventType.BeforeSave, value, context,
                             serviceProvider);
 
@@ -115,7 +115,7 @@ namespace SapphireDb.Command.DeleteRange
 
             foreach (object value in removedValues)
             {
-                property.Key.ExecuteHookMethods<RemoveEventAttribute>(
+                property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                     ModelStoreEventAttributeBase.EventType.After, value, context, serviceProvider);
             }
 
