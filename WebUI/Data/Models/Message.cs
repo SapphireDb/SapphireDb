@@ -12,7 +12,7 @@ namespace WebUI.Data.Models
     {
         public Message()
         {
-            CreatedOn = DateTime.UtcNow;
+            CreatedOn = DateTimeOffset.UtcNow;
         }
 
         public void BeforeCreate(HttpInformation context)
@@ -22,7 +22,7 @@ namespace WebUI.Data.Models
 
         public void BeforeUpdate(HttpInformation context)
         {
-            UpdatedOn = DateTime.UtcNow;
+            UpdatedOn = DateTimeOffset.UtcNow;
         }
 
         public string UserId { get; set; }
@@ -31,8 +31,8 @@ namespace WebUI.Data.Models
 
         public string Content { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
 
-        public DateTime UpdatedOn { get; set; }
+        public DateTimeOffset UpdatedOn { get; set; }
     }
 }

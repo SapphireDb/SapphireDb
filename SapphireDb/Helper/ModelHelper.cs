@@ -29,11 +29,11 @@ namespace SapphireDb.Helper
                 .ToArray();
         }
 
-        public static DateTime? GetTimestamp(this JObject jsonObject)
+        public static DateTimeOffset? GetTimestamp(this JObject jsonObject)
         {
-            return (DateTime?)jsonObject
+            return (DateTimeOffset?)jsonObject
                 .GetValue("modifiedOn")?
-                .ToObject(typeof(DateTime));
+                .ToObject(typeof(DateTimeOffset));
         }
 
         public static bool JsonContainsData(this Type type, SapphireDbContext db, JObject jsonObject)

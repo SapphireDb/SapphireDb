@@ -4,12 +4,12 @@ namespace SapphireDb.Helper
 {
     public static class DateTimeHelper
     {
-        public static DateTime Round(this DateTime input, TimeSpan units)
+        public static DateTimeOffset Round(this DateTimeOffset input, TimeSpan units)
         {
-            return new DateTime((input.Ticks + units.Ticks - 1) / units.Ticks * units.Ticks, input.Kind);
+            return new DateTimeOffset((input.Ticks + units.Ticks - 1) / units.Ticks * units.Ticks, TimeSpan.Zero);
         }
 
-        public static bool EqualWithTolerance(this DateTime input1, DateTime input2, string databaseProviderName)
+        public static bool EqualWithTolerance(this DateTimeOffset input1, DateTimeOffset input2, string databaseProviderName)
         {
             long input1Ticks = input1.Ticks;
             long input2Ticks = input2.Ticks;

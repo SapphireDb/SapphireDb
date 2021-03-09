@@ -15,14 +15,14 @@ namespace SapphireDb.Connection.Poll
         public PollConnection(HttpContext context)
         {
             Init(context);
-            lastPoll = DateTime.UtcNow;
+            lastPoll = DateTimeOffset.UtcNow;
             HttpContext = null;
         }
 
         private readonly ConcurrentQueue<ResponseBase> messages = new ConcurrentQueue<ResponseBase>();
 
         public bool pollInProgress;
-        public DateTime lastPoll;
+        public DateTimeOffset lastPoll;
 
         public override string Type => "Poll";
 
@@ -63,7 +63,7 @@ namespace SapphireDb.Connection.Poll
                 {
                     lastPollLock.Wait();
                     pollInProgress = false;
-                    lastPoll = DateTime.UtcNow;
+                    lastPoll = DateTimeOffset.UtcNow;
                 }
                 finally
                 {
@@ -87,7 +87,7 @@ namespace SapphireDb.Connection.Poll
             try
             {
                 lastPollLock.Wait();
-                return !pollInProgress && lastPoll < DateTime.UtcNow.AddSeconds(-5d);
+                return !pollInProgress && lastPoll < DateTimeOffset.UtcNow.AddSeconds(-5d);
             }
             finally
             {

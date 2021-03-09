@@ -12,13 +12,13 @@ namespace WebUI.Data.DemoDb
     {
         public Message()
         {
-            CreatedOn = DateTime.UtcNow;
+            CreatedOn = DateTimeOffset.UtcNow;
         }
 
         [Key]
         public Guid Id { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
 
         public string From { get; set; }
 

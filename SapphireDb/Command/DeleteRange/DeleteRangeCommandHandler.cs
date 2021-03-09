@@ -64,7 +64,7 @@ namespace SapphireDb.Command.DeleteRange
                         if (value is SapphireOfflineEntity valueOfflineEntity &&
                             valuePrimaryKeys.TryGetValue("modifiedOn", out JValue modifiedOn))
                         {
-                            DateTime commandModifiedOn = modifiedOn.ToObject<DateTime>();
+                            DateTimeOffset commandModifiedOn = modifiedOn.ToObject<DateTimeOffset>();
 
                             if (!valueOfflineEntity.ModifiedOn.EqualWithTolerance(commandModifiedOn,
                                 db.Database.ProviderName))

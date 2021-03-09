@@ -4,7 +4,7 @@ namespace SapphireDb.Command
 {
     public class CommandBase
     {
-        public DateTime Timestamp { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
         
         public string ReferenceId { get; set; }
     }

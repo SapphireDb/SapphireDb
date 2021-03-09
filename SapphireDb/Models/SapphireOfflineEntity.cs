@@ -11,18 +11,18 @@ namespace SapphireDb.Models
         public SapphireOfflineEntity()
         {
             Id = Guid.NewGuid();
-            ModifiedOn = DateTime.UtcNow;
+            ModifiedOn = DateTimeOffset.UtcNow;
         }
         
         [Key]
         public Guid Id { get; set; }
 
         [ConcurrencyCheck]
-        public DateTime ModifiedOn { get; set; }
+        public DateTimeOffset ModifiedOn { get; set; }
 
         public void MarkModified()
         {
-            ModifiedOn = DateTime.UtcNow;
+            ModifiedOn = DateTimeOffset.UtcNow;
         }
     }
 }

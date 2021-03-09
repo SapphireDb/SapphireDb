@@ -1,5 +1,4 @@
 ﻿using System;
-using SapphireDb.Models;
 
 namespace SapphireDb.Command
 {
@@ -7,7 +6,7 @@ namespace SapphireDb.Command
     {
         public ResponseBase()
         {
-            Timestamp = DateTime.UtcNow;
+            Timestamp = DateTimeOffset.UtcNow;
         }
         
         public string ResponseType => GetType().Name;
@@ -16,6 +15,6 @@ namespace SapphireDb.Command
 
         public SapphireDbErrorResponse Error { get; set; }
 
-        public DateTime Timestamp { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
     }
 }

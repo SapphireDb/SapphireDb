@@ -10,7 +10,7 @@ namespace WebUI.Data.Models
     [CreateEvent("OnCreate")]
     public class Log : Base
     {
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
 
         public string Message { get; set; }
 
@@ -18,7 +18,7 @@ namespace WebUI.Data.Models
 
         public void OnCreate()
         {
-            CreatedOn = DateTime.UtcNow;
+            CreatedOn = DateTimeOffset.UtcNow;
         }
     }
 }

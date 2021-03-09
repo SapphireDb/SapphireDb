@@ -125,7 +125,7 @@ namespace SapphireDb.Command.UpdateRange
 
             List<Tuple<string, string>> mergeErrors = null;
 
-            DateTime? modifiedOn = originalValue.GetTimestamp();
+            DateTimeOffset? modifiedOn = originalValue.GetTimestamp();
 
             if (dbValue is SapphireOfflineEntity dbValueOfflineEntity &&
                 property.Key.JsonContainsData(db, originalValue) &&

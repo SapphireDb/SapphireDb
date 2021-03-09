@@ -14,13 +14,13 @@ namespace SapphireDb.Models
         {
             ConnectionId = connectionId;
             EnumerableGenericType = parameterType.GenericTypeArguments.FirstOrDefault();
-            LastFrame = DateTime.UtcNow;
+            LastFrame = DateTimeOffset.UtcNow;
             AsyncEnumerableValue = CreateAsyncEnumerableWrapper();
         }
         
         public Guid ConnectionId { get; set; }
 
-        public DateTime LastFrame { get; set; }
+        public DateTimeOffset LastFrame { get; set; }
 
         private Type EnumerableGenericType { get; set; }
         
@@ -83,7 +83,7 @@ namespace SapphireDb.Models
         {
             object valueObject = value?.ToObject(EnumerableGenericType);
 
-            LastFrame = DateTime.UtcNow;
+            LastFrame = DateTimeOffset.UtcNow;
             streamFrames.TryAdd(index, new StreamData() { Data = valueObject });
             newData.Set();
         }

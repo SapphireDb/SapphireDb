@@ -12,16 +12,16 @@ namespace WebUI.Data.DemoDb
         [Key]
         public Guid Id { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTimeOffset CreatedOn { get; set; }
 
-        public DateTime UpdatedOn { get; set; }
+        public DateTimeOffset UpdatedOn { get; set; }
 
         [Updateable]
         public string Content { get; set; }
 
         private void OnCreate()
         {
-            CreatedOn = DateTime.Now;
+            CreatedOn = DateTimeOffset.Now;
         }
         
         private void OnCreated(DemoContext demoContext)
@@ -35,7 +35,7 @@ namespace WebUI.Data.DemoDb
 
         private void OnUpdate()
         {
-            UpdatedOn = DateTime.Now;
+            UpdatedOn = DateTimeOffset.Now;
         }
         
         private void OnUpdated(DemoContext demoContext)

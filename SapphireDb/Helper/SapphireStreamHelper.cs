@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -27,7 +25,7 @@ namespace SapphireDb.Helper
                     while (streamContainers.Any())
                     {
                         streamContainers
-                            .Where(c => c.Value.LastFrame < DateTime.UtcNow.AddMinutes(-1d))
+                            .Where(c => c.Value.LastFrame < DateTimeOffset.UtcNow.AddMinutes(-1d))
                             .ToList()
                             .ForEach(pair =>
                             {
