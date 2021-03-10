@@ -49,13 +49,13 @@ namespace SapphireDb.Command.UpdateRange
         {
             bool updateRejected;
 
-            List<Tuple<ValidatedResponseBase, object>> updateResults;
+            List<ValidatedResponseBase> updateResults;
 
             do
             {
                 updateRejected = false;
 
-                updateResults = command.Entries.Select((updateEntry, index) =>
+                updateResults = command.Entries.Select<UpdateEntry, ValidatedResponseBase>((updateEntry) =>
                 {
                     object[] primaryKeys = property.Key.GetPrimaryKeyValuesFromJson(db, updateEntry.Value);
                     object dbValue = db.Find(property.Key, primaryKeys);
@@ -67,9 +67,7 @@ namespace SapphireDb.Command.UpdateRange
                             updateEntry.Value.Merge(updateEntry.UpdatedProperties);
                             object completeValue = updateEntry.Value.ToObject(property.Key);
 
-                            return new Tuple<ValidatedResponseBase, object>(CreateRangeCommandHandler
-                                .SetPropertiesAndValidate<UpdateEventAttribute>(db, property, completeValue, context,
-                                    serviceProvider), completeValue);
+                            return CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, completeValue, context, serviceProvider);
                         }
 
                         throw new ValueNotFoundException(command.ContextName, command.CollectionName, primaryKeys);
@@ -80,9 +78,7 @@ namespace SapphireDb.Command.UpdateRange
                         throw new UnauthorizedException("The user is not authorized for this action.");
                     }
 
-                    return new Tuple<ValidatedResponseBase, object>(ApplyChangesToDb(command, property, dbValue,
-                        updateEntry.Value,
-                        updateEntry.UpdatedProperties, db, context), dbValue);
+                    return ApplyChangesToDb(command, property, dbValue, updateEntry.Value, updateEntry.UpdatedProperties, db, context);
                 }).ToList();
 
                 try
@@ -100,19 +96,30 @@ namespace SapphireDb.Command.UpdateRange
                 }
             } while (updateRejected);
 
-            foreach (Tuple<ValidatedResponseBase, object> value in updateResults)
+            foreach (ValidatedResponseBase response in updateResults)
             {
-                if (value.Item2 != null)
+                object value = null;
+                
+                if (response is CreateResponse createResponse && createResponse.Value != null)
+                {
+                    value = createResponse.Value;
+                }
+                else if (response is UpdateResponse updateResponse && updateResponse.Value != null)
+                {
+                    value = updateResponse.Value;
+                }
+
+                if (value != null)
                 {
                     property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                        value.Item2, null, context, serviceProvider);
+                        value, null, context, serviceProvider);   
                 }
             }
 
             return new UpdateRangeResponse
             {
                 ReferenceId = command.ReferenceId,
-                Results = updateResults.Select(r => r.Item1).ToList()
+                Results = updateResults
             };
         }
 
@@ -120,6 +127,15 @@ namespace SapphireDb.Command.UpdateRange
             JObject originalValue,
             JObject updatedProperties, SapphireDbContext db, HttpInformation context)
         {
+            int insteadOfExecuteCount = property.Key.ExecuteHookMethods<UpdateEventAttribute>(
+                ModelStoreEventAttributeBase.EventType.InsteadOf,
+                dbValue, null, context, serviceProvider);
+
+            if (insteadOfExecuteCount > 0)
+            {
+                return new UpdateResponse();
+            }
+            
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
                 dbValue, updatedProperties, context, serviceProvider);
 

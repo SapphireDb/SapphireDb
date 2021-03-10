@@ -31,7 +31,7 @@ namespace SapphireDb.Command.CreateRange
             {
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
-            
+
             if (property.Key.GetModelAttributesInfo().DisableCreateAttribute != null)
             {
                 throw new OperationDisabledException("Create", command.ContextName, command.CollectionName);
@@ -46,28 +46,32 @@ namespace SapphireDb.Command.CreateRange
             object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key))
                 .ToArray();
 
-            CreateRangeResponse response = new CreateRangeResponse
+            List<CreateResponse> results = newValues.Select(value =>
             {
-                ReferenceId = command.ReferenceId,
-                Results = newValues.Select(value =>
+                if (!property.Key.CanCreate(context, value, serviceProvider))
                 {
-                    if (!property.Key.CanCreate(context, value, serviceProvider))
-                    {
-                        throw new UnauthorizedException("The user is not authorized for this action");
-                    }
+                    throw new UnauthorizedException("The user is not authorized for this action");
+                }
 
-                    return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context,
-                        serviceProvider);
-                }).ToList()
-            };
+                return SetPropertiesAndValidate<CreateEventAttribute>(db, property, value, context, serviceProvider);
+            }).ToList();
 
             db.SaveChanges();
 
-            foreach (object value in newValues)
+            foreach (CreateResponse createResponse in results)
             {
-                property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                    value, null, context, serviceProvider);
+                if (createResponse.Value != null)
+                {
+                    property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
+                        createResponse.Value, null, context, serviceProvider);   
+                }
             }
+            
+            CreateRangeResponse response = new CreateRangeResponse
+            {
+                ReferenceId = command.ReferenceId,
+                Results = results
+            };
 
             return response;
         }
@@ -89,6 +93,15 @@ namespace SapphireDb.Command.CreateRange
                 };
             }
 
+            int insteadOfExecuteCount = property.Key.ExecuteHookMethods<TEventAttribute>(
+                ModelStoreEventAttributeBase.EventType.InsteadOf,
+                newEntityObject, null, context, serviceProvider);
+
+            if (insteadOfExecuteCount > 0)
+            {
+                return new CreateResponse();
+            }
+            
             property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
                 newEntityObject, null, context, serviceProvider);
 

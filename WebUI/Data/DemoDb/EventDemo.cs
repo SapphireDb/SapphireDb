@@ -7,7 +7,7 @@ namespace WebUI.Data.DemoDb
 {
     [CreateEvent(Before = nameof(OnCreate), After = nameof(OnCreated))]
     [UpdateEvent(Before = nameof(OnUpdate), After = nameof(OnUpdated))]
-    [DeleteEvent(After = nameof(OnRemoved))]
+    [DeleteEvent(After = nameof(OnRemoved), InsteadOf = nameof(InsteadOfRemove))]
     public class EventDemo
     {
         [Key]
@@ -17,6 +17,8 @@ namespace WebUI.Data.DemoDb
 
         public DateTimeOffset UpdatedOn { get; set; }
 
+        public DateTimeOffset? DeletedOn { get; set; }
+        
         [Updateable]
         public string Content { get; set; }
 
@@ -54,6 +56,12 @@ namespace WebUI.Data.DemoDb
             {
                 Content = $"Removed {Content}"
             });
+            demoContext.SaveChanges();
+        }
+
+        private void InsteadOfRemove(DemoContext demoContext)
+        {
+            DeletedOn = DateTimeOffset.UtcNow;
             demoContext.SaveChanges();
         }
     }

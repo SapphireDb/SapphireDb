@@ -78,6 +78,15 @@ namespace SapphireDb.Command.DeleteRange
                             throw new UnauthorizedException("The user is not authorized for this action");
                         }
 
+                        int insteadOfExecuteCount = property.Key.ExecuteHookMethods<DeleteEventAttribute>(
+                            ModelStoreEventAttributeBase.EventType.InsteadOf,
+                            value, null, context, serviceProvider);
+
+                        if (insteadOfExecuteCount > 0)
+                        {
+                            return new DeleteResponse();
+                        }
+                        
                         property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                             ModelStoreEventAttributeBase.EventType.Before, value, null, context, serviceProvider);
 
