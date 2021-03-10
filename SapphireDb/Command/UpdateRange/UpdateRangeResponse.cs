@@ -10,8 +10,6 @@ namespace SapphireDb.Command.UpdateRange
     
     public class UpdateResponse : ValidatedResponseBase
     {
-        public object Value { get; set; }
-
         public JObject UpdatedProperties { get; set; }
     }
 }

@@ -9,6 +9,6 @@ namespace SapphireDb.Command.DeleteRange
     
     public class DeleteResponse : ValidatedResponseBase
     {
-        public object Value { get; set; }
+        
     }
 }

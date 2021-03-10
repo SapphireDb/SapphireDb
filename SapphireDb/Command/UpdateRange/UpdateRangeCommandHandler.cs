@@ -98,21 +98,10 @@ namespace SapphireDb.Command.UpdateRange
 
             foreach (ValidatedResponseBase response in updateResults)
             {
-                object value = null;
-                
-                if (response is CreateResponse createResponse && createResponse.Value != null)
-                {
-                    value = createResponse.Value;
-                }
-                else if (response is UpdateResponse updateResponse && updateResponse.Value != null)
-                {
-                    value = updateResponse.Value;
-                }
-
-                if (value != null)
+                if (response.Value != null)
                 {
                     property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                        value, null, context, serviceProvider);   
+                        response.Value, null, context, serviceProvider);   
                 }
             }
 

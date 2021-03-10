@@ -9,6 +9,6 @@ namespace SapphireDb.Command.CreateRange
     
     public class CreateResponse : ValidatedResponseBase
     {
-        public object Value { get; set; }
+        
     }
 }
