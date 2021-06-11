@@ -5,7 +5,7 @@ using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
 {
-    public class ModelStoreEventAttributeBase : Attribute
+    public abstract class ModelStoreEventAttributeBase : Attribute, ICompilableAttribute
     {
         public string Before { get; set; }
 
@@ -39,12 +39,12 @@ namespace SapphireDb.Attributes
             InsteadOf = insteadOf;
         }
 
-        public void Compile(Type modelType)
+        public void Compile(Type declaredType, Type modelType = null)
         {
-            BeforeFunction = ReflectionMethodHelper.GetMethodInfo(modelType, Before, typeof(void));
-            BeforeSaveFunction = ReflectionMethodHelper.GetMethodInfo(modelType, BeforeSave, typeof(void));
-            AfterFunction = ReflectionMethodHelper.GetMethodInfo(modelType, After, typeof(void));
-            InsteadOfFunction = ReflectionMethodHelper.GetMethodInfo(modelType, InsteadOf, typeof(void));
+            BeforeFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, Before, typeof(void));
+            BeforeSaveFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, BeforeSave, typeof(void));
+            AfterFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, After, typeof(void));
+            InsteadOfFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, InsteadOf, typeof(void));
         }
 
         public enum EventType

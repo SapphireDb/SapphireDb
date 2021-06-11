@@ -5,7 +5,7 @@ using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
 {
-    public class AuthAttributeBase : Attribute
+    public abstract class AuthAttributeBase : Attribute
     {
         public string[] Policies { get; } = new string[0];
 

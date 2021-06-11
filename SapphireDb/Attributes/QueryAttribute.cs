@@ -1,22 +1,14 @@
 ﻿using System;
 using System.Reflection;
-using Newtonsoft.Json.Linq;
 using SapphireDb.Helper;
-using SapphireDb.Models;
 using SapphireDb.Models.SapphireApiBuilder;
 
 namespace SapphireDb.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class QueryAttribute : Attribute
+    public class QueryAttribute : QueryAttributeBase, ICompilableAttribute
     {
-        public string QueryName { get; set; }
-        
-        public string FunctionName { get; set; }
-
-        public MethodInfo FunctionInfo { get; set; }
-        
-        public Func<dynamic, HttpInformation, JToken[], dynamic> FunctionLambda { get; set; }
+        public string QueryName { get; }
         
         public QueryAttribute(string queryName, string functionName)
         {
@@ -24,9 +16,9 @@ namespace SapphireDb.Attributes
             FunctionName = functionName;
         }
         
-        public void Compile(Type modelType)
+        public void Compile(Type declaredType, Type modelType = null)
         {
-            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(modelType, FunctionName, typeof(SapphireQueryBuilderBase<>).MakeGenericType(modelType),
+            FunctionInfo = ReflectionMethodHelper.GetMethodInfo(declaredType, FunctionName, typeof(SapphireQueryBuilderBase<>).MakeGenericType(declaredType),
                 BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
     }
