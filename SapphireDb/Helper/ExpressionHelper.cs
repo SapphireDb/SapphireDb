@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Models.Exceptions;
 
@@ -183,9 +184,11 @@ namespace SapphireDb.Helper
                     foreach (FieldInfo field in objectType.GetFields().OrderByDescending(f => f.Name))
                     {
                         object value = field.GetValue(constantContainer);
-                        string valueString = Expression.Constant(value).ToString();
+                        string valueString = JsonConvert.SerializeObject(value);
+                        // string valueString = Expression.Constant(value).ToString();
                         string placeholder = $"value({objectName}).{field.Name}";
-                        expressionString = expressionString.Replace(placeholder, valueString);
+                        string valueExpressionString = $"value({valueString})";
+                        expressionString = expressionString.Replace(placeholder, valueExpressionString);
                     }
                 }
             }

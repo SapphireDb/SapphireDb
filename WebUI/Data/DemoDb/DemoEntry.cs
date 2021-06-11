@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Generic;
+using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Models;
@@ -8,6 +9,7 @@ namespace WebUI.Data.DemoDb
 {
     [Updateable]
     [Query("only_test", nameof(OnyTestQuery))]
+    [Query("test_in", nameof(TestInQuery))]
     // [DisableCreate]
     // [DisableUpdate]
     // [DisableDelete]
@@ -25,6 +27,14 @@ namespace WebUI.Data.DemoDb
                 .OrderBy(e => e.Content)
                 .ThenOrderBy(e => e.IntegerValue)
                 .Select(m => new { m.Content });
+        }
+        
+        private static SapphireQueryBuilderBase<DemoEntry> TestInQuery(SapphireQueryBuilder<DemoEntry> queryBuilder, JToken[] parameters)
+        {
+            List<string> values = parameters[0].ToObject<List<string>>();
+
+            return queryBuilder
+                .Where(e => values.Contains(e.Content));
         }
     }
 }
