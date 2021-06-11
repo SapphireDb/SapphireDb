@@ -32,7 +32,7 @@ namespace SapphireDb.Helper
             return QueryableWhere.MakeGenericMethod(parameterType);
         }
         
-        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType,
+        public static MethodInfo GetMethodInfo(Type modelType, string methodName, Type returnType = null,
             BindingFlags bindingFlags = BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         {
             if (string.IsNullOrEmpty(methodName))
@@ -47,7 +47,7 @@ namespace SapphireDb.Helper
                 throw new MethodNotFoundException(modelType.Name, methodName);
             }
             
-            if (!returnType.IsAssignableFrom(methodInfo.ReturnType))
+            if (returnType != null && !returnType.IsAssignableFrom(methodInfo.ReturnType))
             {
                 throw new WrongReturnTypeException(modelType.Name, methodName, returnType.Name);
             }
