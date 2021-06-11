@@ -41,15 +41,20 @@ namespace SapphireDb.Helper
             }
             
             MethodInfo methodInfo = modelType.GetMethod(methodName, bindingFlags);
-            
-            if (methodInfo == null || !returnType.IsAssignableFrom(methodInfo.ReturnType))
+
+            if (methodInfo == null)
             {
                 throw new MethodNotFoundException(modelType.Name, methodName);
+            }
+            
+            if (!returnType.IsAssignableFrom(methodInfo.ReturnType))
+            {
+                throw new WrongReturnTypeException(modelType.Name, methodName, returnType.Name);
             }
 
             return methodInfo;
         }
-        
+
         public static readonly MethodInfo StringToLower = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { });
         public static readonly MethodInfo StringContains = typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) });
         public static readonly MethodInfo StringStartsWith = typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) });
