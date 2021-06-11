@@ -26,6 +26,8 @@ namespace SapphireDb.Models
 
         public List<QueryAttribute> QueryAttributes { get; }
         
+        public List<DefaultQueryAttribute> DefaultQueryAttributes { get; }
+        
         public UpdateableAttribute UpdateableAttribute { get; set; }
         
         public DisableAutoMergeAttribute DisableAutoMergeAttribute { get; set; }
@@ -46,11 +48,13 @@ namespace SapphireDb.Models
             DeleteAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<DeleteAuthAttribute>(modelType);
             CreateAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<CreateAuthAttribute>(modelType);
             
-            CreateEventAttributes = GetHookAttributeOfClassAndTopClasses<CreateEventAttribute>(modelType);
-            UpdateEventAttributes = GetHookAttributeOfClassAndTopClasses<UpdateEventAttribute>(modelType);
-            DeleteEventAttributes = GetHookAttributeOfClassAndTopClasses<DeleteEventAttribute>(modelType);
+            CreateEventAttributes = GetAndCompileAttributesOfClassAndTopClasses<CreateEventAttribute>(modelType);
+            UpdateEventAttributes = GetAndCompileAttributesOfClassAndTopClasses<UpdateEventAttribute>(modelType);
+            DeleteEventAttributes = GetAndCompileAttributesOfClassAndTopClasses<DeleteEventAttribute>(modelType);
 
-            QueryAttributes = GetQueryAttributes(modelType);
+            QueryAttributes = GetAndCompileQueryAttributes(modelType);
+            DefaultQueryAttributes = GetAndCompileAttributesOfClassAndTopClasses<DefaultQueryAttribute>(modelType);
+            
             UpdateableAttribute = modelType.GetCustomAttribute<UpdateableAttribute>(false);
             DisableAutoMergeAttribute = modelType.GetCustomAttribute<DisableAutoMergeAttribute>(false);
             
@@ -60,15 +64,6 @@ namespace SapphireDb.Models
             DisableQueryAttribute = modelType.GetCustomAttribute<DisableQueryAttribute>(true);
         }
 
-        private List<QueryAttribute> GetQueryAttributes(Type modelType)
-        {
-            List<QueryAttribute> queryAttributes = modelType.GetCustomAttributes<QueryAttribute>(false).ToList();
-            
-            queryAttributes.ForEach(queryAttribute => queryAttribute.Compile(modelType));
-
-            return queryAttributes;
-        }
-        
         private List<T> GetAuthAttributesOfClassOrDirectTopClass<T>(Type modelType) where T : AuthAttributeBase
         {
             Type currentModelType = modelType;
@@ -88,7 +83,7 @@ namespace SapphireDb.Models
             return attributes;
         }
 
-        private List<T> GetHookAttributeOfClassAndTopClasses<T>(Type modelType) where T : ModelStoreEventAttributeBase
+        private List<T> GetAndCompileAttributesOfClassAndTopClasses<T>(Type modelType) where T : Attribute, ICompilableAttribute
         {
             List<T> hookAttributes = new List<T>();
             Type currentType = modelType;
@@ -97,7 +92,7 @@ namespace SapphireDb.Models
             {
                 foreach (T attribute in currentType.GetCustomAttributes<T>(false))
                 {
-                    attribute.Compile(currentType);
+                    attribute.Compile(currentType, modelType);
                     hookAttributes.Add(attribute);
                 }
 
@@ -105,6 +100,13 @@ namespace SapphireDb.Models
             }
 
             return hookAttributes;
+        }
+        
+        private List<QueryAttribute> GetAndCompileQueryAttributes(Type modelType)
+        {
+            List<QueryAttribute> queryAttributes = modelType.GetCustomAttributes<QueryAttribute>(false).ToList();
+            queryAttributes.ForEach(queryAttribute => queryAttribute.Compile(modelType));
+            return queryAttributes;
         }
     }
 }

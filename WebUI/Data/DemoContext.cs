@@ -35,5 +35,7 @@ namespace WebUI.Data
         public DbSet<ValidationDemo> ValidationDemos { get; set; }
 
         public DbSet<QueryFunctionDemo> QueryFunctionDemos { get; set; }
+
+        public DbSet<ServerSideQueryWithDefault> ServerSideQueryWithDefaults { get; set; }
     }
 }

@@ -85,11 +85,13 @@ namespace SapphireDb.Helper
         public static List<IPrefilterBase> GetQueryPrefilters(KeyValuePair<Type, string> property, QueryQueryCommand queryCommand,
             HttpInformation information, IServiceProvider serviceProvider)
         {
-            QueryAttribute query = property.Key.GetModelAttributesInfo()
-                .QueryAttributes
+            ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
+            QueryAttribute query = modelAttributesInfo.QueryAttributes
                 .FirstOrDefault(q =>
                     q.QueryName.Equals(queryCommand.QueryName, StringComparison.InvariantCultureIgnoreCase));
 
+            DefaultQueryAttribute defaultQuery = modelAttributesInfo.DefaultQueryAttributes.SingleOrDefault();
+            
             if (query == null)
             {
                 throw new QueryNotFoundException(queryCommand.ContextName, queryCommand.CollectionName, queryCommand.QueryName);
@@ -98,12 +100,24 @@ namespace SapphireDb.Helper
             dynamic queryBuilder =
                 Activator.CreateInstance(typeof(SapphireQueryBuilder<>).MakeGenericType(property.Key));
 
+            if (defaultQuery != null)
+            {
+                if (defaultQuery.FunctionLambda != null)
+                {
+                    queryBuilder = defaultQuery.FunctionLambda(queryBuilder, information, queryCommand.Parameters);
+                }
+                else if (defaultQuery.FunctionInfo != null)
+                {
+                    queryBuilder = defaultQuery.FunctionInfo.Invoke(null,
+                        defaultQuery.FunctionInfo.CreateParameters(information, serviceProvider, queryCommand.Parameters, (object)queryBuilder));
+                }
+            }
+            
             if (query.FunctionLambda != null)
             {
                 queryBuilder = query.FunctionLambda(queryBuilder, information, queryCommand.Parameters);
             }
-
-            if (query.FunctionInfo != null)
+            else if (query.FunctionInfo != null)
             {
                 queryBuilder = query.FunctionInfo.Invoke(null,
                     query.FunctionInfo.CreateParameters(information, serviceProvider, queryCommand.Parameters, (object)queryBuilder));
