@@ -64,12 +64,12 @@ namespace SapphireDb.Helper
         public static async Task<object> HandleAsyncResult(object result)
         {
             Type resultType = result.GetType();
-            Type asyncResultType = resultType.GetInterfaces()
-                .FirstOrDefault(i => i == typeof(IAsyncResult));
 
-            if (asyncResultType != null)
+            if (resultType.GetInterfaces().Any(i => i == typeof(IAsyncResult)))
             {
-                return await (dynamic) result;
+                Task task = (Task) result;
+                await task;
+                return resultType.GetProperty("Result")?.GetValue(task);
             }
 
             return result;
