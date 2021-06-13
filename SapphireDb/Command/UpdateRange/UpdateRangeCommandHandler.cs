@@ -73,7 +73,7 @@ namespace SapphireDb.Command.UpdateRange
                         throw new ValueNotFoundException(command.ContextName, command.CollectionName, primaryKeys);
                     }
 
-                    if (!property.Key.CanUpdate(context, dbValue, serviceProvider))
+                    if (!property.Key.CanUpdate(context, dbValue, serviceProvider, updateEntry.UpdatedProperties))
                     {
                         throw new UnauthorizedException("The user is not authorized for this action.");
                     }

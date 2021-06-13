@@ -1,4 +1,5 @@
-﻿using SapphireDb.Attributes;
+﻿using Newtonsoft.Json.Linq;
+using SapphireDb.Attributes;
 
 namespace WebUI.Data.AuthDemo
 {
@@ -11,7 +12,7 @@ namespace WebUI.Data.AuthDemo
         [UpdateAuth(functionName: nameof(IsAllowed))]
         public string CustomFunction { get; set; }
 
-        private bool IsAllowed()
+        private bool IsAllowed(JObject newValue)
         {
             return RequiresUser == "Yes";
         }

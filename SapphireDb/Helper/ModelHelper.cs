@@ -112,8 +112,8 @@ namespace SapphireDb.Helper
             return newEntityObject;
         }
 
-        private static List<PropertyAttributesInfo> GetUpdateableProperties(this Type entityType,  object entityObject,
-            HttpInformation information, IServiceProvider serviceProvider)
+        private static List<PropertyAttributesInfo> GetUpdateableProperties(this Type entityType, object entityObject,
+            HttpInformation information, IServiceProvider serviceProvider, JObject newValue)
         {
             return entityType.GetPropertyAttributesInfos()
                 .Where(info =>
@@ -121,7 +121,7 @@ namespace SapphireDb.Helper
                     if (info.UpdateableAttribute != null ||
                         info.PropertyInfo.DeclaringType.GetModelAttributesInfo().UpdateableAttribute != null)
                     {
-                        return info.CanUpdate(information, entityObject, serviceProvider);
+                        return info.CanUpdate(information, entityObject, serviceProvider, newValue);
                     }
 
                     return false;
@@ -133,7 +133,7 @@ namespace SapphireDb.Helper
             HttpInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
-                information, serviceProvider);
+                information, serviceProvider, updatedProperties);
 
             foreach (PropertyAttributesInfo pi in updateableProperties)
             {
@@ -166,7 +166,7 @@ namespace SapphireDb.Helper
             IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
-                information, serviceProvider);
+                information, serviceProvider, updatedProperties);
 
             List<Tuple<string, string>> mergeErrors = new List<Tuple<string, string>>();
 
@@ -255,7 +255,7 @@ namespace SapphireDb.Helper
         /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
         /// <returns>the number of event executed event hook methods</returns>
         public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object oldValue, object newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
+            object oldValue, JObject newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
             where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
