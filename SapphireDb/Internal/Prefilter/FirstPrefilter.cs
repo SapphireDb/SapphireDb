@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-
 
 namespace SapphireDb.Internal.Prefilter
 {
-    public class FirstPrefilter : IAfterQueryPrefilter
+    public class FirstPrefilter : IPrefilter
     {
-        public object Execute(IQueryable<object> array)
+        public IQueryable<object> Execute(IQueryable<object> array)
         {
-            return array.FirstOrDefault();
+            return array.Take(1);
         }
 
         public void Dispose()

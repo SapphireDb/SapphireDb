@@ -94,11 +94,5 @@ namespace SapphireDb.Models.SapphireApiBuilder
             prefilters.Add(new FirstPrefilter());
             return new SapphireReducedQueryBuilder<T>(prefilters);
         }
-        
-        public SapphireReducedQueryBuilder<T> Last()
-        {
-            prefilters.Add(new LastPrefilter());
-            return new SapphireReducedQueryBuilder<T>(prefilters);
-        }
     }
 }
