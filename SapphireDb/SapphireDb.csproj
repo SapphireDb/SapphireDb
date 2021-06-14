@@ -14,8 +14,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <Copyright>Copyright © Morris Janatzek</Copyright>
     <PackageTags>realtime, database, core, .net, entityframework, database, websocket, sse, polling, self-hosted, angular, firebase, signalr</PackageTags>
-    <SignAssembly Condition="'$(OS)' == 'Windows_NT'">true</SignAssembly>
-    <AssemblyOriginatorKeyFile>SapphireDbCert.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>SapphireDb.snk</AssemblyOriginatorKeyFile>
     <Version>3.1.7-alpha</Version>
     <AssemblyVersion>3.1.7.0</AssemblyVersion>
     <FileVersion>3.1.7.0</FileVersion>
@@ -26,6 +25,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
   </PropertyGroup>
 
   <ItemGroup>
