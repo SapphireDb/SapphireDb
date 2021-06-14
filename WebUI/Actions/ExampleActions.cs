@@ -27,10 +27,10 @@ namespace WebUI.Actions
             return 15;
         }
 
-        public async Task TestException()
-        {
-            throw new Exception("Should throw in client");
-        }
+        // public async Task TestException()
+        // {
+        //     throw new Exception("Should throw in client");
+        // }
         
         [ActionAuth(functionName: "Test")]
         public async Task<string> AsyncDelay()
