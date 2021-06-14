@@ -15,6 +15,7 @@ namespace SapphireDb.Models
                 CanExecuteCommand = (command, context) => context.User.Identity.IsAuthenticated;
                 IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
                 DisableIncludePrefilter = true;
+                DisableSelectPrefilter = true;
             }
             else
             {
@@ -31,6 +32,7 @@ namespace SapphireDb.Models
             PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
             RestInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
             DisableIncludePrefilter = configuration[nameof(DisableIncludePrefilter)]?.ToLowerInvariant() == "true";
+            DisableSelectPrefilter = configuration[nameof(DisableSelectPrefilter)]?.ToLowerInvariant() == "true";
         }
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
@@ -48,6 +50,8 @@ namespace SapphireDb.Models
         public bool RestInterface { get; set; } = true;
 
         public bool DisableIncludePrefilter { get; set; } = false;
+
+        public bool DisableSelectPrefilter { get; set; } = false;
 
         public class ApiConfiguration
         {

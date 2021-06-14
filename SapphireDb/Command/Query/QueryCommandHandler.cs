@@ -30,6 +30,11 @@ namespace SapphireDb.Command.Query
                 throw new IncludeNotAllowedException(command.ContextName, command.CollectionName);
             }
             
+            if (databaseOptions.DisableSelectPrefilter && command.Prefilters.Any(p => p is SelectPrefilter))
+            {
+                throw new SelectNotAllowedException(command.ContextName, command.CollectionName);
+            }
+            
             SapphireDbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
