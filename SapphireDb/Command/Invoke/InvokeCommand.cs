@@ -3,10 +3,10 @@ using Newtonsoft.Json.Linq;
 
 namespace SapphireDb.Command.Invoke
 {
-    public class InvokeCommand: CommandBase
+    public class InvokeCommand : CollectionCommandBase
     {
         public Dictionary<string, JValue> PrimaryKeys { get; set; }
-        
+
         public string Action { get; set; }
 
         public JToken[] Parameters { get; set; } = new JToken[0];

@@ -36,5 +36,11 @@ namespace WebUI.Data.DemoDb
             return queryBuilder
                 .Where(e => values.Contains(e.Content));
         }
+
+        [Invokable]
+        private void Test(JToken[] parameters)
+        {
+            
+        }
     }
 }
