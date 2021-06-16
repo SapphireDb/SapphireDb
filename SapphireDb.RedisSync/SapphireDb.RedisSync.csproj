@@ -15,12 +15,12 @@
         <Copyright>Copyright © Morris Janatzek</Copyright>
         <PackageTags>realtime, database, core, .net, entityframework, database, websocket, sse, polling, self-hosted, angular, firebase, signalr</PackageTags>
         <AssemblyOriginatorKeyFile>SapphireDb.RedisSync.snk</AssemblyOriginatorKeyFile>
-        <Version>3.1.7-alpha</Version>
-        <AssemblyVersion>3.1.7.0</AssemblyVersion>
-        <FileVersion>3.1.7.0</FileVersion>
+        <Version>3.1.8-alpha</Version>
+        <AssemblyVersion>3.1.8.0</AssemblyVersion>
+        <FileVersion>3.1.8.0</FileVersion>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>icon.png</PackageIcon>
-        <PackageVersion>3.1.7-alpha</PackageVersion>
+        <PackageVersion>3.1.8-alpha</PackageVersion>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
