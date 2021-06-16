@@ -252,10 +252,12 @@ namespace SapphireDb.Helper
         /// <param name="newValue">New model data</param>
         /// <param name="httpInformation">Object with information about current connection</param>
         /// <param name="serviceProvider">Service provider instance for dependency injection</param>
+        /// <param name="dbContext">The dbContext instance of the current executing db context to allow writing changes into save-scope of command handler</param>
         /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
         /// <returns>the number of event executed event hook methods</returns>
         public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object oldValue, JObject newValue, HttpInformation httpInformation, IServiceProvider serviceProvider)
+            object oldValue, JObject newValue, HttpInformation httpInformation, IServiceProvider serviceProvider,
+            SapphireDbContext dbContext)
             where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
@@ -294,7 +296,7 @@ namespace SapphireDb.Helper
                     else if (attribute.BeforeFunction != null)
                     {
                         attribute.BeforeFunction.Invoke(oldValue,
-                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider, newValue, dbContext));
                         eventHooksExecuted++;
                     }
                 }

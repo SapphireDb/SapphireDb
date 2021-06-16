@@ -38,9 +38,10 @@ namespace WebUI.Data.DemoDb
         }
 
         [Invokable]
-        private void Test(JToken[] parameters)
+        private void Test(JToken[] parameters, DemoContext demoContext)
         {
-            
+            Content = "Test mit Invoke";
+            demoContext.SaveChanges();
         }
     }
 }

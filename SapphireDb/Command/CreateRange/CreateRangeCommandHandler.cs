@@ -63,7 +63,7 @@ namespace SapphireDb.Command.CreateRange
                 if (createResponse.Value != null)
                 {
                     property.Key.ExecuteHookMethods<CreateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                        createResponse.Value, null, context, serviceProvider);   
+                        createResponse.Value, null, context, serviceProvider, db);   
                 }
             }
             
@@ -95,7 +95,7 @@ namespace SapphireDb.Command.CreateRange
 
             int insteadOfExecuteCount = property.Key.ExecuteHookMethods<TEventAttribute>(
                 ModelStoreEventAttributeBase.EventType.InsteadOf,
-                newEntityObject, null, context, serviceProvider);
+                newEntityObject, null, context, serviceProvider, db);
 
             if (insteadOfExecuteCount > 0)
             {
@@ -103,12 +103,12 @@ namespace SapphireDb.Command.CreateRange
             }
             
             property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
-                newEntityObject, null, context, serviceProvider);
+                newEntityObject, null, context, serviceProvider, db);
 
             db.Add(newEntityObject);
 
             property.Key.ExecuteHookMethods<TEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave,
-                newEntityObject, null, context, serviceProvider);
+                newEntityObject, null, context, serviceProvider, db);
 
             return new CreateResponse()
             {

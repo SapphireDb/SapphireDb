@@ -53,7 +53,7 @@ namespace SapphireDb.Command.Invoke
                 throw new NotInvokableException(command.ContextName, command.CollectionName, command.Action);
             }
 
-            object result = methodInfo.Invoke(value, methodInfo.CreateParameters(context, serviceProvider, new object[]{ command.Parameters }));
+            object result = methodInfo.Invoke(value, methodInfo.CreateParameters(context, serviceProvider, command.Parameters, db));
             
             if (result != null)
             {
