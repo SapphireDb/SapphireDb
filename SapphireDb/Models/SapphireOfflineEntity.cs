@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using SapphireDb.Attributes;
 
 namespace SapphireDb.Models

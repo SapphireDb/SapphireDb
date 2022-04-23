@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.AspNetCore.SignalR;
 using SapphireDb.Helper;
 using SapphireDb.Models;
 
@@ -13,7 +14,7 @@ namespace SapphireDb.Connection
         private readonly Dictionary<string, List<Subscription>> subscriptions =
             new Dictionary<string, List<Subscription>>(StringComparer.InvariantCultureIgnoreCase);
 
-        public void AddSubscription(string topic, string referenceId, ConnectionBase connection)
+        public void AddSubscription(string topic, string referenceId, SignalRConnection connection)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace SapphireDb.Connection
             }
         }
 
-        public void RemoveConnectionSubscriptions(Guid connectionId)
+        public void RemoveConnectionSubscriptions(string connectionId)
         {
             try
             {

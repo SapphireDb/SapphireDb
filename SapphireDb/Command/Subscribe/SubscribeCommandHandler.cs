@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -13,7 +14,7 @@ namespace SapphireDb.Command.Subscribe
 {
     class SubscribeCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeCommand>, INeedsConnection
     {
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
         private readonly IServiceProvider serviceProvider;
         private readonly SubscriptionManager subscriptionManager;
         private readonly SapphireDatabaseOptions databaseOptions;
@@ -27,7 +28,7 @@ namespace SapphireDb.Command.Subscribe
             this.databaseOptions = databaseOptions;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, SubscribeCommand command,
             ExecutionContext executionContext)
         {
             if (databaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
@@ -40,7 +41,7 @@ namespace SapphireDb.Command.Subscribe
                 throw new SelectNotAllowedException(command.ContextName, command.CollectionName);
             }
 
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
             if (property.Key.GetModelAttributesInfo().DisableQueryAttribute != null)

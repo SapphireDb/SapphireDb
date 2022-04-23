@@ -50,7 +50,7 @@ namespace SapphireDb.RedisSync
         
         public void Publish(SyncRequest syncRequest)
         {
-            string requestString = JsonHelper.Serialize(syncRequest);
+            string requestString = JsonHelper.Serialize(syncRequest).ToString();
             
             string path = syncRequest is SendPublishRequest ? "publish" :
                 syncRequest is SendMessageRequest ? "message" : "changes";

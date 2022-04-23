@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SapphireDb", "SapphireDb\SapphireDb.csproj", "{6FC4FBCC-6BBA-42D3-8EFF-849D2AD149A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SapphireDb.RedisSync", "SapphireDb.RedisSync\SapphireDb.RedisSync.csproj", "{12E7F676-2F36-47C8-8258-D0C8D3BBA042}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sync", "Sync", "{7B072B97-EBE7-4718-9147-3CA43E669A97}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{24DC96E4-A7C9-4555-9C55-8BA0494C6C5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basic", "Basic\Basic.csproj", "{AB03D0D2-D8E5-40F2-BFCF-656884C1B803}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FC4FBCC-6BBA-42D3-8EFF-849D2AD149A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FC4FBCC-6BBA-42D3-8EFF-849D2AD149A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FC4FBCC-6BBA-42D3-8EFF-849D2AD149A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FC4FBCC-6BBA-42D3-8EFF-849D2AD149A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12E7F676-2F36-47C8-8258-D0C8D3BBA042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12E7F676-2F36-47C8-8258-D0C8D3BBA042}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12E7F676-2F36-47C8-8258-D0C8D3BBA042}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12E7F676-2F36-47C8-8258-D0C8D3BBA042}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB03D0D2-D8E5-40F2-BFCF-656884C1B803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB03D0D2-D8E5-40F2-BFCF-656884C1B803}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB03D0D2-D8E5-40F2-BFCF-656884C1B803}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB03D0D2-D8E5-40F2-BFCF-656884C1B803}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12E7F676-2F36-47C8-8258-D0C8D3BBA042} = {7B072B97-EBE7-4718-9147-3CA43E669A97}
+		{AB03D0D2-D8E5-40F2-BFCF-656884C1B803} = {24DC96E4-A7C9-4555-9C55-8BA0494C6C5B}
+	EndGlobalSection
+EndGlobal

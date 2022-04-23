@@ -4,6 +4,6 @@ namespace SapphireDb.Command.Connection
 {
     class ConnectionResponse : ResponseBase
     {
-        public Guid ConnectionId { get; set; }
+        public string ConnectionId { get; set; }
     }
 }

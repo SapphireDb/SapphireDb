@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Command;
 using SapphireDb.Command.Execute;
@@ -26,7 +27,7 @@ namespace SapphireDb.Internal
         }
 
         public async Task<ResponseBase> ExecuteCommand<T>(CommandBase command, IServiceProvider serviceProvider,
-            HttpInformation information, ILogger<T> logger, ConnectionBase connection = null)
+            IConnectionInformation information, ILogger<T> logger, SignalRConnection connection = null)
         {
             ExecutionContext executionContext = new ExecutionContext();
             

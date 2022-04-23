@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using SapphireDb.Connection;
 using SapphireDb.Models;
 
 namespace SapphireDb.Internal
 {
     static class DiHelper
     {
-        public static object[] CreateParameters(this MethodInfo mi, HttpInformation httpInformation, IServiceProvider serviceProvider, params object[] additionalParameters)
+        public static object[] CreateParameters(this MethodInfo mi, IConnectionInformation connectionInformation, IServiceProvider serviceProvider, params object[] additionalParameters)
         {
             ParameterInfo[] parameters = mi.GetParameters();
             return parameters.Select(p =>
             {
-                if (p.ParameterType == typeof(HttpInformation))
+                if (p.ParameterType == typeof(IConnectionInformation))
                 {
-                    return httpInformation;
+                    return connectionInformation;
                 }
 
                 object additionalParameter = additionalParameters.FirstOrDefault(parameter => parameter?.GetType() == p.ParameterType);

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Command.CreateRange;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -24,10 +25,10 @@ namespace SapphireDb.Command.UpdateRange
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, UpdateRangeCommand command,
+        public async Task<ResponseBase> Handle(IConnectionInformation context, UpdateRangeCommand command,
             ExecutionContext executionContext)
         {
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key == null)
@@ -45,7 +46,7 @@ namespace SapphireDb.Command.UpdateRange
 
         private async Task<ResponseBase> InitializeUpdate(UpdateRangeCommand command,
             KeyValuePair<Type, string> property,
-            HttpInformation context, SapphireDbContext db)
+            IConnectionInformation context, DbContext db)
         {
             bool updateRejected;
 
@@ -114,7 +115,7 @@ namespace SapphireDb.Command.UpdateRange
 
         private UpdateResponse ApplyChangesToDb(UpdateRangeCommand command, KeyValuePair<Type, string> property, object dbValue,
             JObject originalValue,
-            JObject updatedProperties, SapphireDbContext db, HttpInformation context)
+            JObject updatedProperties, DbContext db, IConnectionInformation context)
         {
             int insteadOfExecuteCount = property.Key.ExecuteHookMethods<UpdateEventAttribute>(
                 ModelStoreEventAttributeBase.EventType.InsteadOf,

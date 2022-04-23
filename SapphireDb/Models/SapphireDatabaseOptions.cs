@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using SapphireDb.Command;
+using SapphireDb.Connection;
 
 namespace SapphireDb.Models
 {
@@ -26,32 +27,26 @@ namespace SapphireDb.Models
 
         public SapphireDatabaseOptions(IConfigurationSection configuration, bool strict = false) : this(strict)
         {
+            // TODO: add automatic parsing
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
-            ServerSentEventsInterface = configuration[nameof(ServerSentEventsInterface)]?.ToLowerInvariant() != "false";
-            WebsocketInterface = configuration[nameof(WebsocketInterface)]?.ToLowerInvariant() != "false";
-            PollInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
-            RestInterface = configuration[nameof(PollInterface)]?.ToLowerInvariant() != "false";
+            RestInterface = configuration[nameof(RestInterface)]?.ToLowerInvariant() != "false";
             DisableIncludePrefilter = configuration[nameof(DisableIncludePrefilter)]?.ToLowerInvariant() == "true";
             DisableSelectPrefilter = configuration[nameof(DisableSelectPrefilter)]?.ToLowerInvariant() == "true";
         }
 
         public List<ApiConfiguration> ApiConfigurations { get; set; } = new List<ApiConfiguration>();
 
-        public Func<CommandBase, HttpInformation, bool> CanExecuteCommand { get; set; }
+        public Func<CommandBase, IConnectionInformation, bool> CanExecuteCommand { get; set; }
 
-        public Func<HttpInformation, bool> IsAllowedToSendMessages { get; set; }
-        
-        public bool ServerSentEventsInterface { get; set; } = true;
-
-        public bool WebsocketInterface { get; set; } = true;
-
-        public bool PollInterface { get; set; } = true;
+        public Func<IConnectionInformation, bool> IsAllowedToSendMessages { get; set; }
 
         public bool RestInterface { get; set; } = true;
 
         public bool DisableIncludePrefilter { get; set; } = false;
 
         public bool DisableSelectPrefilter { get; set; } = false;
+
+        public long MaximumReceiveMessageSize { get; set; } = Int64.MaxValue;
 
         public class ApiConfiguration
         {

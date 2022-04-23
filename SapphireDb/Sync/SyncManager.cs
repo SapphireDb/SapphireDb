@@ -12,21 +12,21 @@ namespace SapphireDb.Sync
 {
     public class SyncManager
     {
-        private readonly ILogger<SyncManager> logger;
-        private readonly DbContextTypeContainer contextTypeContainer;
-        private readonly SyncContext syncContext;
-        private readonly ISapphireSyncModule sapphireSyncModule;
+        private readonly ILogger<SyncManager> _logger;
+        private readonly DbContextTypeContainer _contextTypeContainer;
+        private readonly SyncContext _syncContext;
+        private readonly ISapphireSyncModule _sapphireSyncModule;
 
         public SyncManager(IServiceProvider serviceProvider, ILogger<SyncManager> logger, DbContextTypeContainer contextTypeContainer, SyncContext syncContext)
         {
-            this.logger = logger;
-            this.contextTypeContainer = contextTypeContainer;
-            this.syncContext = syncContext;
-            sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
+            _logger = logger;
+            _contextTypeContainer = contextTypeContainer;
+            _syncContext = syncContext;
+            _sapphireSyncModule = (ISapphireSyncModule) serviceProvider.GetService(typeof(ISapphireSyncModule));
 
-            if (sapphireSyncModule != null)
+            if (_sapphireSyncModule != null)
             {
-                sapphireSyncModule.SyncRequestRequestReceived += request =>
+                _sapphireSyncModule.SyncRequestRequestReceived += request =>
                 {
                     if (request.OriginId == syncContext.SessionId)
                     {
@@ -102,8 +102,8 @@ namespace SapphireDb.Sync
             SendChangesRequest sendChangesRequest = new SendChangesRequest()
             {
                 Changes = changes,
-                DbName = contextTypeContainer.GetName(dbContextType),
-                OriginId = syncContext.SessionId
+                DbName = _contextTypeContainer.GetName(dbContextType),
+                OriginId = _syncContext.SessionId
             };
 
             Publish(sendChangesRequest);
@@ -116,7 +116,7 @@ namespace SapphireDb.Sync
                 Topic = topic,
                 Message = message,
                 Retain = retain,
-                OriginId = syncContext.SessionId
+                OriginId = _syncContext.SessionId
             };
 
             Publish(sendPublishRequest);
@@ -129,7 +129,7 @@ namespace SapphireDb.Sync
                 Message = message,
                 Filter = filter,
                 FilterParameters = filterParameters,
-                OriginId = syncContext.SessionId
+                OriginId = _syncContext.SessionId
             };
 
             Publish(sendMessageRequest);
@@ -137,10 +137,10 @@ namespace SapphireDb.Sync
 
         private void Publish(SyncRequest syncRequest)
         {
-            if (sapphireSyncModule != null)
+            if (_sapphireSyncModule != null)
             {
-                logger.LogInformation("Publishing sync request to other servers");
-                sapphireSyncModule.Publish(syncRequest);
+                _logger.LogInformation("Publishing sync request to other servers");
+                _sapphireSyncModule.Publish(syncRequest);
             }
         }
     }

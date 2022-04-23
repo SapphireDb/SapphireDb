@@ -10,7 +10,7 @@ namespace SapphireDb.Models
 {
     public class StreamContainer
     {
-        public StreamContainer(Guid connectionId, Type parameterType)
+        public StreamContainer(string connectionId, Type parameterType)
         {
             ConnectionId = connectionId;
             EnumerableGenericType = parameterType.GenericTypeArguments.FirstOrDefault();
@@ -18,7 +18,7 @@ namespace SapphireDb.Models
             AsyncEnumerableValue = CreateAsyncEnumerableWrapper();
         }
         
-        public Guid ConnectionId { get; set; }
+        public string ConnectionId { get; set; }
 
         public DateTimeOffset LastFrame { get; set; }
 

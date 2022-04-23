@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using SapphireDb.Connection;
 using SapphireDb.Models;
 
 namespace SapphireDb.Attributes
@@ -11,6 +12,6 @@ namespace SapphireDb.Attributes
 
         public MethodInfo FunctionInfo { get; set; }
         
-        public Func<dynamic, HttpInformation, JToken[], dynamic> FunctionLambda { get; set; }
+        public Func<dynamic, IConnectionInformation, JToken[], dynamic> FunctionLambda { get; set; }
     }
 }

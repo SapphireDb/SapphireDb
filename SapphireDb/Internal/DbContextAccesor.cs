@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace SapphireDb.Internal
 {
@@ -14,14 +14,14 @@ namespace SapphireDb.Internal
             this.serviceProvider = serviceProvider;
         }
 
-        public SapphireDbContext GetContext(string contextName, IServiceProvider customServiceProvider = null)
+        public DbContext GetContext(string contextName, IServiceProvider customServiceProvider = null)
         {
-            return (SapphireDbContext)(customServiceProvider ?? serviceProvider).GetService(contextTypeContainer.GetContext(contextName));
+            return (DbContext)(customServiceProvider ?? serviceProvider).GetService(contextTypeContainer.GetContext(contextName));
         }
 
-        public SapphireDbContext GetContext(Type dbContextType, IServiceProvider customServiceProvider = null)
+        public DbContext GetContext(Type dbContextType, IServiceProvider customServiceProvider = null)
         {
-            return (SapphireDbContext)(customServiceProvider ?? serviceProvider).GetService(dbContextType);
+            return (DbContext)(customServiceProvider ?? serviceProvider).GetService(dbContextType);
         }
     }
 }

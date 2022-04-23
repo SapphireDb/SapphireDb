@@ -1,4 +1,5 @@
-﻿using SapphireDb.Internal;
+﻿using Microsoft.EntityFrameworkCore;
+using SapphireDb.Internal;
 
 namespace SapphireDb.Command
 {
@@ -11,7 +12,7 @@ namespace SapphireDb.Command
             this.contextAccessor = contextAccessor;
         }
 
-        protected SapphireDbContext GetContext(string contextName)
+        protected DbContext GetContext(string contextName)
         {
             return contextAccessor.GetContext(contextName);
         }

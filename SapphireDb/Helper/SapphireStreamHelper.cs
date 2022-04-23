@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Command.Execute;
 using SapphireDb.Command.Stream;
@@ -41,7 +42,8 @@ namespace SapphireDb.Helper
             }
         }
         
-        public object OpenStreamChannel(ConnectionBase connection, ExecuteCommand executeCommand, Type parameterType)
+        public object OpenStreamChannel(SignalRConnection connection, ExecuteCommand executeCommand, Type parameterType,
+            IServiceProvider serviceProvider)
         {
             StreamContainer streamContainer = new StreamContainer(connection.Id, parameterType);
             
@@ -52,14 +54,14 @@ namespace SapphireDb.Helper
             {
                 ReferenceId = executeCommand.ReferenceId,
                 Id = streamId
-            });
+            }, serviceProvider);
 
             CloseOldStreamChannels();
             
             return streamContainer.AsyncEnumerableValue;
         }
 
-        public void StreamData(Guid streamId, JToken frameData, int index, Guid connectionId)
+        public void StreamData(Guid streamId, JToken frameData, int index, string connectionId)
         {
             if (streamContainers.TryGetValue(streamId, out StreamContainer streamContainer) && streamContainer.ConnectionId == connectionId)
             {
@@ -67,7 +69,7 @@ namespace SapphireDb.Helper
             }
         }
 
-        public void CompleteStream(Guid streamId, int index, bool error, Guid connectionId)
+        public void CompleteStream(Guid streamId, int index, bool error, string connectionId)
         {
             if (streamContainers.TryGetValue(streamId, out StreamContainer streamContainer) && streamContainer.ConnectionId == connectionId)
             {

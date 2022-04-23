@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -23,9 +25,9 @@ namespace SapphireDb.Command.Invoke
             this.logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, InvokeCommand command, ExecutionContext executionContext)
+        public async Task<ResponseBase> Handle(IConnectionInformation context, InvokeCommand command, ExecutionContext executionContext)
         {
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key == null)

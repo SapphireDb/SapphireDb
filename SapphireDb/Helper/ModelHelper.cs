@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 
@@ -13,14 +14,14 @@ namespace SapphireDb.Helper
 {
     static class ModelHelper
     {
-        public static object[] GetPrimaryKeyValues(this Type type, SapphireDbContext db,
+        public static object[] GetPrimaryKeyValues(this Type type, DbContext db,
             Dictionary<string, JValue> primaryKeys)
         {
             return type.GetPrimaryKeys(db)
                 .Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
         }
 
-        public static object[] GetPrimaryKeyValuesFromJson(this Type type, SapphireDbContext db, JObject jsonObject)
+        public static object[] GetPrimaryKeyValuesFromJson(this Type type, DbContext db, JObject jsonObject)
         {
             return type.GetPrimaryKeys(db)
                 .Select(p => 
@@ -36,7 +37,7 @@ namespace SapphireDb.Helper
                 .ToObject(typeof(DateTimeOffset));
         }
 
-        public static bool JsonContainsData(this Type type, SapphireDbContext db, JObject jsonObject)
+        public static bool JsonContainsData(this Type type, DbContext db, JObject jsonObject)
         {
             bool isOfflineEntity = typeof(SapphireOfflineEntity).IsAssignableFrom(type);
             
@@ -54,7 +55,7 @@ namespace SapphireDb.Helper
         private static readonly ConcurrentDictionary<Type, IProperty[]> PrimaryKeyDictionary =
             new ConcurrentDictionary<Type, IProperty[]>();
 
-        public static IProperty[] GetPrimaryKeys(this Type type, SapphireDbContext db)
+        public static IProperty[] GetPrimaryKeys(this Type type, DbContext db)
         {
             if (PrimaryKeyDictionary.TryGetValue(type, out IProperty[] primaryKeys))
             {
@@ -113,7 +114,7 @@ namespace SapphireDb.Helper
         }
 
         private static List<PropertyAttributesInfo> GetUpdateableProperties(this Type entityType, object entityObject,
-            HttpInformation information, IServiceProvider serviceProvider, JObject newValue)
+            IConnectionInformation information, IServiceProvider serviceProvider, JObject newValue)
         {
             return entityType.GetPropertyAttributesInfos()
                 .Where(info =>
@@ -130,7 +131,7 @@ namespace SapphireDb.Helper
         }
         
         public static void UpdateFields(this Type entityType, object entityObject, JObject originalValue, JObject updatedProperties,
-            HttpInformation information, IServiceProvider serviceProvider)
+            IConnectionInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
                 information, serviceProvider, updatedProperties);
@@ -162,7 +163,7 @@ namespace SapphireDb.Helper
         }
         
         public static List<Tuple<string, string>> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
-            JObject originalOfflineEntity, JObject updatedProperties, HttpInformation information,
+            JObject originalOfflineEntity, JObject updatedProperties, IConnectionInformation information,
             IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(dbObject,
@@ -237,7 +238,7 @@ namespace SapphireDb.Helper
             return mergeErrors;
         }
 
-        public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property)
+        public static IQueryable<object> GetValues(this DbContext db, KeyValuePair<Type, string> property)
         {
             IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
             return values?.AsNoTracking();
@@ -250,14 +251,14 @@ namespace SapphireDb.Helper
         /// <param name="eventType">The type of event hook to execute</param>
         /// <param name="oldValue">The instance of the old model</param>
         /// <param name="newValue">New model data</param>
-        /// <param name="httpInformation">Object with information about current connection</param>
+        /// <param name="connectionInformation">Object with information about current connection</param>
         /// <param name="serviceProvider">Service provider instance for dependency injection</param>
         /// <param name="dbContext">The dbContext instance of the current executing db context to allow writing changes into save-scope of command handler</param>
         /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
         /// <returns>the number of event executed event hook methods</returns>
         public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object oldValue, JObject newValue, HttpInformation httpInformation, IServiceProvider serviceProvider,
-            SapphireDbContext dbContext)
+            object oldValue, JObject newValue, IConnectionInformation connectionInformation, IServiceProvider serviceProvider,
+            DbContext dbContext)
             where T : ModelStoreEventAttributeBase
         {
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
@@ -290,13 +291,13 @@ namespace SapphireDb.Helper
                 {
                     if (attribute.BeforeLambda != null)
                     {
-                        attribute.BeforeLambda(oldValue, newValue, httpInformation);
+                        attribute.BeforeLambda(oldValue, newValue, connectionInformation);
                         eventHooksExecuted++;
                     }
                     else if (attribute.BeforeFunction != null)
                     {
                         attribute.BeforeFunction.Invoke(oldValue,
-                            attribute.BeforeFunction.CreateParameters(httpInformation, serviceProvider, newValue, dbContext));
+                            attribute.BeforeFunction.CreateParameters(connectionInformation, serviceProvider, newValue, dbContext));
                         eventHooksExecuted++;
                     }
                 }
@@ -304,13 +305,13 @@ namespace SapphireDb.Helper
                 {
                     if (attribute.BeforeSaveLambda != null)
                     {
-                        attribute.BeforeSaveLambda(oldValue, newValue, httpInformation);
+                        attribute.BeforeSaveLambda(oldValue, newValue, connectionInformation);
                         eventHooksExecuted++;
                     }
                     else if (attribute.BeforeSaveFunction != null)
                     {
                         attribute.BeforeSaveFunction.Invoke(oldValue,
-                            attribute.BeforeSaveFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                            attribute.BeforeSaveFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
                         eventHooksExecuted++;
                     }
                 }
@@ -318,13 +319,13 @@ namespace SapphireDb.Helper
                 {
                     if (attribute.AfterLambda != null)
                     {
-                        attribute.AfterLambda(oldValue, newValue, httpInformation);
+                        attribute.AfterLambda(oldValue, newValue, connectionInformation);
                         eventHooksExecuted++;
                     }
                     else if (attribute.AfterFunction != null)
                     {
                         attribute.AfterFunction.Invoke(oldValue,
-                            attribute.AfterFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                            attribute.AfterFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
                         eventHooksExecuted++;
                     }
                 }
@@ -332,13 +333,13 @@ namespace SapphireDb.Helper
                 {
                     if (attribute.InsteadOfLambda != null)
                     {
-                        attribute.InsteadOfLambda(oldValue, newValue, httpInformation);
+                        attribute.InsteadOfLambda(oldValue, newValue, connectionInformation);
                         eventHooksExecuted++;
                     }
                     else if (attribute.InsteadOfFunction != null)
                     {
                         attribute.InsteadOfFunction.Invoke(oldValue,
-                            attribute.InsteadOfFunction.CreateParameters(httpInformation, serviceProvider, newValue));
+                            attribute.InsteadOfFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
                         eventHooksExecuted++;
                     }
                 }

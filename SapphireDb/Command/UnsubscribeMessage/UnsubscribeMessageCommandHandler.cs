@@ -9,7 +9,7 @@ namespace SapphireDb.Command.UnsubscribeMessage
         INeedsConnection
     {
         private readonly MessageSubscriptionManager subscriptionManager;
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
 
         public UnsubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor,
             MessageSubscriptionManager subscriptionManager)
@@ -18,7 +18,7 @@ namespace SapphireDb.Command.UnsubscribeMessage
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, UnsubscribeMessageCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, UnsubscribeMessageCommand command,
             ExecutionContext executionContext)
         {
             subscriptionManager.RemoveSubscription(command.ReferenceId);

@@ -21,6 +21,8 @@ namespace SapphireDb.Helper
             ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
+        public static readonly JsonSerializer DefaultSerializer = JsonSerializer.Create(Settings);
+        
         public static readonly JsonSerializerSettings DeserializeCommandSettings = new JsonSerializerSettings()
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
@@ -29,32 +31,27 @@ namespace SapphireDb.Helper
             Converters = { new CustomJsonConverter<IPrefilterBase>(), new CustomJsonConverter<CommandBase>() }
         };
 
-        public static string Serialize(object value)
+        public static readonly JsonSerializer CommandDeserializer = JsonSerializer.Create(DeserializeCommandSettings);
+
+        public static JToken Serialize(object value)
         {
-            return JsonConvert.SerializeObject(value, Settings);
+            return JToken.FromObject(value, DefaultSerializer);
         }
 
-        public static object Deserialize(string value, Type t)
+        public static CommandBase DeserializeCommand(JObject value)
         {
             try
             {
-                return JsonConvert.DeserializeObject(value, t, Settings);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public static CommandBase DeserializeCommand(string value)
-        {
-            try
-            {
-                return JsonConvert.DeserializeObject<CommandBase>(value, DeserializeCommandSettings);
+                return value.ToObject<CommandBase>(CommandDeserializer);
             }
             catch (Exception ex)
             {
-                string referenceId = value.TryGetReferenceId();
+                string referenceId = null;
+
+                if (value.TryGetValue("ReferenceId", out JToken referenceIdToken))
+                {
+                    referenceId = referenceIdToken.ToObject<string>();
+                }
                 
                 if (ex.InnerException is SapphireDbException sapphireDbException)
                 {

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
@@ -29,14 +30,14 @@ namespace SapphireDb.Models.SapphireApiBuilder
         }
 
         public SapphirePropertyBuilder<TModel, TProperty> AddQueryAuth(string policies = null,
-            Func<HttpInformation, TModel, bool> function = null)
+            Func<IConnectionInformation, TModel, bool> function = null)
         {
             attributesInfo.QueryAuthAttributes.Add(CreateAuthAttribute<QueryAuthAttribute>(policies, function));
             return this;
         }
 
         public SapphirePropertyBuilder<TModel, TProperty> AddUpdateAuth(string policies = null,
-            Func<HttpInformation, TModel, bool> function = null)
+            Func<IConnectionInformation, TModel, bool> function = null)
         {
             attributesInfo.UpdateAuthAttributes.Add(CreateAuthAttribute<UpdateAuthAttribute>(policies, function));
             return this;
@@ -51,7 +52,7 @@ namespace SapphireDb.Models.SapphireApiBuilder
         }
 
         private TAttributeType CreateAuthAttribute<TAttributeType>(string policies,
-            Func<HttpInformation, TModel, bool> function) where TAttributeType : AuthAttributeBase
+            Func<IConnectionInformation, TModel, bool> function) where TAttributeType : AuthAttributeBase
         {
             TAttributeType attribute =
                 (TAttributeType) Activator.CreateInstance(typeof(TAttributeType), policies, null);

@@ -9,7 +9,7 @@ namespace SapphireDb.Command.Stream
     class CompleteStreamCommandHandler : CommandHandlerBase, ICommandHandler<CompleteStreamCommand>, INeedsConnection
     {
         private readonly SapphireStreamHelper streamHelper;
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
 
         public CompleteStreamCommandHandler(DbContextAccesor dbContextAccessor, SapphireStreamHelper streamHelper)
             : base(dbContextAccessor)
@@ -17,7 +17,7 @@ namespace SapphireDb.Command.Stream
             this.streamHelper = streamHelper;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, CompleteStreamCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, CompleteStreamCommand command,
             ExecutionContext executionContext)
         {
             streamHelper.CompleteStream(command.StreamId, command.Index, command.Error, Connection.Id);

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using SapphireDb.Connection;
 using SapphireDb.Internal;
 using SapphireDb.Models;
 
@@ -10,7 +11,7 @@ namespace SapphireDb.Command.Error
         {
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, ErrorCommand command, ExecutionContext executionContext)
+        public Task<ResponseBase> Handle(IConnectionInformation context, ErrorCommand command, ExecutionContext executionContext)
         {
             throw command.Exception;
         }

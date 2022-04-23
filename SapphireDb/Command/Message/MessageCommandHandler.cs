@@ -18,7 +18,7 @@ namespace SapphireDb.Command.Message
             this.options = options;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, MessageCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, MessageCommand command,
             ExecutionContext executionContext)
         {
             if (!options.IsAllowedToSendMessages(context))

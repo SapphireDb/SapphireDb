@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
-using SapphireDb.Models;
 
 namespace SapphireDb.Extensions
 {
@@ -19,36 +18,52 @@ namespace SapphireDb.Extensions
         }
 
         public SapphireDatabaseBuilder AddContext<TContextType>(
-            Action<DbContextOptionsBuilder> dbContextOptions = null,
+            Action<IServiceProvider, DbContextOptionsBuilder> optionsActions = null,
             string contextName = "Default")
-            where TContextType : SapphireDbContext
+            where TContextType : DbContext
         {
-            DbContextTypeContainer contextTypes = (DbContextTypeContainer)serviceCollection
+            DbContextTypeContainer contextTypes = (DbContextTypeContainer) serviceCollection
                 .FirstOrDefault(s => s.ServiceType == typeof(DbContextTypeContainer))?.ImplementationInstance;
+            
+            contextTypes?.AddContext(contextName, typeof(TContextType));
 
-            // ReSharper disable once PossibleNullReferenceException
-            contextTypes.AddContext(contextName, typeof(TContextType));
+            serviceCollection.AddDbContext<TContextType>((serviceProvider, dbContextOptions) =>
+            {
+                SapphireDbInterceptor dbInterceptor = serviceProvider.GetRequiredService<SapphireDbInterceptor>();
+                dbContextOptions.AddInterceptors(dbInterceptor);
+                
+                optionsActions?.Invoke(serviceProvider, dbContextOptions);
+            }, ServiceLifetime.Transient);
 
-            serviceCollection.AddDbContext<TContextType>(dbContextOptions, ServiceLifetime.Transient);
-
-            return this;
-        }
-
-        public SapphireDatabaseBuilder AddTopicConfiguration(string topic, Func<HttpInformation, bool> canSubscribe,
-            Func<HttpInformation, bool> canPublish)
-        {
-            MessageTopicHelper.RegisteredTopicAuthFunctions.Add(topic, new Tuple<Func<HttpInformation, bool>,
-                Func<HttpInformation, bool>>(canSubscribe, canPublish));
             return this;
         }
         
-        public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, object[], bool> filter)
+        public SapphireDatabaseBuilder AddContext<TContextType>(
+            Action<DbContextOptionsBuilder> optionsActions = null,
+            string contextName = "Default")
+            where TContextType : DbContext
+        {
+            AddContext<TContextType>((_, optionsBuilder) => optionsActions?.Invoke(optionsBuilder), contextName);
+            return this;
+        }
+
+        public SapphireDatabaseBuilder AddTopicConfiguration(string topic,
+            Func<IConnectionInformation, bool> canSubscribe,
+            Func<IConnectionInformation, bool> canPublish)
+        {
+            MessageTopicHelper.RegisteredTopicAuthFunctions.Add(topic, new Tuple<Func<IConnectionInformation, bool>,
+                Func<IConnectionInformation, bool>>(canSubscribe, canPublish));
+            return this;
+        }
+
+        public SapphireDatabaseBuilder AddMessageFilter(string name,
+            Func<IConnectionInformation, object[], bool> filter)
         {
             SapphireMessageSender.RegisteredMessageFilter.Add(name.ToLowerInvariant(), filter);
             return this;
         }
-        
-        public SapphireDatabaseBuilder AddMessageFilter(string name, Func<HttpInformation, bool> filter)
+
+        public SapphireDatabaseBuilder AddMessageFilter(string name, Func<IConnectionInformation, bool> filter)
         {
             SapphireMessageSender.RegisteredMessageFilter.Add(name.ToLowerInvariant(), filter);
             return this;

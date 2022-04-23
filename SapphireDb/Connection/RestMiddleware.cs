@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using SapphireDb.Command;
-using SapphireDb.Command.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -37,24 +37,15 @@ namespace SapphireDb.Connection
                 return;
             }
 
-            if (!AuthHelper.CheckApiAuth(context.Request.Headers["key"], context.Request.Headers["secret"], options))
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync(JsonHelper.Serialize(new WrongApiResponse()));
-                return;
-            }
-
             if (!requestPath.EndsWith("command"))
             {
                 requestPath += "command";
             }
 
-            ConnectionBase connection = connectionManager.GetConnection(context);
-
             StreamReader sr = new StreamReader(context.Request.Body);
             string requestBody = await sr.ReadToEndAsync();
-
-            CommandBase command = JsonHelper.DeserializeCommand(requestBody);
+            
+            CommandBase command = JsonHelper.DeserializeCommand(new JObject(requestBody));
             if (command != null)
             {
                 if (command.GetType().Name.ToLowerInvariant() != requestPath)
@@ -65,14 +56,14 @@ namespace SapphireDb.Connection
                 }
 
                 ResponseBase response = await commandExecutor.ExecuteCommand(command,
-                    serviceProvider.CreateScope().ServiceProvider, connection != null ? connection.Information : new HttpInformation(context, "Rest"), logger, connection);
+                    serviceProvider.CreateScope().ServiceProvider, new HttpConnectionInformation(context), logger);
 
                 if (response?.Error != null)
                 {
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 }
 
-                await context.Response.WriteAsync(JsonHelper.Serialize(response));
+                await context.Response.WriteAsync(JsonHelper.Serialize(response).ToString());
             }
             else
             {

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -23,10 +24,10 @@ namespace SapphireDb.Command.DeleteRange
             this.serviceProvider = serviceProvider;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, DeleteRangeCommand command,
+        public async Task<ResponseBase> Handle(IConnectionInformation context, DeleteRangeCommand command,
             ExecutionContext executionContext)
         {
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key == null)

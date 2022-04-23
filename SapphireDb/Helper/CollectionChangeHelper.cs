@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SapphireDb.Command.Subscribe;
+using SapphireDb.Connection;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
@@ -65,7 +66,7 @@ namespace SapphireDb.Helper
 
         public static List<ChangeResponse> CalculateRelativeAuthenticatedChanges(
             ModelAttributesInfo modelAttributesInfo,
-            List<ChangeResponse> allChanges, KeyValuePair<Type, string> property, HttpInformation connectionInformation,
+            List<ChangeResponse> allChanges, KeyValuePair<Type, string> property, IConnectionInformation connectionInformation,
             IServiceProvider requestServiceProvider)
         {
             if (!modelAttributesInfo.QueryEntryAuthAttributes.Any())

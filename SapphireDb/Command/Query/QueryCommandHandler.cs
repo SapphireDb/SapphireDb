@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
@@ -22,7 +24,7 @@ namespace SapphireDb.Command.Query
             this.databaseOptions = databaseOptions;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, QueryCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, QueryCommand command,
             ExecutionContext executionContext)
         {
             if (databaseOptions.DisableIncludePrefilter && command.Prefilters.Any(p => p is IncludePrefilter))
@@ -35,7 +37,7 @@ namespace SapphireDb.Command.Query
                 throw new SelectNotAllowedException(command.ContextName, command.CollectionName);
             }
             
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
             if (property.Key.GetModelAttributesInfo().DisableQueryAttribute != null)

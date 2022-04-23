@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Command.Query;
 using SapphireDb.Command.Subscribe;
@@ -14,10 +15,10 @@ namespace SapphireDb.Connection
 {
     public class SapphireChangeNotifier
     {
-        private readonly DbContextAccesor dbContextAccessor;
-        private readonly IServiceProvider serviceProvider;
-        private readonly DbContextTypeContainer contextTypeContainer;
-        private readonly SubscriptionManager subscriptionManager;
+        private readonly DbContextAccesor _dbContextAccessor;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly DbContextTypeContainer _contextTypeContainer;
+        private readonly SubscriptionManager _subscriptionManager;
 
         public SapphireChangeNotifier(
             DbContextAccesor dbContextAccessor,
@@ -25,16 +26,16 @@ namespace SapphireDb.Connection
             DbContextTypeContainer contextTypeContainer,
             SubscriptionManager subscriptionManager)
         {
-            this.dbContextAccessor = dbContextAccessor;
-            this.serviceProvider = serviceProvider.CreateScope().ServiceProvider;
-            this.contextTypeContainer = contextTypeContainer;
-            this.subscriptionManager = subscriptionManager;
+            _dbContextAccessor = dbContextAccessor;
+            _serviceProvider = serviceProvider.CreateScope().ServiceProvider;
+            _contextTypeContainer = contextTypeContainer;
+            _subscriptionManager = subscriptionManager;
         }
 
         public void HandleChanges(List<ChangeResponse> changes, Type dbContextType)
         {
             Guid handlingId = Guid.NewGuid();
-            string contextName = contextTypeContainer.GetName(dbContextType);
+            string contextName = _contextTypeContainer.GetName(dbContextType);
 
             Parallel.ForEach(changes.GroupBy(change => change.CollectionName),
                 collectionChanges =>
@@ -59,7 +60,7 @@ namespace SapphireDb.Connection
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(collectionChanges.Key);
             ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
             Dictionary<PrefilterContainer, List<Subscription>> equalCollectionSubscriptionsGrouping =
-                subscriptionManager.GetSubscriptions(contextName, collectionChanges.Key);
+                _subscriptionManager.GetSubscriptions(contextName, collectionChanges.Key);
 
             if (equalCollectionSubscriptionsGrouping == null)
             {
@@ -81,7 +82,7 @@ namespace SapphireDb.Connection
             IGrouping<string, ChangeResponse> collectionChanges, Guid handlingId)
         {
             List<CollectionSubscriptionsContainer> equalCollectionSubscriptions =
-                subscriptionManager.GetSubscriptionsWithInclude(contextName, collectionChanges.Key);
+                _subscriptionManager.GetSubscriptionsWithInclude(contextName, collectionChanges.Key);
 
             if (equalCollectionSubscriptions == null)
             {
@@ -115,8 +116,8 @@ namespace SapphireDb.Connection
             List<IPrefilterBase> prefilters = prefilterContainer.Prefilters;
 
             if (prefilters.Any(prefilter =>
-                prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter ||
-                prefilter is SkipPrefilter || prefilter is IncludePrefilter))
+                    prefilter is IAfterQueryPrefilter || prefilter is TakePrefilter ||
+                    prefilter is SkipPrefilter || prefilter is IncludePrefilter))
             {
                 HandleReloadOfCollectionData(dbContextType, property, prefilterContainer, equalCollectionSubscriptions,
                     handlingId);
@@ -142,7 +143,7 @@ namespace SapphireDb.Connection
                     List<ChangeResponse> connectionChanges =
                         CollectionChangeHelper.CalculateRelativeAuthenticatedChanges(modelAttributesInfo,
                             completeChanges,
-                            property, subscription.Connection.Information, serviceProvider);
+                            property, subscription.Connection, _serviceProvider);
 
                     ChangesResponse changesResponse = new ChangesResponse()
                     {
@@ -150,15 +151,15 @@ namespace SapphireDb.Connection
                         Changes = connectionChanges.Select(change =>
                         {
                             object value =
-                                change.Value.GetAuthenticatedQueryModel(subscription.Connection.Information,
-                                    serviceProvider);
+                                change.Value.GetAuthenticatedQueryModel(subscription.Connection,
+                                    _serviceProvider);
                             return change.CreateResponse(subscription.ReferenceId, value);
                         }).ToList()
                     };
 
                     if (changesResponse.Changes.Any())
                     {
-                        _ = subscription.Connection.Send(changesResponse);
+                        _ = subscription.Connection.Send(changesResponse, _serviceProvider);
                     }
                 });
             });
@@ -175,7 +176,7 @@ namespace SapphireDb.Connection
                     return;
                 }
 
-                SapphireDbContext db = dbContextAccessor.GetContext(dbContextType, serviceProvider);
+                DbContext db = _dbContextAccessor.GetContext(dbContextType, _serviceProvider);
 
                 IQueryable<object> collectionValues =
                     db.GetCollectionValues(property, prefilterContainer.Prefilters);
@@ -195,7 +196,7 @@ namespace SapphireDb.Connection
                             {
                                 ReferenceId = subscription.ReferenceId,
                                 Result = result
-                            });
+                            }, _serviceProvider);
                         });
                     });
                 }
@@ -211,13 +212,13 @@ namespace SapphireDb.Connection
                             {
                                 ReferenceId = subscription.ReferenceId,
                                 Result = values
-                                    .Where(v => property.Key.CanQueryEntry(subscription.Connection.Information,
-                                        serviceProvider, v))
+                                    .Where(v => property.Key.CanQueryEntry(subscription.Connection,
+                                        _serviceProvider, v))
                                     .Select(v =>
-                                        v.GetAuthenticatedQueryModel(subscription.Connection.Information,
-                                            serviceProvider))
+                                        v.GetAuthenticatedQueryModel(subscription.Connection,
+                                            _serviceProvider))
                                     .ToList()
-                            });
+                            }, _serviceProvider);
                         });
                     });
                 }

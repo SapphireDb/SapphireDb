@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using SapphireDb.Connection;
-using SapphireDb.Connection.Poll;
-using SapphireDb.Connection.SSE;
-using SapphireDb.Connection.Websocket;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -29,38 +25,20 @@ namespace SapphireDb.Extensions
 
             builder.Map("/sapphire", (sapphireApp) =>
             {
-                if (options.WebsocketInterface)
-                {
-                    sapphireApp.Map("/socket", (socket) =>
-                    {
-                        socket.UseWebSockets();
-                        socket.UseMiddleware<WebsocketMiddleware>();
-                    });
-                }
+                sapphireApp.UseRouting();
 
-                if (options.ServerSentEventsInterface || options.PollInterface || options.RestInterface)
+                sapphireApp.UseMiddleware<ApiAuthMiddleware>();
+                
+                sapphireApp.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapHub<SapphireDbHub>("/hub");
+                });
+
+                // TODO: rename rest interface 
+                if (options.RestInterface)
                 {
                     sapphireApp.Map("/api", (api) => { api.UseMiddleware<RestMiddleware>(); });
                 }
-
-                if (options.ServerSentEventsInterface)
-                {
-                    sapphireApp.Map("/sse", (sse) => { sse.UseMiddleware<SSEMiddleware>(); });
-                }
-
-                if (options.PollInterface)
-                {
-                    sapphireApp.Map("/poll", (poll) => { poll.UseMiddleware<PollMiddleware>(); });
-                }
-
-                sapphireApp.Map("/authToken", (authToken) =>
-                {
-                    authToken.Run(async (context) =>
-                    {
-                        bool authenticated = context.Request.Method == "POST" && context.User.Identity.IsAuthenticated;
-                        await context.Response.WriteAsync(authenticated.ToString().ToLowerInvariant());
-                    });
-                });
             });
 
             ExecuteApiBuilders(builder.ApplicationServices);
@@ -94,6 +72,7 @@ namespace SapphireDb.Extensions
             services.AddScoped<ISapphireDatabaseNotifier, SapphireDatabaseNotifier>();
 
             services.AddTransient<DbContextAccesor>();
+            services.AddTransient<SapphireDbInterceptor>();
 
             services.AddSingleton<ConnectionManager>();
             services.AddTransient<SapphireChangeNotifier>();
@@ -101,6 +80,11 @@ namespace SapphireDb.Extensions
             services.AddSingleton<SapphireMessageSender>();
 
             services.AddSingleton<SapphireStreamHelper>();
+
+            services.AddSignalR(config =>
+            {
+                config.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
+            }).AddNewtonsoftJsonProtocol();
             
             ActionMapper actionMapper = new ActionMapper();
             services.AddSingleton(actionMapper);

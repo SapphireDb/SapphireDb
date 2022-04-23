@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
 using SapphireDb.Models;
@@ -21,10 +23,10 @@ namespace SapphireDb.Command.CreateRange
             this.serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, CreateRangeCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, CreateRangeCommand command,
             ExecutionContext executionContext)
         {
-            SapphireDbContext db = GetContext(command.ContextName);
+            DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = db.GetType().GetDbSetType(command.CollectionName);
 
             if (property.Key == null)
@@ -41,7 +43,7 @@ namespace SapphireDb.Command.CreateRange
         }
 
         private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,
-            HttpInformation context, SapphireDbContext db)
+            IConnectionInformation context, DbContext db)
         {
             object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key))
                 .ToArray();
@@ -76,9 +78,9 @@ namespace SapphireDb.Command.CreateRange
             return response;
         }
 
-        public static CreateResponse SetPropertiesAndValidate<TEventAttribute>(SapphireDbContext db,
+        public static CreateResponse SetPropertiesAndValidate<TEventAttribute>(DbContext db,
             KeyValuePair<Type, string> property, object newValue,
-            HttpInformation context, IServiceProvider serviceProvider)
+            IConnectionInformation context, IServiceProvider serviceProvider)
             where TEventAttribute : ModelStoreEventAttributeBase
         {
             object newEntityObject = property.Key.SetFields(newValue);

@@ -1,9 +1,0 @@
-language: csharp
-mono: none
-sudo: required
-dist: xenial
-dotnet: 3.0
-
-script:
- - cd SapphireDb
- - dotnet build ./SapphireDb.csproj --configuration Release

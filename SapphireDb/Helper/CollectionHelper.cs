@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using SapphireDb.Attributes;
 using SapphireDb.Command;
 using SapphireDb.Command.Query;
 using SapphireDb.Command.QueryQuery;
+using SapphireDb.Connection;
 using SapphireDb.Internal;
 using SapphireDb.Internal.Prefilter;
 using SapphireDb.Models;
@@ -15,7 +17,7 @@ namespace SapphireDb.Helper
 {
     static class CollectionHelper
     {
-        public static IQueryable<object> GetCollectionValues(this SapphireDbContext db,
+        public static IQueryable<object> GetCollectionValues(this DbContext db,
             KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters)
         {
             IQueryable<object> collectionSet = db.GetValues(property);
@@ -28,7 +30,7 @@ namespace SapphireDb.Helper
             return collectionSet;
         }
 
-        public static KeyValuePair<Type, string> GetCollectionType(SapphireDbContext db, IQueryCommand command)
+        public static KeyValuePair<Type, string> GetCollectionType(DbContext db, IQueryCommand command)
         {
             Type dbContextType = db.GetType();
             KeyValuePair<Type, string> property = dbContextType.GetDbSetType(command.CollectionName);
@@ -41,8 +43,8 @@ namespace SapphireDb.Helper
             return property;
         }
         
-        public static ResponseBase GetCollection(SapphireDbContext db, IQueryCommand command, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters,
-            HttpInformation information, IServiceProvider serviceProvider)
+        public static ResponseBase GetCollection(DbContext db, IQueryCommand command, KeyValuePair<Type, string> property, List<IPrefilterBase> prefilters,
+            IConnectionInformation information, IServiceProvider serviceProvider)
         {
             if (!property.Key.CanQuery(information, serviceProvider))
             {
@@ -83,7 +85,7 @@ namespace SapphireDb.Helper
         }
 
         public static List<IPrefilterBase> GetQueryPrefilters(KeyValuePair<Type, string> property, QueryQueryCommand queryCommand,
-            HttpInformation information, IServiceProvider serviceProvider)
+            IConnectionInformation information, IServiceProvider serviceProvider)
         {
             ModelAttributesInfo modelAttributesInfo = property.Key.GetModelAttributesInfo();
             QueryAttribute query = modelAttributesInfo.QueryAttributes

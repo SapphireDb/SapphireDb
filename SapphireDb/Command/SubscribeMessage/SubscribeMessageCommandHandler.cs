@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
@@ -11,17 +12,19 @@ namespace SapphireDb.Command.SubscribeMessage
     class SubscribeMessageCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeMessageCommand>,
         INeedsConnection
     {
-        public ConnectionBase Connection { get; set; }
-        private readonly MessageSubscriptionManager subscriptionManager;
+        public SignalRConnection Connection { get; set; }
+        private readonly MessageSubscriptionManager _subscriptionManager;
+        private readonly IServiceProvider _serviceProvider;
 
         public SubscribeMessageCommandHandler(DbContextAccesor dbContextAccessor,
-            MessageSubscriptionManager subscriptionManager)
+            MessageSubscriptionManager subscriptionManager, IServiceProvider serviceProvider)
             : base(dbContextAccessor)
         {
-            this.subscriptionManager = subscriptionManager;
+            _subscriptionManager = subscriptionManager;
+            _serviceProvider = serviceProvider;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeMessageCommand command,
+        public Task<ResponseBase> Handle(IConnectionInformation context, SubscribeMessageCommand command,
             ExecutionContext executionContext)
         {
             if (!MessageTopicHelper.IsAllowedForSubscribe(command.Topic, context))
@@ -29,7 +32,7 @@ namespace SapphireDb.Command.SubscribeMessage
                 throw new UnauthorizedException("Not allowed to subscribe this topic(s)");
             }
 
-            subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);
+            _subscriptionManager.AddSubscription(command.Topic, command.ReferenceId, Connection);
 
             SapphireMessageSender.RetainedTopicMessages
                 .Where(m => m.Key.MatchesGlobPattern(command.Topic))
@@ -41,7 +44,7 @@ namespace SapphireDb.Command.SubscribeMessage
                         ReferenceId = command.ReferenceId,
                         Message = retainedMessage.Value,
                         Topic = retainedMessage.Key
-                    });
+                    }, _serviceProvider);
                 });
             
             return Task.FromResult<ResponseBase>(null);

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using SapphireDb.Connection;
 using SapphireDb.Models;
 
 namespace SapphireDb.Command
@@ -7,6 +8,6 @@ namespace SapphireDb.Command
     internal interface ICommandHandler<T>
         where T : CommandBase
     {
-        Task<ResponseBase> Handle(HttpInformation context, T command, ExecutionContext executionContext);
+        Task<ResponseBase> Handle(IConnectionInformation context, T command, ExecutionContext executionContext);
     }
 }

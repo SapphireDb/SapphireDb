@@ -4,6 +4,6 @@ namespace SapphireDb.Command
 {
     interface INeedsConnection
     {
-        ConnectionBase Connection { get; set; }
+        SignalRConnection Connection { get; set; }
     }
 }

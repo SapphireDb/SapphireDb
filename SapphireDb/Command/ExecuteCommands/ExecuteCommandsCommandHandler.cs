@@ -13,7 +13,7 @@ namespace SapphireDb.Command.ExecuteCommands
         private readonly IServiceProvider serviceProvider;
         private readonly CommandExecutor commandExecutor;
         private readonly ILogger<ExecuteCommandsCommandHandler> logger;
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
 
         public ExecuteCommandsCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider, CommandExecutor commandExecutor, ILogger<ExecuteCommandsCommandHandler> logger)
             : base(contextAccessor)
@@ -23,7 +23,7 @@ namespace SapphireDb.Command.ExecuteCommands
             this.logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommandsCommand command,
+        public async Task<ResponseBase> Handle(IConnectionInformation context, ExecuteCommandsCommand command,
             ExecutionContext executionContext)
         {
             List<ExecuteCommandsResultResponse> results = new List<ExecuteCommandsResultResponse>();

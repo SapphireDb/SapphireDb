@@ -6,6 +6,6 @@ namespace SapphireDb.Models
     {
         public string ReferenceId { get; set; }
         
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
     }
 }

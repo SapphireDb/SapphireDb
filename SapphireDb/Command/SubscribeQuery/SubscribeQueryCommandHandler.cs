@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Internal;
@@ -11,7 +12,7 @@ namespace SapphireDb.Command.SubscribeQuery
 {
     class SubscribeQueryCommandHandler : CommandHandlerBase, ICommandHandler<SubscribeQueryCommand>, INeedsConnection
     {
-        public ConnectionBase Connection { get; set; }
+        public SignalRConnection Connection { get; set; }
         private readonly IServiceProvider serviceProvider;
         private readonly SubscriptionManager subscriptionManager;
 
@@ -23,14 +24,14 @@ namespace SapphireDb.Command.SubscribeQuery
             this.subscriptionManager = subscriptionManager;
         }
 
-        public Task<ResponseBase> Handle(HttpInformation context, SubscribeQueryCommand queryCommand,
+        public Task<ResponseBase> Handle(IConnectionInformation context, SubscribeQueryCommand queryCommand,
             ExecutionContext executionContext)
         {
-            SapphireDbContext db = GetContext(queryCommand.ContextName);
+            DbContext db = GetContext(queryCommand.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, queryCommand);
 
             List<IPrefilterBase> prefilters =
-                CollectionHelper.GetQueryPrefilters(property, queryCommand, Connection.Information, serviceProvider);
+                CollectionHelper.GetQueryPrefilters(property, queryCommand, Connection, serviceProvider);
             
             ResponseBase response = CollectionHelper.GetCollection(db, queryCommand, property, prefilters, context, serviceProvider);
             

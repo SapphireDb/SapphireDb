@@ -2,6 +2,7 @@
 using System.Reflection;
 using SapphireDb.Actions;
 using SapphireDb.Attributes;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Models.SapphireApiBuilder
@@ -17,7 +18,7 @@ namespace SapphireDb.Models.SapphireApiBuilder
         }
 
         public SapphireActionHandlerBuilder<T> AddActionAuth(string policies = null,
-            Func<HttpInformation, bool> function = null)
+            Func<IConnectionInformation, bool> function = null)
         {
             ActionAuthAttribute attribute = new ActionAuthAttribute(policies);
 

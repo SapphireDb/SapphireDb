@@ -17,21 +17,21 @@ namespace SapphireDb.Command.Execute
 {
     class ExecuteCommandHandler : CommandHandlerBase, ICommandHandler<ExecuteCommand>, INeedsConnection
     {
-        private readonly ActionMapper actionMapper;
-        private readonly IServiceProvider serviceProvider;
-        private readonly ILogger<ExecuteCommandHandler> logger;
-        public ConnectionBase Connection { get; set; }
+        private readonly ActionMapper _actionMapper;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<ExecuteCommandHandler> _logger;
+        public SignalRConnection Connection { get; set; }
 
         public ExecuteCommandHandler(DbContextAccesor contextAccessor, ActionMapper actionMapper,
             IServiceProvider serviceProvider, ILogger<ExecuteCommandHandler> logger)
             : base(contextAccessor)
         {
-            this.actionMapper = actionMapper;
-            this.serviceProvider = serviceProvider;
-            this.logger = logger;
+            _actionMapper = actionMapper;
+            _serviceProvider = serviceProvider;
+            _logger = logger;
         }
 
-        public async Task<ResponseBase> Handle(HttpInformation context, ExecuteCommand command,
+        public async Task<ResponseBase> Handle(IConnectionInformation context, ExecuteCommand command,
             ExecutionContext executionContext)
         {
             try
@@ -48,7 +48,7 @@ namespace SapphireDb.Command.Execute
             }
         }
 
-        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, HttpInformation context, ExecutionContext executionContext)
+        private async Task<ResponseBase> GetActionDetails(ExecuteCommand command, IConnectionInformation context, ExecutionContext executionContext)
         {
             string[] actionParts = command?.Action.Split('.');
 
@@ -60,21 +60,21 @@ namespace SapphireDb.Command.Execute
             string actionHandlerName = actionParts[0];
             string actionName = actionParts[1];
 
-            Type actionHandlerType = actionMapper.GetHandler(actionHandlerName);
+            Type actionHandlerType = _actionMapper.GetHandler(actionHandlerName);
 
             if (actionHandlerType == null)
             {
                 throw new ActionHandlerNotFoundException(actionHandlerName);
             }
             
-            MethodInfo actionMethod = actionMapper.GetAction(actionName, actionHandlerType);
+            MethodInfo actionMethod = _actionMapper.GetAction(actionName, actionHandlerType);
 
             if (actionMethod == null)
             {
                 throw new ActionNotFoundException(actionHandlerName, actionName);
             }
             
-            ActionHandlerBase actionHandler = (ActionHandlerBase) serviceProvider.GetService(actionHandlerType);
+            ActionHandlerBase actionHandler = (ActionHandlerBase) _serviceProvider.GetService(actionHandlerType);
 
             if (actionHandler == null)
             {
@@ -84,12 +84,12 @@ namespace SapphireDb.Command.Execute
             actionHandler.connection = Connection;
             actionHandler.executeCommand = command;
 
-            if (!actionHandlerType.CanExecuteAction(context, actionHandler, serviceProvider))
+            if (!actionHandlerType.CanExecuteAction(context, actionHandler, _serviceProvider))
             {
                 throw new UnauthorizedException("User is not allowed to execute actions of this handler");
             }
 
-            if (!actionMethod.CanExecuteAction(context, actionHandler, serviceProvider))
+            if (!actionMethod.CanExecuteAction(context, actionHandler, _serviceProvider))
             {
                 throw new UnauthorizedException("User is not allowed to execute action");
             }
@@ -100,7 +100,7 @@ namespace SapphireDb.Command.Execute
         private async Task<ResponseBase> ExecuteAction(ActionHandlerBase actionHandler, ExecuteCommand command,
             MethodInfo actionMethod, ExecutionContext executionContext)
         {
-            logger.LogDebug("Execution of {ActionHandlerName}.{ActionName} started. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName,
+            _logger.LogDebug("Execution of {ActionHandlerName}.{ActionName} started. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName,
                 actionMethod.Name, Connection.Id, executionContext.Id);
 
             object result = actionMethod.Invoke(actionHandler, GetParameters(actionMethod, command));
@@ -117,7 +117,7 @@ namespace SapphireDb.Command.Execute
                 }
             }
 
-            logger.LogInformation("Executed {ActionHandlerName}.{ActionName}. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id, executionContext.Id);
+            _logger.LogInformation("Executed {ActionHandlerName}.{ActionName}. ConnectionId: {SapphireConnectionId}, ExecutionId: {ExecutionId}", actionMethod.DeclaringType?.FullName, actionMethod.Name, Connection.Id, executionContext.Id);
 
             return new ExecuteResponse()
             {
@@ -139,8 +139,8 @@ namespace SapphireDb.Command.Execute
                     parameter.ParameterType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>))
                 {
                     SapphireStreamHelper streamHelper =
-                        (SapphireStreamHelper) serviceProvider.GetService(typeof(SapphireStreamHelper));
-                    return streamHelper.OpenStreamChannel(Connection, command, parameter.ParameterType);
+                        (SapphireStreamHelper) _serviceProvider.GetService(typeof(SapphireStreamHelper));
+                    return streamHelper.OpenStreamChannel(Connection, command, parameter.ParameterType, _serviceProvider);
                 }
 
                 JToken parameterValue = command.Parameters[parameter.Position];

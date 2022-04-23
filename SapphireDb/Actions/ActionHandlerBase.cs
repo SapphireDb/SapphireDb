@@ -1,13 +1,21 @@
-﻿using SapphireDb.Command.Execute;
+﻿using System;
+using SapphireDb.Command.Execute;
 using SapphireDb.Connection;
 
 namespace SapphireDb.Actions
 {
     public class ActionHandlerBase
     {
-        public ConnectionBase connection;
+        private readonly IServiceProvider _serviceProvider;
+        
+        public SignalRConnection connection;
         public ExecuteCommand executeCommand;
 
+        public ActionHandlerBase(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+        
         public void Notify(object data)
         {
             if (connection != null)
@@ -17,7 +25,7 @@ namespace SapphireDb.Actions
                     ReferenceId = executeCommand.ReferenceId,
                     Result = data,
                     Type = ExecuteResponse.ExecuteResponseType.Notify
-                });
+                }, _serviceProvider);
             }
         }
         
@@ -30,7 +38,7 @@ namespace SapphireDb.Actions
                     ReferenceId = executeCommand.ReferenceId,
                     Result = data,
                     Type = ExecuteResponse.ExecuteResponseType.Async
-                });
+                }, _serviceProvider);
             }
         }
     }

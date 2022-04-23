@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Newtonsoft.Json;
 using SapphireDb.Helper;
 
 namespace SapphireDb.Command.Subscribe
@@ -16,7 +15,7 @@ namespace SapphireDb.Command.Subscribe
         public ChangeResponse(EntityEntry change)
         {
             Value = change.Entity;
-            CollectionName = ((SapphireDbContext)change.Context).GetType().GetDbSetTypes()[change.Metadata.ClrType].ToLowerInvariant();
+            CollectionName = change.Context.GetType().GetDbSetTypes()[change.Metadata.ClrType].ToLowerInvariant();
 
             switch (change.State)
             {

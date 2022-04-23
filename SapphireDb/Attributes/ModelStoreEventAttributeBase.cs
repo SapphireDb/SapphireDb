@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using SapphireDb.Connection;
 using SapphireDb.Helper;
 using SapphireDb.Models;
 
@@ -11,25 +12,25 @@ namespace SapphireDb.Attributes
 
         public MethodInfo BeforeFunction { get; set; }
         
-        public Action<object, object, HttpInformation> BeforeLambda { get; set; }
+        public Action<object, object, IConnectionInformation> BeforeLambda { get; set; }
         
         public string BeforeSave { get; set; }
 
         public MethodInfo BeforeSaveFunction { get; set; }
         
-        public Action<object, object, HttpInformation> BeforeSaveLambda { get; set; }
+        public Action<object, object, IConnectionInformation> BeforeSaveLambda { get; set; }
         
         public string After { get; set; }
         
         public MethodInfo AfterFunction { get; set; }
         
-        public Action<object, object, HttpInformation> AfterLambda { get; set; }
+        public Action<object, object, IConnectionInformation> AfterLambda { get; set; }
         
         public string InsteadOf { get; set; }
         
         public MethodInfo InsteadOfFunction { get; set; }
         
-        public Action<object, object, HttpInformation> InsteadOfLambda { get; set; }
+        public Action<object, object, IConnectionInformation> InsteadOfLambda { get; set; }
 
         public ModelStoreEventAttributeBase(string before = null, string beforeSave = null, string after = null, string insteadOf = null)
         {

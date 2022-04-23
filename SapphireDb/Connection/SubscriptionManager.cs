@@ -14,7 +14,7 @@ namespace SapphireDb.Connection
             new Dictionary<string, Dictionary<string, Dictionary<PrefilterContainer, List<Subscription>>>>(StringComparer.InvariantCultureIgnoreCase);
 
         public void AddSubscription(string contextName, string collectionName, List<IPrefilterBase> prefilters,
-            ConnectionBase connection, string referenceId)
+            SignalRConnection connection, string referenceId)
         {
             contextName = contextName.ToLowerInvariant();
             collectionName = collectionName.ToLowerInvariant();
@@ -88,7 +88,7 @@ namespace SapphireDb.Connection
             }
         }
 
-        public void RemoveConnectionSubscriptions(Guid connectionId)
+        public void RemoveConnectionSubscriptions(string connectionId)
         {
             try
             {
