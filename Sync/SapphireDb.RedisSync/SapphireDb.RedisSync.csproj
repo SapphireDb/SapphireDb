@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SapphireDb\SapphireDb.csproj" />
+      <ProjectReference Include="..\..\SapphireDb\SapphireDb.csproj" />
     </ItemGroup>
 
 </Project>

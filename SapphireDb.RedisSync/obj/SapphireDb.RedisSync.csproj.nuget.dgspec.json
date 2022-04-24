@@ -1,0 +1,172 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb.RedisSync\\SapphireDb.RedisSync.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb.RedisSync\\SapphireDb.RedisSync.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb.RedisSync\\SapphireDb.RedisSync.csproj",
+        "projectName": "SapphireDb.RedisSync",
+        "projectPath": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb.RedisSync\\SapphireDb.RedisSync.csproj",
+        "packagesPath": "C:\\Users\\morri\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb.RedisSync\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\morri\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\SapphireDb.csproj": {
+                "projectPath": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\SapphireDb.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.SourceLink.GitHub": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.1.1, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.2.88, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\SapphireDb.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\SapphireDb.csproj",
+        "projectName": "SapphireDb",
+        "projectPath": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\SapphireDb.csproj",
+        "packagesPath": "C:\\Users\\morri\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\morri\\Documents\\Projekte\\produktiv\\SapphireDb-new\\SapphireDb\\SapphireDb\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\morri\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authorization": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.2.2, )"
+            },
+            "Microsoft.AspNetCore.Http.Features": {
+              "target": "Package",
+              "version": "[5.0.14, )"
+            },
+            "Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "Microsoft.SourceLink.GitHub": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.1.1, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ﻿<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Basic" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
-    <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/Basic/Basic.csproj" />
+    <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/Examples/Basic/Basic.csproj" />
     <option name="LAUNCH_PROFILE_TFM" value="net6.0" />
     <option name="LAUNCH_PROFILE_NAME" value="Basic" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
