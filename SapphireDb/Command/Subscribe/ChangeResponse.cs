@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using SapphireDb.Helper;
+using SapphireDb.Models;
 
 namespace SapphireDb.Command.Subscribe
 {
@@ -15,7 +18,16 @@ namespace SapphireDb.Command.Subscribe
         public ChangeResponse(EntityEntry change)
         {
             Value = change.Entity;
-            CollectionName = change.Context.GetType().GetDbSetTypes()[change.Metadata.ClrType].ToLowerInvariant();
+            
+            Dictionary<Type, string> dbSetTypes = change.Context.GetType().GetDbSetTypes();
+            if (!dbSetTypes.ContainsKey(change.Metadata.ClrType) || change.Metadata.ClrType == typeof(SapphireDbFile))
+            {
+                ValidChange = false;
+            }
+            else
+            {
+                CollectionName = dbSetTypes[change.Metadata.ClrType].ToLowerInvariant();
+            }
 
             switch (change.State)
             {
@@ -46,6 +58,9 @@ namespace SapphireDb.Command.Subscribe
             };
         }
 
+        [JsonIgnore]
+        public bool ValidChange { get; } = true;
+        
         public ChangeState State { get; set; }
 
         public object Value { get; set; }

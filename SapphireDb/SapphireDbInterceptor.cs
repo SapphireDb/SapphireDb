@@ -125,6 +125,7 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return eventData?.Context?.ChangeTracker.Entries()
             .Where(e => e.State == EntityState.Added || e.State == EntityState.Deleted || e.State == EntityState.Modified)
             .Select(e => new ChangeResponse(e))
+            .Where(c => c.ValidChange)
             .ToList();
     }
 
