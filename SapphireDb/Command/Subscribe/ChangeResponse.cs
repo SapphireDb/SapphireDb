@@ -20,7 +20,7 @@ namespace SapphireDb.Command.Subscribe
             Value = change.Entity;
             
             Dictionary<Type, string> dbSetTypes = change.Context.GetType().GetDbSetTypes();
-            if (!dbSetTypes.ContainsKey(change.Metadata.ClrType) || change.Metadata.ClrType == typeof(SapphireDbFile))
+            if (change.Metadata.ClrType == typeof(SapphireDbFile) || !dbSetTypes.ContainsKey(change.Metadata.ClrType))
             {
                 ValidChange = false;
             }
