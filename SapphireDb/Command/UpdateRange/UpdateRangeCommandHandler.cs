@@ -18,11 +18,13 @@ namespace SapphireDb.Command.UpdateRange
     class UpdateRangeCommandHandler : CommandHandlerBase, ICommandHandler<UpdateRangeCommand>
     {
         private readonly IServiceProvider serviceProvider;
+        private readonly SapphireDatabaseOptions _databaseOptions;
 
-        public UpdateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
+        public UpdateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider, SapphireDatabaseOptions databaseOptions)
             : base(contextAccessor)
         {
             this.serviceProvider = serviceProvider;
+            _databaseOptions = databaseOptions;
         }
 
         public async Task<ResponseBase> Handle(IConnectionInformation context, UpdateRangeCommand command,
@@ -36,7 +38,8 @@ namespace SapphireDb.Command.UpdateRange
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
-            if (property.Key.GetModelAttributesInfo().DisableUpdateAttribute != null)
+            if (property.Key.GetModelAttributesInfo().DisableUpdateAttribute != null ||
+                _databaseOptions.OnlyIncludedEntities && property.Key.GetModelAttributesInfo().IncludeEntityAttribute == null)
             {
                 throw new OperationDisabledException("Update", command.ContextName, command.CollectionName);
             }

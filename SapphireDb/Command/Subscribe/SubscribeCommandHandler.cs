@@ -44,7 +44,8 @@ namespace SapphireDb.Command.Subscribe
             DbContext db = GetContext(command.ContextName);
             KeyValuePair<Type, string> property = CollectionHelper.GetCollectionType(db, command);
             
-            if (property.Key.GetModelAttributesInfo().DisableQueryAttribute != null)
+            if (property.Key.GetModelAttributesInfo().DisableQueryAttribute != null ||
+                databaseOptions.OnlyIncludedEntities && property.Key.GetModelAttributesInfo().IncludeEntityAttribute == null)
             {
                 throw new OperationDisabledException("Query", command.ContextName, command.CollectionName);
             }

@@ -17,11 +17,14 @@ namespace SapphireDb.Command.DeleteRange
     class DeleteRangeCommandHandler : CommandHandlerBase, ICommandHandler<DeleteRangeCommand>
     {
         private readonly IServiceProvider serviceProvider;
+        private readonly SapphireDatabaseOptions _databaseOptions;
 
-        public DeleteRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
+        public DeleteRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider,
+            SapphireDatabaseOptions databaseOptions)
             : base(contextAccessor)
         {
             this.serviceProvider = serviceProvider;
+            _databaseOptions = databaseOptions;
         }
 
         public async Task<ResponseBase> Handle(IConnectionInformation context, DeleteRangeCommand command,
@@ -35,7 +38,8 @@ namespace SapphireDb.Command.DeleteRange
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
             
-            if (property.Key.GetModelAttributesInfo().DisableDeleteAttribute != null)
+            if (property.Key.GetModelAttributesInfo().DisableDeleteAttribute != null ||
+                _databaseOptions.OnlyIncludedEntities && property.Key.GetModelAttributesInfo().IncludeEntityAttribute == null)
             {
                 throw new OperationDisabledException("Delete", command.ContextName, command.CollectionName);
             }

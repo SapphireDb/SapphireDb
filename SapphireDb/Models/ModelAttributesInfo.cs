@@ -40,6 +40,8 @@ namespace SapphireDb.Models
         
         public DisableQueryAttribute DisableQueryAttribute { get; set; }
         
+        public IncludeEntityAttribute IncludeEntityAttribute { get; set; }
+        
         public ModelAttributesInfo(Type modelType)
         {
             QueryAuthAttributes = GetAuthAttributesOfClassOrDirectTopClass<QueryAuthAttribute>(modelType);
@@ -62,6 +64,8 @@ namespace SapphireDb.Models
             DisableUpdateAttribute = modelType.GetCustomAttribute<DisableUpdateAttribute>(true);
             DisableDeleteAttribute = modelType.GetCustomAttribute<DisableDeleteAttribute>(true);
             DisableQueryAttribute = modelType.GetCustomAttribute<DisableQueryAttribute>(true);
+
+            IncludeEntityAttribute = modelType.GetCustomAttribute<IncludeEntityAttribute>(true);
         }
 
         private List<T> GetAuthAttributesOfClassOrDirectTopClass<T>(Type modelType) where T : AuthAttributeBase

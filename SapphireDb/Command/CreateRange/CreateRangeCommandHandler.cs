@@ -16,11 +16,14 @@ namespace SapphireDb.Command.CreateRange
     class CreateRangeCommandHandler : CommandHandlerBase, ICommandHandler<CreateRangeCommand>
     {
         private readonly IServiceProvider serviceProvider;
+        private readonly SapphireDatabaseOptions _databaseOptions;
 
-        public CreateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider)
+        public CreateRangeCommandHandler(DbContextAccesor contextAccessor, IServiceProvider serviceProvider,
+            SapphireDatabaseOptions databaseOptions)
             : base(contextAccessor)
         {
             this.serviceProvider = serviceProvider;
+            _databaseOptions = databaseOptions;
         }
 
         public Task<ResponseBase> Handle(IConnectionInformation context, CreateRangeCommand command,
@@ -34,7 +37,8 @@ namespace SapphireDb.Command.CreateRange
                 throw new CollectionNotFoundException(command.ContextName, command.CollectionName);
             }
 
-            if (property.Key.GetModelAttributesInfo().DisableCreateAttribute != null)
+            if (property.Key.GetModelAttributesInfo().DisableCreateAttribute != null ||
+                _databaseOptions.OnlyIncludedEntities && property.Key.GetModelAttributesInfo().IncludeEntityAttribute == null)
             {
                 throw new OperationDisabledException("Create", command.ContextName, command.CollectionName);
             }

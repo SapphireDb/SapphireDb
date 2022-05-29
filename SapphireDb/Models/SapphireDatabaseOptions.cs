@@ -15,11 +15,13 @@ namespace SapphireDb.Models
             {
                 CanExecuteCommand = (command, context) => context.User.Identity.IsAuthenticated;
                 IsAllowedToSendMessages = (context) => context.User.Identity.IsAuthenticated;
+                OnlyIncludedEntities = true;
                 DisableIncludePrefilter = true;
                 DisableSelectPrefilter = true;
             }
             else
             {
+                OnlyIncludedEntities = true;
                 CanExecuteCommand = (command, context) => true;
                 IsAllowedToSendMessages = (context) => true;
             }
@@ -30,6 +32,7 @@ namespace SapphireDb.Models
             // TODO: add automatic parsing
             ApiConfigurations = configuration.GetSection(nameof(ApiConfigurations)).GetChildren().Select((section) => new ApiConfiguration(section)).ToList();
             RestInterface = configuration[nameof(RestInterface)]?.ToLowerInvariant() != "false";
+            OnlyIncludedEntities = configuration[nameof(OnlyIncludedEntities)]?.ToLowerInvariant() != "false";
             DisableIncludePrefilter = configuration[nameof(DisableIncludePrefilter)]?.ToLowerInvariant() == "true";
             DisableSelectPrefilter = configuration[nameof(DisableSelectPrefilter)]?.ToLowerInvariant() == "true";
         }
@@ -41,6 +44,8 @@ namespace SapphireDb.Models
         public Func<IConnectionInformation, bool> IsAllowedToSendMessages { get; set; }
 
         public bool RestInterface { get; set; } = true;
+
+        public bool OnlyIncludedEntities { get; set; } = false;
 
         public bool DisableIncludePrefilter { get; set; } = false;
 

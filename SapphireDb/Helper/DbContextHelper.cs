@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using SapphireDb.Attributes;
 
 namespace SapphireDb.Helper
 {
@@ -15,7 +17,8 @@ namespace SapphireDb.Helper
             if (!DbContextSets.ContainsKey(dbContextType))
             {
                 Dictionary<Type, string> sets = dbContextType.GetProperties()
-                    .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
+                    .Where(p => p.PropertyType.IsGenericType &&
+                                p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>))
                     .ToDictionary(p => p.PropertyType.GenericTypeArguments.FirstOrDefault(), p => p.Name);
 
                 DbContextSets.TryAdd(dbContextType, sets);
