@@ -29,11 +29,11 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
 
-    public async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result,
+    public ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result,
         CancellationToken cancellationToken = new CancellationToken())
     {
         _currentSaveChanges.AddRange(GetChanges(eventData));
-        return result;
+        return ValueTask.FromResult(result);
     }
     
     public int SavedChanges(SaveChangesCompletedEventData eventData, int result)
@@ -52,7 +52,7 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
 
-    public async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
+    public ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
         CancellationToken cancellationToken = new CancellationToken())
     {
         if (_transactionActive)
@@ -65,7 +65,7 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         }
         
         _currentSaveChanges.Clear();
-        return result;
+        return ValueTask.FromResult(result);
     }
     
     public void SaveChangesFailed(DbContextErrorEventData eventData)
@@ -73,10 +73,11 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         _currentSaveChanges.Clear();
     }
 
-    public async Task SaveChangesFailedAsync(DbContextErrorEventData eventData,
+    public Task SaveChangesFailedAsync(DbContextErrorEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
         _currentSaveChanges.Clear();
+        return Task.CompletedTask;
     }
     
     public DbTransaction TransactionStarted(DbConnection connection, TransactionEndEventData eventData, DbTransaction result)
@@ -85,11 +86,11 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
     
-    public async ValueTask<DbTransaction> TransactionStartedAsync(DbConnection connection, TransactionEndEventData eventData, DbTransaction result,
+    public ValueTask<DbTransaction> TransactionStartedAsync(DbConnection connection, TransactionEndEventData eventData, DbTransaction result,
         CancellationToken cancellationToken = new CancellationToken())
     {
         _transactionActive = true;
-        return result;
+        return ValueTask.FromResult(result);
     }
     
     public void TransactionCommitted(DbTransaction transaction, TransactionEndEventData eventData)
@@ -99,12 +100,13 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         _completeTransactionChanges.Clear();
     }
     
-    public async Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData eventData,
+    public Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
         _transactionActive = false;
         _notifier.HandleChanges(_completeTransactionChanges.ToList(), eventData.Context?.GetType());
         _completeTransactionChanges.Clear();
+        return Task.CompletedTask;
     }
 
     public void TransactionRolledBack(DbTransaction transaction, TransactionEndEventData eventData)
@@ -113,11 +115,12 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         _completeTransactionChanges.Clear();
     }
     
-    public async Task TransactionRolledBackAsync(DbTransaction transaction, TransactionEndEventData eventData,
+    public Task TransactionRolledBackAsync(DbTransaction transaction, TransactionEndEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
         _transactionActive = false;
         _completeTransactionChanges.Clear();
+        return Task.CompletedTask;
     }
     
     private List<ChangeResponse> GetChanges(DbContextEventData eventData)
@@ -136,10 +139,10 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
 
-    public async ValueTask<InterceptionResult<DbTransaction>> TransactionStartingAsync(DbConnection connection, TransactionStartingEventData eventData,
+    public ValueTask<InterceptionResult<DbTransaction>> TransactionStartingAsync(DbConnection connection, TransactionStartingEventData eventData,
         InterceptionResult<DbTransaction> result, CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
     public DbTransaction TransactionUsed(DbConnection connection, TransactionEventData eventData, DbTransaction result)
@@ -147,10 +150,10 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
 
-    public async ValueTask<DbTransaction> TransactionUsedAsync(DbConnection connection, TransactionEventData eventData, DbTransaction result,
+    public ValueTask<DbTransaction> TransactionUsedAsync(DbConnection connection, TransactionEventData eventData, DbTransaction result,
         CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
     public InterceptionResult TransactionCommitting(DbTransaction transaction, TransactionEventData eventData,
@@ -159,10 +162,10 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
     
-    public async ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData eventData,
+    public ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData eventData,
         InterceptionResult result, CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
     public InterceptionResult TransactionRollingBack(DbTransaction transaction, TransactionEventData eventData,
@@ -171,10 +174,10 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
         return result;
     }
 
-    public async ValueTask<InterceptionResult> TransactionRollingBackAsync(DbTransaction transaction, TransactionEventData eventData,
+    public ValueTask<InterceptionResult> TransactionRollingBackAsync(DbTransaction transaction, TransactionEventData eventData,
         InterceptionResult result, CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
     public InterceptionResult CreatingSavepoint(DbTransaction transaction, TransactionEventData eventData,
@@ -187,15 +190,16 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
     {
     }
 
-    public async ValueTask<InterceptionResult> CreatingSavepointAsync(DbTransaction transaction, TransactionEventData eventData, InterceptionResult result,
+    public ValueTask<InterceptionResult> CreatingSavepointAsync(DbTransaction transaction, TransactionEventData eventData, InterceptionResult result,
         CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
-    public async Task CreatedSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
+    public Task CreatedSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
+        return Task.CompletedTask;
     }
 
     public InterceptionResult RollingBackToSavepoint(DbTransaction transaction, TransactionEventData eventData,
@@ -208,15 +212,16 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
     {
     }
 
-    public async ValueTask<InterceptionResult> RollingBackToSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
+    public ValueTask<InterceptionResult> RollingBackToSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
         InterceptionResult result, CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
-    public async Task RolledBackToSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
+    public Task RolledBackToSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
+        return Task.CompletedTask;
     }
 
     public InterceptionResult ReleasingSavepoint(DbTransaction transaction, TransactionEventData eventData,
@@ -229,23 +234,25 @@ public class SapphireDbInterceptor : IDbTransactionInterceptor, ISaveChangesInte
     {
     }
 
-    public async ValueTask<InterceptionResult> ReleasingSavepointAsync(DbTransaction transaction, TransactionEventData eventData, InterceptionResult result,
+    public ValueTask<InterceptionResult> ReleasingSavepointAsync(DbTransaction transaction, TransactionEventData eventData, InterceptionResult result,
         CancellationToken cancellationToken = new CancellationToken())
     {
-        return result;
+        return ValueTask.FromResult(result);
     }
 
-    public async Task ReleasedSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
+    public Task ReleasedSavepointAsync(DbTransaction transaction, TransactionEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
+        return Task.CompletedTask;
     }
 
     public void TransactionFailed(DbTransaction transaction, TransactionErrorEventData eventData)
     {
     }
 
-    public async Task TransactionFailedAsync(DbTransaction transaction, TransactionErrorEventData eventData,
+    public Task TransactionFailedAsync(DbTransaction transaction, TransactionErrorEventData eventData,
         CancellationToken cancellationToken = new CancellationToken())
     {
+        return Task.CompletedTask;
     }
 }
