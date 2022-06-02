@@ -19,6 +19,10 @@ namespace SapphireDb.Models
         
         public MergeConflictResolutionModeAttribute MergeConflictResolutionModeAttribute { get; set; }
 
+        public ConcealAttribute ConcealAttribute { get; set; }
+
+        public ExposeAttribute ExposeAttribute { get; set; }
+
         public PropertyAttributesInfo(PropertyInfo propertyInfo)
         {
             PropertyInfo = propertyInfo;
@@ -27,6 +31,8 @@ namespace SapphireDb.Models
             UpdateableAttribute = PropertyInfo.GetCustomAttribute<UpdateableAttribute>(false);
             NonCreatableAttribute = PropertyInfo.GetCustomAttribute<NonCreatableAttribute>(false);
             MergeConflictResolutionModeAttribute = PropertyInfo.GetCustomAttribute<MergeConflictResolutionModeAttribute>();
+            ConcealAttribute = PropertyInfo.GetCustomAttribute<ConcealAttribute>();
+            ExposeAttribute = PropertyInfo.GetCustomAttribute<ExposeAttribute>();
         }
 
         private List<T> GetCustomAttributes<T>() where T : AuthAttributeBase

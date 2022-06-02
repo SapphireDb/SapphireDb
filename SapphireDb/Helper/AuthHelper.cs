@@ -36,8 +36,24 @@ namespace SapphireDb.Helper
         }
 
         public static bool CanQuery(this PropertyAttributesInfo pi, IConnectionInformation connectionInformation, object entityObject,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider, bool propertyWhitelist, bool propertyBlacklist)
         {
+            if (propertyWhitelist)
+            {
+                if (pi.ExposeAttribute == null)
+                {
+                    return false;
+                }
+            }
+
+            if (propertyBlacklist)
+            {
+                if (pi.ConcealAttribute != null)
+                {
+                    return false;
+                }
+            }
+            
             return HandleAuthAttributes(pi.QueryAuthAttributes, connectionInformation,
                 SapphireAuthResource.OperationTypeEnum.Query, entityObject, serviceProvider);
         }
@@ -75,7 +91,10 @@ namespace SapphireDb.Helper
         {
             PropertyAttributesInfo[] propertyInfos = model.GetType().GetPropertyAttributesInfos();
 
-            if (propertyInfos.All(pi => !pi.QueryAuthAttributes.Any()))
+            bool usePropertyWhitelist = propertyInfos.Any(pi => pi.ExposeAttribute != null); 
+            bool usePropertyBlacklist = propertyInfos.Any(pi => pi.ConcealAttribute != null);
+            
+            if (propertyInfos.All(pi => !pi.QueryAuthAttributes.Any()) && !usePropertyBlacklist && !usePropertyWhitelist)
             {
                 return model;
             }
@@ -84,7 +103,7 @@ namespace SapphireDb.Helper
 
             foreach (PropertyAttributesInfo pi in propertyInfos)
             {
-                if (pi.CanQuery(connectionInformation, model, serviceProvider))
+                if (pi.CanQuery(connectionInformation, model, serviceProvider, usePropertyWhitelist, usePropertyBlacklist))
                 {
                     value.Add(pi.PropertyInfo.Name.ToCamelCase(), pi.PropertyInfo.GetValue(model));
                 }
