@@ -14,7 +14,7 @@ namespace SapphireDb.Models.SapphireApiBuilder
         public SapphirePropertyBuilder(PropertyInfo propertyInfo)
         {
             attributesInfo = typeof(TModel).GetPropertyAttributesInfos()
-                .FirstOrDefault(property => property.PropertyInfo == propertyInfo);
+                .FirstOrDefault(property => property.PropertyInfo.Name == propertyInfo.Name);
         }
 
         public SapphirePropertyBuilder<TModel, TProperty> MakeUpdateable()
@@ -63,6 +63,18 @@ namespace SapphireDb.Models.SapphireApiBuilder
             }
 
             return attribute;
+        }
+        
+        public SapphirePropertyBuilder<TModel, TProperty> Expose()
+        {
+            attributesInfo.ExposeAttribute = new ExposeAttribute();
+            return this;
+        }
+        
+        public SapphirePropertyBuilder<TModel, TProperty> Conceal()
+        {
+            attributesInfo.ConcealAttribute = new ConcealAttribute();
+            return this;
         }
     }
 }
