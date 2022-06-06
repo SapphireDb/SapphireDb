@@ -9,6 +9,7 @@ using SapphireDb.Attributes;
 using SapphireDb.Connection;
 using SapphireDb.Internal;
 using SapphireDb.Models;
+using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
 {
@@ -17,14 +18,23 @@ namespace SapphireDb.Helper
         public static object[] GetPrimaryKeyValues(this Type type, DbContext db,
             Dictionary<string, JValue> primaryKeys)
         {
-            return type.GetPrimaryKeys(db)
-                .Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
+            IProperty[] primaryKeyProperties = type.GetPrimaryKeys(db);
+            
+            try
+            {
+                return primaryKeyProperties.Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
+            }
+            catch (KeyNotFoundException)
+            {
+                string[] primaryKeyPropertyNames = type.GetPrimaryKeys(db).Select(p => p.Name.ToCamelCase()).ToArray();
+                throw new PrimaryKeyValuesMissingException(primaryKeyPropertyNames);
+            }
         }
 
         public static object[] GetPrimaryKeyValuesFromJson(this Type type, DbContext db, JObject jsonObject)
         {
             return type.GetPrimaryKeys(db)
-                .Select(p => 
+                .Select(p =>
                     jsonObject.GetValue(p.PropertyInfo.Name.ToCamelCase())
                         .ToObject(p.PropertyInfo.PropertyType))
                 .ToArray();
@@ -32,7 +42,7 @@ namespace SapphireDb.Helper
 
         public static DateTimeOffset? GetTimestamp(this JObject jsonObject)
         {
-            return (DateTimeOffset?)jsonObject
+            return (DateTimeOffset?) jsonObject
                 .GetValue("modifiedOn")?
                 .ToObject(typeof(DateTimeOffset));
         }
@@ -40,12 +50,12 @@ namespace SapphireDb.Helper
         public static bool JsonContainsData(this Type type, DbContext db, JObject jsonObject)
         {
             bool isOfflineEntity = typeof(SapphireOfflineEntity).IsAssignableFrom(type);
-            
+
             string[] defaultPropertyList = type.GetPrimaryKeys(db)
                 .Select(p => p.PropertyInfo.Name.ToCamelCase())
-                .Concat(isOfflineEntity ? new [] { "modifiedOn" } : new string[] {})
+                .Concat(isOfflineEntity ? new[] {"modifiedOn"} : new string[] { })
                 .ToArray();
-            
+
             List<JProperty> jsonObjectProperties = jsonObject.Properties().ToList();
 
             return defaultPropertyList.All(p => jsonObjectProperties.Any(jp => jp.Name == p)) &&
@@ -105,7 +115,7 @@ namespace SapphireDb.Helper
             object newEntityObject = Activator.CreateInstance(entityType);
 
             foreach (PropertyAttributesInfo pi in entityType.GetPropertyAttributesInfos()
-                .Where(p => p.NonCreatableAttribute == null))
+                         .Where(p => p.NonCreatableAttribute == null))
             {
                 pi.PropertyInfo.SetValue(newEntityObject, pi.PropertyInfo.GetValue(newValues));
             }
@@ -129,8 +139,9 @@ namespace SapphireDb.Helper
                 })
                 .ToList();
         }
-        
-        public static void UpdateFields(this Type entityType, object entityObject, JObject originalValue, JObject updatedProperties,
+
+        public static void UpdateFields(this Type entityType, object entityObject, JObject originalValue,
+            JObject updatedProperties,
             IConnectionInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
@@ -144,7 +155,7 @@ namespace SapphireDb.Helper
                 if (updatePropertyToken != null)
                 {
                     object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
-                    
+
                     if (originalPropertyToken != null)
                     {
                         object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
@@ -161,7 +172,7 @@ namespace SapphireDb.Helper
                 }
             }
         }
-        
+
         public static List<Tuple<string, string>> MergeFields(this Type entityType, SapphireOfflineEntity dbObject,
             JObject originalOfflineEntity, JObject updatedProperties, IConnectionInformation information,
             IServiceProvider serviceProvider)
@@ -179,7 +190,7 @@ namespace SapphireDb.Helper
                 {
                     object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
                     object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
-                    
+
                     JToken originalPropertyToken = originalOfflineEntity.GetValue(pi.PropertyInfo.Name.ToCamelCase());
 
                     if (originalPropertyToken != null)
@@ -191,22 +202,24 @@ namespace SapphireDb.Helper
                             // Value not updated
                             continue;
                         }
-                        
+
                         if (dbPropertyValue != null && dbPropertyValue.Equals(originalPropertyValue))
                         {
                             // Value in db equals previous value -> use new value
                             pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                             continue;
                         }
-                        
+
                         if (pi.MergeConflictResolutionModeAttribute != null)
                         {
-                            if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.Last)
+                            if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode ==
+                                MergeConflictResolutionMode.Last)
                             {
                                 pi.PropertyInfo.SetValue(dbObject, updatedPropertyValue);
                                 mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "value updated"));
                             }
-                            else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode == MergeConflictResolutionMode.ConflictMarkers &&
+                            else if (pi.MergeConflictResolutionModeAttribute.MergeConflictResolutionMode ==
+                                     MergeConflictResolutionMode.ConflictMarkers &&
                                      dbPropertyValue is string dbPropertyValueString &&
                                      updatedPropertyValue is string updatedPropertyValueString)
                             {
@@ -216,7 +229,8 @@ namespace SapphireDb.Helper
                                                                       $"{updatedPropertyValueString}\n" +
                                                                       ">>>>>>> update";
                                 pi.PropertyInfo.SetValue(dbObject, propertyValueConflictMarkers);
-                                mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "added conflict markers"));
+                                mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name,
+                                    "added conflict markers"));
                             }
                             else
                             {
@@ -225,7 +239,8 @@ namespace SapphireDb.Helper
                         }
                         else
                         {
-                            mergeErrors.Add(new Tuple<string, string>(pi.PropertyInfo.Name, "no resolution mode active"));
+                            mergeErrors.Add(
+                                new Tuple<string, string>(pi.PropertyInfo.Name, "no resolution mode active"));
                         }
                     }
                     else
@@ -257,7 +272,8 @@ namespace SapphireDb.Helper
         /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
         /// <returns>the number of event executed event hook methods</returns>
         public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
-            object oldValue, JObject newValue, IConnectionInformation connectionInformation, IServiceProvider serviceProvider,
+            object oldValue, JObject newValue, IConnectionInformation connectionInformation,
+            IServiceProvider serviceProvider,
             DbContext dbContext)
             where T : ModelStoreEventAttributeBase
         {
@@ -284,7 +300,7 @@ namespace SapphireDb.Helper
             }
 
             int eventHooksExecuted = 0;
-            
+
             foreach (T attribute in eventAttributes)
             {
                 if (eventType == ModelStoreEventAttributeBase.EventType.Before)
@@ -297,7 +313,8 @@ namespace SapphireDb.Helper
                     else if (attribute.BeforeFunction != null)
                     {
                         attribute.BeforeFunction.Invoke(oldValue,
-                            attribute.BeforeFunction.CreateParameters(connectionInformation, serviceProvider, newValue, dbContext));
+                            attribute.BeforeFunction.CreateParameters(connectionInformation, serviceProvider, newValue,
+                                dbContext));
                         eventHooksExecuted++;
                     }
                 }
@@ -311,7 +328,8 @@ namespace SapphireDb.Helper
                     else if (attribute.BeforeSaveFunction != null)
                     {
                         attribute.BeforeSaveFunction.Invoke(oldValue,
-                            attribute.BeforeSaveFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
+                            attribute.BeforeSaveFunction.CreateParameters(connectionInformation, serviceProvider,
+                                newValue));
                         eventHooksExecuted++;
                     }
                 }
@@ -339,7 +357,8 @@ namespace SapphireDb.Helper
                     else if (attribute.InsteadOfFunction != null)
                     {
                         attribute.InsteadOfFunction.Invoke(oldValue,
-                            attribute.InsteadOfFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
+                            attribute.InsteadOfFunction.CreateParameters(connectionInformation, serviceProvider,
+                                newValue));
                         eventHooksExecuted++;
                     }
                 }
