@@ -50,7 +50,7 @@ namespace SapphireDb.Command.Subscribe
                 throw new OperationDisabledException("Query", command.ContextName, command.CollectionName);
             }
             
-            command.Prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+            command.Prefilters.ForEach(prefilter => prefilter.Initialize(property.Key, serviceProvider));
             ResponseBase response = CollectionHelper.GetCollection(db, command, property, command.Prefilters, context, serviceProvider);
 
             subscriptionManager.AddSubscription(command.ContextName, command.CollectionName, command.Prefilters, Connection, command.ReferenceId);

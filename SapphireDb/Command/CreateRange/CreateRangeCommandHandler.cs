@@ -49,7 +49,7 @@ namespace SapphireDb.Command.CreateRange
         private ResponseBase CreateObjects(CreateRangeCommand command, KeyValuePair<Type, string> property,
             IConnectionInformation context, DbContext db)
         {
-            object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key))
+            object[] newValues = command.Values.Values<JObject>().Select(newValue => newValue.ToObject(property.Key, serviceProvider))
                 .ToArray();
 
             List<CreateResponse> results = newValues.Select(value =>

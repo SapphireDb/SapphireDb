@@ -23,7 +23,7 @@ namespace SapphireDb.Internal.Prefilter
 
         private bool initialized = false;
 
-        public void Initialize(Type modelType)
+        public void Initialize(Type modelType, IServiceProvider serviceProvider)
         {
             if (initialized)
             {

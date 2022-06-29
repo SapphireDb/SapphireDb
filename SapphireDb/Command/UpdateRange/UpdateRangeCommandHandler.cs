@@ -69,7 +69,7 @@ namespace SapphireDb.Command.UpdateRange
                         if (property.Key.JsonContainsData(db, updateEntry.Value))
                         {
                             updateEntry.Value.Merge(updateEntry.UpdatedProperties);
-                            object completeValue = updateEntry.Value.ToObject(property.Key);
+                            object completeValue = updateEntry.Value.ToObject(property.Key, serviceProvider);
 
                             return CreateRangeCommandHandler.SetPropertiesAndValidate<UpdateEventAttribute>(db, property, completeValue, context, serviceProvider);
                         }

@@ -144,7 +144,7 @@ namespace SapphireDb.Command.Execute
                 }
 
                 JToken parameterValue = command.Parameters[parameter.Position];
-                return parameterValue?.ToObject(parameter.ParameterType);
+                return parameterValue?.ToObject(parameter.ParameterType, _serviceProvider);
             }).ToArray();
         }
     }

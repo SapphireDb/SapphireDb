@@ -57,7 +57,8 @@ namespace SapphireDb.Helper
             return ArrayContains(checkArray, input, propertyType);
         }
         
-        public static Expression CreateCompareExpression(Type modelType, JArray compareParts, Expression modelExpression)
+        public static Expression CreateCompareExpression(Type modelType, JArray compareParts, Expression modelExpression,
+            IServiceProvider serviceProvider)
         {
             PropertyInfo compareProperty = modelType.GetProperty(compareParts.First().Value<string>(),
                 BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase |
@@ -79,7 +80,7 @@ namespace SapphireDb.Helper
                 targetType = typeof(List<>).MakeGenericType(targetType);
             }
 
-            object compareValue = compareParts.Last.ToObject(targetType);
+            object compareValue = compareParts.Last.ToObject(targetType, serviceProvider);
             Expression compareValueExpression = Expression.Constant(compareValue);
 
             switch (compareOperation)
@@ -120,7 +121,8 @@ namespace SapphireDb.Helper
             }
         }
 
-        public static Expression ConvertConditionParts(Type modelType, JToken conditionParts, Expression modelExpression)
+        public static Expression ConvertConditionParts(Type modelType, JToken conditionParts, Expression modelExpression,
+            IServiceProvider serviceProvider)
         {
             if (conditionParts.Type == JTokenType.Array)
             {
@@ -133,14 +135,14 @@ namespace SapphireDb.Helper
                     {
                         if (prevExpression == null)
                         {
-                            prevExpression = ConvertConditionParts(modelType, combineOperator.Previous, modelExpression);
+                            prevExpression = ConvertConditionParts(modelType, combineOperator.Previous, modelExpression, serviceProvider);
                         }
                         else
                         {
                             prevExpression = completeExpression;
                         }
 
-                        Expression nextExpression = ConvertConditionParts(modelType, combineOperator.Next, modelExpression);
+                        Expression nextExpression = ConvertConditionParts(modelType, combineOperator.Next, modelExpression, serviceProvider);
 
                         string operatorValue = combineOperator.Value<string>();
 
@@ -156,13 +158,13 @@ namespace SapphireDb.Helper
 
                     if (completeExpression == null)
                     {
-                        completeExpression = ConvertConditionParts(modelType, conditionParts.First(), modelExpression);
+                        completeExpression = ConvertConditionParts(modelType, conditionParts.First(), modelExpression, serviceProvider);
                     }
 
                     return completeExpression;
                 }
                 
-                return CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression);
+                return CreateCompareExpression(modelType, conditionParts.Value<JArray>(), modelExpression, serviceProvider);
             }
 
             throw new WrongConditionOrderException(conditionParts);

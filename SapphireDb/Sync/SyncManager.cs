@@ -57,12 +57,12 @@ namespace SapphireDb.Sync
                                 KeyValuePair<Type, string> property = dbType.GetDbSetType(change.CollectionName);
                                 
                                 JObject rawValue = change.Value as JObject;
-                                change.Value = rawValue?.ToObject(property.Key);
+                                change.Value = rawValue?.ToObject(property.Key, serviceProvider);
 
                                 if (change.State == ChangeResponse.ChangeState.Modified && change.OriginalValue != null)
                                 {
                                     JObject rawOriginalValue = change.OriginalValue as JObject;
-                                    change.OriginalValue = rawOriginalValue?.ToObject(property.Key);
+                                    change.OriginalValue = rawOriginalValue?.ToObject(property.Key, serviceProvider);
                                 }
                             });
                             

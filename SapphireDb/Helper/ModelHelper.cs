@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SapphireDb.Attributes;
 using SapphireDb.Connection;
@@ -19,10 +20,11 @@ namespace SapphireDb.Helper
             Dictionary<string, JValue> primaryKeys)
         {
             IProperty[] primaryKeyProperties = type.GetPrimaryKeys(db);
-            
+
             try
             {
-                return primaryKeyProperties.Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType)).ToArray();
+                return primaryKeyProperties.Select(p => primaryKeys[p.Name.ToCamelCase()].ToObject(p.ClrType))
+                    .ToArray();
             }
             catch (KeyNotFoundException)
             {
@@ -141,8 +143,7 @@ namespace SapphireDb.Helper
         }
 
         public static void UpdateFields(this Type entityType, object entityObject, JObject originalValue,
-            JObject updatedProperties,
-            IConnectionInformation information, IServiceProvider serviceProvider)
+            JObject updatedProperties, IConnectionInformation information, IServiceProvider serviceProvider)
         {
             List<PropertyAttributesInfo> updateableProperties = entityType.GetUpdateableProperties(entityObject,
                 information, serviceProvider, updatedProperties);
@@ -154,11 +155,11 @@ namespace SapphireDb.Helper
 
                 if (updatePropertyToken != null)
                 {
-                    object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+                    object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType, serviceProvider);
 
                     if (originalPropertyToken != null)
                     {
-                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType, serviceProvider);
 
                         if (originalPropertyValue == null || !originalPropertyValue.Equals(updatedPropertyValue))
                         {
@@ -189,13 +190,14 @@ namespace SapphireDb.Helper
                 if (updatePropertyToken != null)
                 {
                     object dbPropertyValue = pi.PropertyInfo.GetValue(dbObject);
-                    object updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+
+                    var updatedPropertyValue = updatePropertyToken.ToObject(pi.PropertyInfo.PropertyType, serviceProvider);
 
                     JToken originalPropertyToken = originalOfflineEntity.GetValue(pi.PropertyInfo.Name.ToCamelCase());
 
                     if (originalPropertyToken != null)
                     {
-                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType);
+                        object originalPropertyValue = originalPropertyToken.ToObject(pi.PropertyInfo.PropertyType, serviceProvider);
 
                         if (originalPropertyValue != null && originalPropertyValue.Equals(updatedPropertyValue))
                         {

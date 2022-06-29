@@ -21,7 +21,7 @@ namespace SapphireDb.Internal.Prefilter
 
         private bool initialized = false;
 
-        public void Initialize(Type modelType)
+        public void Initialize(Type modelType, IServiceProvider serviceProvider)
         {
             if (initialized)
             {
@@ -32,7 +32,7 @@ namespace SapphireDb.Internal.Prefilter
 
             ParameterExpression parameter = Expression.Parameter(typeof(object));
             UnaryExpression modelExpression = Expression.Convert(parameter, modelType);
-            Expression whereConditionBody = ExpressionHelper.ConvertConditionParts(modelType, Conditions, modelExpression);
+            Expression whereConditionBody = ExpressionHelper.ConvertConditionParts(modelType, Conditions, modelExpression, serviceProvider);
 
             WhereExpression = Expression.Lambda<Func<object, bool>>(whereConditionBody, parameter);
             WhereExpressionCompiled = WhereExpression.Compile();

@@ -15,7 +15,7 @@ namespace SapphireDb.Internal.Prefilter
             
         }
 
-        public void Initialize(Type modelType) { } 
+        public void Initialize(Type modelType, IServiceProvider serviceProvider) { } 
         
         public string Hash()
         {

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using SapphireDb.Command;
 using SapphireDb.Command.Error;
 using SapphireDb.Internal.Prefilter;
+using SapphireDb.Models;
 using SapphireDb.Models.Exceptions;
 
 namespace SapphireDb.Helper
@@ -28,7 +30,7 @@ namespace SapphireDb.Helper
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            Converters = { new CustomJsonConverter<IPrefilterBase>(), new CustomJsonConverter<CommandBase>() }
+            Converters = { new SapphireJsonConverter<IPrefilterBase>(), new SapphireJsonConverter<CommandBase>() }
         };
 
         public static readonly JsonSerializer CommandDeserializer = JsonSerializer.Create(DeserializeCommandSettings);
@@ -69,13 +71,26 @@ namespace SapphireDb.Helper
                 };;
             }
         }
+
+        public static object ToObject(this JToken jToken, Type targetType, IServiceProvider serviceProvider)
+        {
+            CustomModelJsonSerializer customModelJsonSerializer =
+                serviceProvider.GetService<CustomModelJsonSerializer>();
+
+            if (customModelJsonSerializer != null)
+            {
+                return jToken.ToObject(targetType, customModelJsonSerializer.JsonSerializer);
+            }
+
+            return jToken.ToObject(targetType);
+        }
     }
 
-    class CustomJsonConverter<T> : JsonConverter
+    class SapphireJsonConverter<T> : JsonConverter
     {
         private readonly Dictionary<string, Type> nameTypeMappings = new Dictionary<string, Type>();
 
-        public CustomJsonConverter()
+        public SapphireJsonConverter()
         {
             if (typeof(T) == typeof(IPrefilterBase))
             {

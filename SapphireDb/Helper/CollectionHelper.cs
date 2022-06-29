@@ -130,7 +130,7 @@ namespace SapphireDb.Helper
                 .GetField("prefilters")?
                 .GetValue(queryBuilder);
             
-            prefilters.ForEach(prefilter => prefilter.Initialize(property.Key));
+            prefilters.ForEach(prefilter => prefilter.Initialize(property.Key, serviceProvider));
 
             return prefilters;
         }

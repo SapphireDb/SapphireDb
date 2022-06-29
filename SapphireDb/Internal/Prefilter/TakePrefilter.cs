@@ -12,7 +12,7 @@ namespace SapphireDb.Internal.Prefilter
             return array.Take(Number);
         }
 
-        public void Initialize(Type modelType) { }
+        public void Initialize(Type modelType, IServiceProvider serviceProvider) { }
 
         public void Dispose()
         {
