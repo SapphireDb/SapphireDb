@@ -45,7 +45,7 @@ namespace SapphireDb.Attributes
             BeforeFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, Before, typeof(void));
             BeforeSaveFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, BeforeSave, typeof(void));
             AfterFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, After, typeof(void));
-            InsteadOfFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, InsteadOf, typeof(void));
+            InsteadOfFunction = ReflectionMethodHelper.GetMethodInfo(declaredType, InsteadOf);
         }
 
         public enum EventType

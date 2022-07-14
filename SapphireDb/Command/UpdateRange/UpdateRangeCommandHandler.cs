@@ -105,7 +105,7 @@ namespace SapphireDb.Command.UpdateRange
                 if (response.Value != null)
                 {
                     property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.After,
-                        response.Value, null, context, serviceProvider, db);   
+                        response.Value, null, context, serviceProvider, db, out _);   
                 }
             }
 
@@ -122,15 +122,18 @@ namespace SapphireDb.Command.UpdateRange
         {
             int insteadOfExecuteCount = property.Key.ExecuteHookMethods<UpdateEventAttribute>(
                 ModelStoreEventAttributeBase.EventType.InsteadOf,
-                dbValue, null, context, serviceProvider, db);
+                dbValue, null, context, serviceProvider, db, out object insteadOfResult);
 
             if (insteadOfExecuteCount > 0)
             {
-                return new UpdateResponse();
+                return new UpdateResponse()
+                {
+                    Value = insteadOfResult
+                };
             }
             
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.Before,
-                dbValue, updatedProperties, context, serviceProvider, db);
+                dbValue, updatedProperties, context, serviceProvider, db, out _);
 
             List<Tuple<string, string>> mergeErrors = null;
 
@@ -170,7 +173,7 @@ namespace SapphireDb.Command.UpdateRange
             db.Update(dbValue);
 
             property.Key.ExecuteHookMethods<UpdateEventAttribute>(ModelStoreEventAttributeBase.EventType.BeforeSave,
-                dbValue, updatedProperties, context, serviceProvider, db);
+                dbValue, updatedProperties, context, serviceProvider, db, out _);
 
             return new UpdateResponse()
             {

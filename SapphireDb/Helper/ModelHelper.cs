@@ -271,14 +271,17 @@ namespace SapphireDb.Helper
         /// <param name="connectionInformation">Object with information about current connection</param>
         /// <param name="serviceProvider">Service provider instance for dependency injection</param>
         /// <param name="dbContext">The dbContext instance of the current executing db context to allow writing changes into save-scope of command handler</param>
+        /// <param name="insteadOfResult">Optional return value of instead of function</param>
         /// <typeparam name="T">The type of the store event attribute indicating the operation</typeparam>
         /// <returns>the number of event executed event hook methods</returns>
         public static int ExecuteHookMethods<T>(this Type modelType, ModelStoreEventAttributeBase.EventType eventType,
             object oldValue, JObject newValue, IConnectionInformation connectionInformation,
             IServiceProvider serviceProvider,
-            DbContext dbContext)
+            DbContext dbContext, out object insteadOfResult)
             where T : ModelStoreEventAttributeBase
         {
+            insteadOfResult = null;
+            
             ModelAttributesInfo modelAttributesInfo = modelType.GetModelAttributesInfo();
 
             List<T> eventAttributes = null;
@@ -358,7 +361,7 @@ namespace SapphireDb.Helper
                     }
                     else if (attribute.InsteadOfFunction != null)
                     {
-                        attribute.InsteadOfFunction.Invoke(oldValue,
+                        insteadOfResult = attribute.InsteadOfFunction.Invoke(oldValue,
                             attribute.InsteadOfFunction.CreateParameters(connectionInformation, serviceProvider,
                                 newValue));
                         eventHooksExecuted++;

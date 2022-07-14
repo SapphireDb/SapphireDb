@@ -85,21 +85,24 @@ namespace SapphireDb.Command.DeleteRange
 
                         int insteadOfExecuteCount = property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                             ModelStoreEventAttributeBase.EventType.InsteadOf,
-                            value, null, context, serviceProvider, db);
+                            value, null, context, serviceProvider, db, out object insteadOfResult);
 
                         if (insteadOfExecuteCount > 0)
                         {
-                            return new DeleteResponse();
+                            return new DeleteResponse()
+                            {
+                                Value = insteadOfResult
+                            };
                         }
                         
                         property.Key.ExecuteHookMethods<DeleteEventAttribute>(
-                            ModelStoreEventAttributeBase.EventType.Before, value, null, context, serviceProvider, db);
+                            ModelStoreEventAttributeBase.EventType.Before, value, null, context, serviceProvider, db, out _);
 
                         db.Remove(value);
 
                         property.Key.ExecuteHookMethods<DeleteEventAttribute>(
                             ModelStoreEventAttributeBase.EventType.BeforeSave, value, null, context,
-                            serviceProvider, db);
+                            serviceProvider, db, out _);
 
                         removedValues.Add(value);
 
@@ -130,7 +133,7 @@ namespace SapphireDb.Command.DeleteRange
             foreach (object value in removedValues)
             {
                 property.Key.ExecuteHookMethods<DeleteEventAttribute>(
-                    ModelStoreEventAttributeBase.EventType.After, value, null, context, serviceProvider, db);
+                    ModelStoreEventAttributeBase.EventType.After, value, null, context, serviceProvider, db, out _);
             }
 
             return response;
