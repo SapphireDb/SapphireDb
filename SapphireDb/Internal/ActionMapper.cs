@@ -15,7 +15,7 @@ namespace SapphireDb.Internal
 
         public ActionMapper()
         {
-            actionHandlerTypes = Assembly.GetEntryAssembly()?.GetTypes()
+            actionHandlerTypes = (AppDomain.CurrentDomain.GetAssemblies().ToArray().SelectMany(x => x.GetTypes()))
                 .Where(t => typeof(ActionHandlerBase).IsAssignableFrom(t) && t.Name.EndsWith("Actions"))
                 .ToDictionary(t => t.Name.Substring(0, t.Name.LastIndexOf("Actions", StringComparison.Ordinal)).ToCamelCase(), t => t);
 

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json.Linq;
@@ -239,8 +240,9 @@ namespace SapphireDb.Helper
 
         public static IQueryable<object> GetValues(this SapphireDbContext db, KeyValuePair<Type, string> property)
         {
-            IQueryable<object> values = (IQueryable<object>) db.GetType().GetProperty(property.Value)?.GetValue(db);
-            return values?.AsNoTracking();
+            MethodInfo method = db.GetType().GetMethod((string)"Set", (int)(BindingFlags.Public | BindingFlags.Instance), Type.EmptyTypes); 
+            method = method.MakeGenericMethod(property.Key);
+            return ((IQueryable<object>)method.Invoke(db, null))?.AsNoTracking(); 
         }
 
         /// <summary>
