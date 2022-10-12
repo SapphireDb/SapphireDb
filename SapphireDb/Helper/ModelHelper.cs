@@ -334,7 +334,7 @@ namespace SapphireDb.Helper
                     {
                         attribute.BeforeSaveFunction.Invoke(oldValue,
                             attribute.BeforeSaveFunction.CreateParameters(connectionInformation, serviceProvider,
-                                newValue));
+                                newValue, dbContext));
                         eventHooksExecuted++;
                     }
                 }
@@ -348,7 +348,7 @@ namespace SapphireDb.Helper
                     else if (attribute.AfterFunction != null)
                     {
                         attribute.AfterFunction.Invoke(oldValue,
-                            attribute.AfterFunction.CreateParameters(connectionInformation, serviceProvider, newValue));
+                            attribute.AfterFunction.CreateParameters(connectionInformation, serviceProvider, newValue, dbContext));
                         eventHooksExecuted++;
                     }
                 }
