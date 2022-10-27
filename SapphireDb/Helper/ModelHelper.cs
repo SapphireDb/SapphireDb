@@ -117,7 +117,7 @@ namespace SapphireDb.Helper
             object newEntityObject = Activator.CreateInstance(entityType);
 
             foreach (PropertyAttributesInfo pi in entityType.GetPropertyAttributesInfos()
-                         .Where(p => p.NonCreatableAttribute == null))
+                         .Where(p => p.NonCreatableAttribute == null && p.PropertyInfo.CanWrite))
             {
                 pi.PropertyInfo.SetValue(newEntityObject, pi.PropertyInfo.GetValue(newValues));
             }
